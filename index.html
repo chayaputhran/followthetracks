@@ -1,353 +1,619 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Follow The Tracks — Clinical Reasoning, Examined</title>
-  <meta name="description" content="Follow The Tracks retires the multiple-choice crutch. Medical students work real cases in their own words and are graded on how they reason — a clinical reasoning simulator for Indian medical colleges." />
-  <meta property="og:title" content="Follow The Tracks — Recall, not recognition" />
-  <meta property="og:description" content="A clinical reasoning simulator for Indian medical colleges. Free-text case work, semantic grading, a cognitive report." />
-  <meta property="og:type" content="website" />
-
-  <!-- Fonts: Zodiak (display serif) + Satoshi (body) via Fontshare; IBM Plex Mono via Google -->
-  <link href="https://api.fontshare.com/v2/css?f[]=zodiak@400,500,700&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='17' cy='17' r='11' fill='none' stroke='%230f5b56' stroke-width='2.4'/%3E%3Cpath d='M25 25 L34 34' stroke='%230f5b56' stroke-width='2.8' stroke-linecap='round'/%3E%3C/svg%3E" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Follow the Tracks — Clinical Reasoning Simulator</title>
+<style>
+:root{
+  --page:#ECEBE7; --paper:#F5F4F1; --paper2:#EDECE5; --ink:#1B1B1A; --ink2:#403d36;
+  --muted:#8a8578; --rule:#e0ded6; --rule2:#cdcabf; --accent:#DE6B1F; --accent2:#c25c17;
+  --accent-soft:rgba(222,107,31,.10);
+  --good:#3B7A57; --good-s:rgba(59,122,87,.12); --warn:#C58A1E; --warn-s:rgba(197,138,30,.14);
+  --bad:#B2472B; --bad-s:rgba(178,71,43,.12); --slate:#4f6472; --invc:#3d6a8a;
+  --serif:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,"SF Mono","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{color:var(--ink);font-family:var(--sans);line-height:1.55;background:var(--page);font-size:14.5px}
+.mono{font-family:var(--mono)}
+button{font-family:var(--sans);cursor:pointer}
+/* ---------- App bar ---------- */
+.appbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:0 20px;height:56px;
+  background:var(--paper);border-bottom:1px solid var(--rule2)}
+.brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.mono-logo{width:30px;height:30px;border-radius:4px;background:var(--ink);color:var(--paper);display:flex;align-items:center;
+  justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.5px}
+.wordmark{font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:.2px;white-space:nowrap}
+.wordmark small{display:block;font-family:var(--sans);font-weight:600;font-size:8.5px;letter-spacing:2.5px;color:var(--muted);text-transform:uppercase;margin-top:-2px}
+.nav{display:flex;gap:4px;margin-left:8px}
+.nav a{font-size:13px;color:var(--ink2);text-decoration:none;padding:7px 12px;border-radius:4px;font-weight:500}
+.nav a:hover{background:var(--paper2)}
+.nav a.on{color:var(--accent);font-weight:700}
+.spacer{flex:1}
+.userchip{display:flex;align-items:center;gap:9px;font-size:12.5px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--ink2);color:var(--paper);display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:700}
+.rolebadge{font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;font-weight:700;padding:2px 7px;border:1px solid var(--rule2);border-radius:3px;color:var(--muted)}
+.linkbtn{background:none;border:none;color:var(--muted);font-size:12px;text-decoration:underline;padding:0}
+/* ---------- Layout ---------- */
+.wrap{max-width:1060px;margin:0 auto;padding:26px 20px 90px}
+.wrapn{max-width:1060px;margin:0 auto;padding:22px 20px 90px}
+.crumbs{font-size:12px;color:var(--muted);margin-bottom:14px}
+.crumbs a{color:var(--muted);text-decoration:none}.crumbs a:hover{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--serif)}
+.pagetitle{font-size:26px;font-weight:700;margin:0 0 4px}
+.pagesub{color:var(--ink2);font-size:14px;margin:0 0 20px}
+.card{background:var(--paper);border:1px solid var(--rule2);border-radius:4px;padding:22px 24px;margin-bottom:16px}
+.card h2{font-size:17px;margin:0 0 3px;font-weight:700}
+.card h3{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:20px 0 9px;font-weight:700;font-family:var(--sans)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.grid2,.grid3{grid-template-columns:1fr}.nav{display:none}}
+.small{font-size:12px;color:var(--muted)}
+/* ---------- Login ---------- */
+.loginwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(1000px 500px at 50% -20%,rgba(222,107,31,.05),transparent 60%),var(--page)}
+.logincard{background:var(--paper);border:1px solid var(--rule2);border-radius:6px;max-width:400px;width:100%;padding:34px 32px;
+  box-shadow:0 20px 50px -30px rgba(60,40,20,.5)}
+.logincard .lg{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+.logincard .mono-logo{width:38px;height:38px;font-size:19px}
+.field{margin:14px 0}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px}
+.field input{width:100%;padding:11px 12px;border:1px solid var(--rule2);border-radius:4px;font-size:14px;font-family:var(--sans);background:#fffdf8;color:var(--ink)}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.roletoggle{display:flex;gap:0;border:1px solid var(--rule2);border-radius:4px;overflow:hidden;margin-top:6px}
+.roletoggle button{flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--ink2)}
+.roletoggle button.on{background:var(--accent);color:#f7f2e9}
+/* ---------- Buttons ---------- */
+.btn{font-size:13.5px;font-weight:600;border-radius:4px;padding:10px 17px;border:1px solid var(--ink2);background:transparent;color:var(--ink)}
+.btn:hover{background:var(--paper2)}
+.btn.primary{background:var(--accent);color:#f7f2e9;border-color:var(--accent);width:auto}
+.btn.primary:hover{background:var(--accent2)}
+.btn.primary:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{border-color:var(--rule2);color:var(--ink2)}
+.btn.block{width:100%;text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+/* ---------- Library ---------- */
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.casecard{background:var(--paper);border:1px solid var(--rule2);border-radius:4px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;transition:.15s}
+.casecard.live{cursor:pointer}
+.casecard.live:hover{border-color:var(--accent);transform:translateY(-2px)}
+.casecard.locked{opacity:.55}
+.casecard .sys{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700}
+.casecard h3{font-family:var(--serif);font-size:17px;margin:0;font-weight:700}
+.casecard .ol{font-size:12.5px;color:var(--ink2)}
+.casecard .meta{display:flex;gap:8px;margin-top:auto;padding-top:10px;font-size:11px;color:var(--muted);align-items:center}
+.dchip{font-size:10px;padding:2px 7px;border:1px solid var(--rule2);border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+.status-done{color:var(--good);font-weight:700}
+/* ---------- Case ---------- */
+.vignette{background:var(--paper2);border-left:3px solid var(--accent);padding:15px 18px;font-size:15px;font-family:var(--serif);line-height:1.65}
+.chips{display:flex;flex-wrap:wrap;gap:0;margin-top:14px;border-top:1px solid var(--rule)}
+.chip{font-size:12.5px;padding:8px 18px 8px 0;margin-right:18px;border-bottom:1px solid var(--rule);color:var(--ink2)}
+.chip b{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.6px;margin-right:6px}
+.media{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+.media .m{flex:1;min-width:120px;background:var(--paper2);border:1px solid var(--rule);border-radius:4px;padding:13px;text-align:center;color:var(--muted);font-size:11.5px}
+.media .m .ico{font-size:22px;display:block;margin-bottom:4px;filter:grayscale(1) opacity(.65)}
+textarea{width:100%;min-height:180px;background:#fffdf8;border:1px solid var(--rule2);border-radius:4px;color:var(--ink);padding:15px;font-size:14.5px;font-family:var(--serif);resize:vertical;line-height:1.7}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.q{font-size:14px;color:var(--ink);font-weight:600;margin:6px 0 9px;font-family:var(--serif);font-style:italic}
+.hint{font-size:12.5px;color:var(--muted);margin-top:9px;font-style:italic;font-family:var(--serif)}
+/* ---------- Grading anim ---------- */
+.layer{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--rule);border-radius:4px;background:var(--paper2);opacity:.4;transition:.4s;margin-bottom:10px}
+.layer.on{opacity:1;border-color:var(--accent)}.layer.ok{opacity:1;border-color:var(--rule2)}
+.layer .tick{width:24px;height:24px;border-radius:50%;border:1px solid var(--rule2);display:flex;align-items:center;justify-content:center;font-size:13px;flex:0 0 auto}
+.layer.ok .tick{background:var(--good);color:var(--paper);border-color:var(--good)}
+.layer.on .tick{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.layer .t{font-size:14px;font-weight:600;font-family:var(--serif)}.layer .d{font-size:12px;color:var(--muted)}
+.spin{width:15px;height:15px;border:2px solid rgba(247,242,233,.4);border-top-color:var(--paper);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* ---------- Result ---------- */
+.scorehead{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.bigscore{font-size:46px;font-weight:700;line-height:1;font-family:var(--mono);letter-spacing:-2px}
+.verdict{font-size:11.5px;padding:4px 12px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.metric{margin:13px 0}
+.metric .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.metric .top b{font-weight:600}
+.metric .top span{font-family:var(--mono);font-size:12.5px}
+.bar{height:7px;background:rgba(27,27,26,.09);border-radius:20px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:20px;transition:width .7s ease}
+.crit{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--rule);font-size:13.5px}
+.crit:last-child{border-bottom:none}
+.dot{width:19px;height:19px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px}
+.dot.g{background:var(--good);color:var(--paper)}.dot.p{background:var(--warn);color:var(--paper)}.dot.r{background:var(--bad);color:var(--paper)}
+.cw{font-size:11.5px;color:var(--muted);margin-top:2px}
+.matchphrase{color:var(--accent);font-style:italic;font-family:var(--serif)}
+.conf{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.tag{font-size:9px;letter-spacing:.6px;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-left:6px;font-weight:700}
+.tag.miss{border:1px solid var(--bad);color:var(--bad)}.tag.safety{border:1px solid var(--muted);color:var(--muted)}.tag.part{border:1px solid var(--warn);color:var(--warn)}
+.evidence{background:#fffdf8;border:1px solid var(--rule);border-radius:4px;padding:15px;font-family:var(--serif);font-size:14px;line-height:1.85}
+mark{padding:1px 2px;border-radius:2px;background:transparent}
+mark.dx{background:rgba(222,107,31,.16);box-shadow:inset 0 -2px 0 var(--accent)}
+mark.ddx{background:rgba(79,100,114,.16);box-shadow:inset 0 -2px 0 var(--slate)}
+mark.inv{background:rgba(61,106,138,.16);box-shadow:inset 0 -2px 0 var(--invc)}
+mark.mgmt{background:rgba(59,122,87,.16);box-shadow:inset 0 -2px 0 var(--good)}
+mark.hist{background:rgba(138,133,120,.18);box-shadow:inset 0 -2px 0 var(--muted)}
+mark.neg{opacity:.6;text-decoration:line-through rgba(156,51,32,.6)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.lgdot{width:11px;height:11px;border-radius:2px;display:inline-block}
+.path{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.pnode{font-size:12px;padding:6px 11px;border-radius:3px;background:var(--paper2);border:1px solid var(--rule2);font-family:var(--serif)}
+.pnode.cm{border-color:var(--accent);color:var(--accent);font-weight:600}.parrow{color:var(--muted)}
+.narr .blk{padding:12px 15px;border-radius:3px;margin-bottom:11px;font-size:14px;border-left:3px solid var(--rule2);background:var(--paper2)}
+.narr .win{border-left-color:var(--good)}.narr .gap{border-left-color:var(--warn)}.narr .soc{border-left-color:var(--accent);font-family:var(--serif);font-style:italic}
+.narr b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px;color:var(--muted);font-weight:700;font-family:var(--sans)}
+.disclaimer{font-size:11.5px;color:var(--muted);background:var(--paper2);border:1px solid var(--rule);border-radius:4px;padding:10px 13px;margin-top:8px}
+/* ---------- Stats / analytics ---------- */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:820px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--paper);border:1px solid var(--rule2);border-radius:4px;padding:16px 18px}
+.tile .v{font-family:var(--mono);font-size:29px;font-weight:700;line-height:1;letter-spacing:-1px}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-top:4px;font-weight:700}
+.hbar{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.hbar .lbl{flex:0 0 46%;color:var(--ink2)}
+.hbar .track{flex:1;height:16px;background:rgba(27,27,26,.07);border-radius:20px;overflow:hidden}
+.hbar .track>i{display:block;height:100%;background:var(--bad);border-radius:20px}
+.hbar .num{flex:0 0 42px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.histo{display:flex;align-items:stretch;gap:6px;height:120px;margin-top:10px}
+.histo .col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.histo .col>i{width:100%;background:var(--accent);border-radius:2px 2px 0 0;min-height:2px}
+.histo .col .cl{font-size:9.5px;color:var(--muted);font-family:var(--mono)}
+table.data{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+table.data th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--rule2);padding:7px 8px;font-weight:700}
+table.data td{padding:8px;border-bottom:1px solid var(--rule)}
+.progressrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:34px}
+.spark i{width:7px;background:var(--accent);border-radius:1px}
+.footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:30px;padding-top:16px;border-top:1px solid var(--rule2)}
+</style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="./app.js"></script>
-<script data-pplx-inline-edit>
-(function () {
-  if (window === window.top) return;
+<div id="app"></div>
+<script>
+/* ==================================================================
+   Follow the Tracks — Clinical Reasoning Simulator (self-contained POC)
+   Vanilla JS SPA. Grading is an in-browser NLP stand-in for the
+   production LLM examiner: concept lexicon + negation + partial credit.
+   ================================================================== */
 
-  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
-  const MAX_FONT_BYTES = 500 * 1024;
-  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
-  let scrollForwarding = false;
-  let scrollRaf = 0;
-  let trustedTopOrigin = null;
+/* ---------------- Concept lexicon (shared) ---------------- */
+/* category codes: dx diagnosis · ddx differential · inv investigation · mgmt management · hist history */
+var NEG = ["no ","not ","without ","denies","denied","negative for","unlikely","doubt","rather than","never had","absence of","r/o ","ro ","cannot be","isn't","is not","wasn't","no evidence"];
+/* words that mean "considered/excluded" — for differentials these are POSITIVE (you thought of it) */
+var CONSIDER = ["exclude","excluded","rule out","ruled out","consider","considered","differential","ddx","must exclude","cannot miss","think about","also possible","versus","vs "];
 
-  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
-  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
-  // across multiple labels.
-  function matchesAllowedOrigin(origin) {
-    if (!origin) return false;
-    for (const entry of allowedParentOrigins) {
-      if (!entry.includes("*")) {
-        if (entry === origin) return true;
-        continue;
-      }
-      const pattern = new RegExp(
-        "^" +
-          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
-          "$",
-      );
-      if (pattern.test(origin)) return true;
+/* ---------------- Cases ---------------- */
+var CASES = [
+ {
+  id:"PE-014", system:"Respiratory / Vascular", diff:"Core", level:"MBBS / PG", title:"Sudden pleuritic chest pain",
+  ol:"A returning traveller, breathless and hypoxic, with a swollen calf.",
+  vignette:"A 45-year-old man, a chronic smoker, presents with sudden-onset sharp (pleuritic) chest pain and breathlessness that began 3 hours ago. He returned yesterday from a 9-hour flight. He is tachycardic (HR 112), tachypnoeic (RR 24) and SpO2 is 91% on room air. His right calf is swollen and tender.",
+  clues:[["Age/Sex","45 M"],["Risk","Chronic smoker"],["Onset","Sudden, pleuritic"],["Recent","9-hour flight"],["Vitals","HR 112 · RR 24 · SpO2 91%"],["Exam","Swollen tender R calf"]],
+  media:["🫁 Chest X-ray","📈 ECG","🧪 ABG / D-dimer"],
+  rubric:[
+    {id:"dx",label:"Primary diagnosis: Pulmonary embolism",w:26,cantMiss:true,negFlip:true,cat:"dx",
+     groups:[["pulmonary embolism","pulmonary embolus","lung clot","clot in the lung","clot in lung","blood clot in the lung","thromboembolism"," pe ","pulmonary thrombo"]]},
+    {id:"ddx",label:"Considered dangerous differentials (dissection · ACS · pneumothorax)",w:15,safety:true,cat:"ddx",
+     groups:[["aortic dissection","dissection"],["acute coronary","myocardial","heart attack"," acs"," mi "],["pneumothorax"],["pneumonia"]]},
+    {id:"dvt",label:"Recognised the DVT source (swollen calf)",w:10,cat:"ddx",
+     groups:[["dvt","deep vein thrombosis","leg clot","calf clot","venous thrombosis","doppler"]]},
+    {id:"inv",label:"Appropriate investigations (Wells · D-dimer · CTPA · ECG)",w:16,cat:"inv",
+     groups:[["wells"],["d-dimer","d dimer","ddimer"],["ctpa","ct pulmonary","ct angiogram","ctpulmonary"],["ecg","ekg"],["chest x-ray","cxr","abg"]]},
+    {id:"hist",label:"Explored VTE risk history (immobility · surgery · malignancy · OCP)",w:10,gap:true,cat:"hist",
+     groups:[["immobil","long flight","travel"],["recent surgery","surgery"],["malignan","cancer"],["oral contraceptive"," ocp","hormone","oestrogen","estrogen"],["previous clot","prior vte","past dvt"]]},
+    {id:"mgmt",label:"Safe initial management (oxygen + anticoagulation)",w:18,safety:true,cat:"mgmt",
+     groups:[["oxygen"," o2"],["anticoagul","heparin","lmwh","enoxaparin","low molecular weight","doac","apixaban","rivaroxaban","tinzaparin"],["thrombolysis","thrombolyse"]]},
+    {id:"just",label:"Reasoning justified from case evidence",w:5,cat:"hist",
+     groups:[["because","given","suggests","risk factor","points to","in view of","due to","consistent with","all point","supported by"]]}
+  ],
+  cm:[{label:"Aortic dissection",keys:["dissection"]},{label:"ACS / MI",keys:["acute coronary","myocardial","heart attack"," acs"," mi "]},{label:"Pneumothorax",keys:["pneumothorax"]},{label:"Pulmonary embolism",keys:["pulmonary embol","lung clot","clot in lung"]}],
+  strong:"This man is high-risk for a pulmonary embolism — a smoker, a 9-hour flight causing immobility, sudden pleuritic chest pain, hypoxia and a swollen tender calf all point to a DVT that has embolised. I must first exclude aortic dissection and acute coronary syndrome, and a pneumothorax given the sudden dyspnoea. I would calculate a Wells score, send a D-dimer, do an ECG and chest X-ray, and arrange a CTPA to confirm; Doppler the leg for the DVT. I'd ask about recent surgery, malignancy and hormone therapy. Management: high-flow oxygen for the hypoxia and start anticoagulation with low molecular weight heparin (enoxaparin) while awaiting imaging.",
+  weak:"Chest pain, probably a heart problem. I'd give painkillers, do an ECG and observe. Maybe a chest infection."
+ },
+ {
+  id:"ACS-021", system:"Cardiology", diff:"Core", level:"MBBS / PG", title:"Crushing central chest pain",
+  ol:"A diabetic man with crushing chest pain radiating to the jaw, cold and sweating.",
+  vignette:"A 62-year-old man with type 2 diabetes and hypertension develops crushing central chest pain radiating to his left arm and jaw, with sweating and nausea, for the last 40 minutes. He looks grey and clammy. BP 148/92, HR 96. The pain is not relieved by rest.",
+  clues:[["Age/Sex","62 M"],["Risk","T2DM · hypertension"],["Onset","40 min, at rest"],["Character","Crushing, radiates arm/jaw"],["Assoc","Sweating, nausea"],["Vitals","BP 148/92 · HR 96"]],
+  media:["📈 12-lead ECG","🧪 Troponin","🫁 Chest X-ray"],
+  rubric:[
+    {id:"dx",label:"Primary diagnosis: Acute coronary syndrome / STEMI",w:24,cantMiss:true,negFlip:true,cat:"dx",
+     groups:[["acute coronary","stemi","nstemi"," acs","myocardial infarction","heart attack","mi "]]},
+    {id:"ecg",label:"Immediate 12-lead ECG (time-critical)",w:16,cantMiss:true,cat:"inv",
+     groups:[["ecg","ekg","12-lead","12 lead"]]},
+    {id:"ddx",label:"Considered dangerous mimics (dissection · PE · pericarditis)",w:12,safety:true,cat:"ddx",
+     groups:[["aortic dissection","dissection"],["pulmonary embol"," pe "],["pericarditis"],["oesophageal","esophageal","reflux","gord","gerd"]]},
+    {id:"trop",label:"Troponin & bloods",w:8,cat:"inv",groups:[["troponin","cardiac enzyme","trop "]]},
+    {id:"mgmt",label:"Initial management (aspirin · antiplatelet · analgesia · nitrate)",w:20,safety:true,cat:"mgmt",
+     groups:[["aspirin"],["ticagrelor","clopidogrel","prasugrel","p2y12","dual antiplatelet","dapt"],["morphine","analgesi","gtn","nitrate","nitroglycer"],["oxygen if","oxygen"]]},
+    {id:"reperf",label:"Recognised need for urgent reperfusion (PCI / cath lab)",w:14,cantMiss:true,cat:"mgmt",
+     groups:[["pci","primary angioplasty","cath lab","catheter","reperfusion","thrombolysis","revascular"]]},
+    {id:"just",label:"Reasoning justified from case evidence",w:6,cat:"hist",
+     groups:[["because","given","risk factor","points to","in view of","classic","typical","diabetic"]]}
+  ],
+  cm:[{label:"Aortic dissection",keys:["dissection"]},{label:"ACS / STEMI",keys:["acute coronary","stemi"," acs","myocardial","heart attack"]},{label:"PE",keys:["pulmonary embol"," pe "]},{label:"Pericarditis",keys:["pericarditis"]}],
+  strong:"This is an acute coronary syndrome — likely a STEMI — given crushing central chest pain radiating to the arm and jaw with diaphoresis in a diabetic, hypertensive man, unrelieved by rest. I would get an immediate 12-lead ECG and send troponin. Before anything I must exclude aortic dissection as a mimic. Management: aspirin 300mg, ticagrelor, GTN and morphine for pain, oxygen only if hypoxic, and — critically — activate the cath lab for primary PCI because time is myocardium. He needs urgent reperfusion.",
+  weak:"Chest pain in an older man. Give him some antacids for reflux and paracetamol, and admit for observation overnight."
+ },
+ {
+  id:"MEN-008", system:"Infectious / Neurology", diff:"High-stakes", level:"MBBS / PG", title:"Fever, headache and a rash",
+  ol:"A drowsy student with neck stiffness and spots that don't fade under a glass.",
+  vignette:"A 19-year-old university student is brought in with a 12-hour history of fever, severe headache, photophobia and neck stiffness. She is now drowsy. There is a non-blanching petechial rash over her trunk and legs. Temperature 39.4°C, HR 118, BP 98/60.",
+  clues:[["Age/Sex","19 F"],["Onset","12 hours, rapid"],["Symptoms","Fever · headache · photophobia"],["Signs","Neck stiffness · drowsy"],["Rash","Non-blanching petechial"],["Vitals","T 39.4 · HR 118 · BP 98/60"]],
+  media:["🩸 Blood cultures","🧫 LP / CSF","🧪 FBC · CRP · lactate"],
+  rubric:[
+    {id:"dx",label:"Primary diagnosis: Bacterial (meningococcal) meningitis / septicaemia",w:22,cantMiss:true,negFlip:true,cat:"dx",
+     groups:[["bacterial meningitis","meningococc","meningitis","meningococcaemia","meningococcal sepsis"]]},
+    {id:"abx",label:"IMMEDIATE parenteral antibiotics — do not delay",w:22,cantMiss:true,cat:"mgmt",
+     groups:[["ceftriaxone","cefotaxime","benzylpenicillin","antibiotic","abx"]]},
+    {id:"nodelay",label:"Antibiotics BEFORE LP / imaging (recognised not to delay)",w:12,cantMiss:true,cat:"mgmt",
+     groups:[["do not delay","don't delay","before lp","before lumbar","without waiting","immediately","first","stat","empirical"]]},
+    {id:"sepsis",label:"Sepsis resuscitation (fluids · oxygen · lactate)",w:12,safety:true,cat:"mgmt",
+     groups:[["fluid","resuscitat","sepsis six","iv fluids","oxygen"],["lactate"],["dexamethasone","steroid"]]},
+    {id:"inv",label:"Key investigations (blood cultures · LP · FBC/CRP · PCR)",w:12,cat:"inv",
+     groups:[["blood culture"],["lumbar puncture"," lp ","csf"],["fbc","crp","full blood"],["pcr"]]},
+    {id:"ddx",label:"Considered differentials (SAH · encephalitis · viral)",w:8,safety:true,cat:"ddx",
+     groups:[["subarachnoid","sah"],["encephalitis"],["viral mening"]]},
+    {id:"pubh",label:"Public-health steps (notify · contact prophylaxis)",w:6,cat:"mgmt",
+     groups:[["notifiable","public health","notify","contact prophylaxis","chemoprophylaxis","ciprofloxacin contact"]]},
+    {id:"just",label:"Reasoning justified from case evidence",w:6,cat:"hist",
+     groups:[["because","given","non-blanching","petechial","points to","classic","in view of","time-critical"]]}
+  ],
+  cm:[{label:"Bacterial meningitis",keys:["bacterial mening","meningococc","meningitis"]},{label:"Subarachnoid haemorrhage",keys:["subarachnoid","sah"]},{label:"Encephalitis",keys:["encephalitis"]}],
+  strong:"This is bacterial — almost certainly meningococcal — meningitis with septicaemia: fever, headache, photophobia, neck stiffness, drowsiness and a non-blanching petechial rash, now hypotensive and tachycardic. This is time-critical. I would give immediate IV ceftriaxone empirically — do not delay for the LP or imaging — and add dexamethasone. Simultaneously treat sepsis: high-flow oxygen, IV fluids, check lactate, blood cultures. Investigations: blood cultures, FBC/CRP, meningococcal PCR, and a lumbar puncture for CSF once safe. It is a notifiable disease — inform public health and arrange contact chemoprophylaxis. Differentials to keep in mind are subarachnoid haemorrhage and encephalitis.",
+  weak:"Looks like a bad migraine or maybe flu. I'd give her paracetamol and fluids, arrange a CT scan and a lumbar puncture, and start antibiotics once the LP results are back."
+ }
+];
+var LOCKED = [
+  {system:"Endocrine",title:"Diabetic ketoacidosis",ol:"A vomiting teenager, breathing deeply, drowsy."},
+  {system:"General Surgery",title:"The acute abdomen",ol:"Right iliac fossa pain that started at the umbilicus."},
+  {system:"Obstetrics",title:"Collapse in early pregnancy",ol:"Shoulder-tip pain and a positive test."}
+];
+
+/* ---------------- Engine ---------------- */
+function norm(s){return " "+s.toLowerCase().replace(/[\r\n]+/g," ").replace(/[^a-z0-9%.\- ]/g," ").replace(/\s+/g," ")+" ";}
+function findSpans(raw,variants){
+  var low=norm(raw), spans=[];
+  variants.forEach(function(v){
+    var needle=v.trim(); if(!needle)return; var from=0,i;
+    while((i=low.indexOf(needle,from))!==-1){
+      var before=low.slice(Math.max(0,i-26),i);
+      var negated=NEG.some(function(n){return before.indexOf(n)!==-1;}) && !CONSIDER.some(function(c){return before.indexOf(c)!==-1;});
+      spans.push({start:i-1,len:needle.length,neg:negated}); from=i+needle.length;
     }
-    return false;
-  }
-
-  // Trust decision: when the sender is same-origin-visible (event.origin is a
-  // real origin like https://www.perplexity.ai) we trust event.origin directly.
-  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
-  // broker's stamped `parentOrigin` to identify the top window. The fallback
-  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
-  // on the response path (see postToTrustedTop) to ensure replies can't be
-  // delivered to anyone but the actual top window of that claimed origin.
-  function getTrustedParentOrigin(event) {
-    const forwardedParentOrigin =
-      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
-    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
-    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
-  }
-
-  // All responses go to window.top with targetOrigin = the allowlisted origin.
-  // An attacker that iframes us inside their own null-origin broker can claim
-  // any parentOrigin they like, but the browser will drop the reply whenever
-  // the real top's origin doesn't match — so the screenshot never leaves.
-  function postToTrustedTop(message) {
-    if (!trustedTopOrigin) return;
-    try {
-      window.top.postMessage(message, trustedTopOrigin);
-    } catch (_error) {}
-  }
-
-  function inlineAll(original, clone) {
-    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
-
-    try {
-      const computedStyle = getComputedStyle(original);
-      // cssText on a computed style is the serialized declaration in modern
-      // Chromium/Safari — a single read beats enumerating ~400 longhand
-      // properties. Firefox returns "" here, so we fall back on empty.
-      const serialized = computedStyle.cssText;
-      if (serialized) {
-        clone.style.cssText = serialized;
-      } else {
-        const parts = new Array(computedStyle.length);
-        for (let index = 0; index < computedStyle.length; index += 1) {
-          const property = computedStyle[index];
-          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
-        }
-        clone.style.cssText = parts.join("");
-      }
-    } catch (_error) {}
-
-    const originalChildren = original.children;
-    const clonedChildren = clone.children;
-    for (
-      let index = 0;
-      index < originalChildren.length && index < clonedChildren.length;
-      index += 1
-    ) {
-      inlineAll(originalChildren[index], clonedChildren[index]);
-    }
-  }
-
-  function extractFontUrl(srcValue) {
-    const matches = [
-      ...srcValue.matchAll(
-        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
-      ),
-    ];
-    if (matches.length === 0) return null;
-    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
-    if (woff2) return woff2[1];
-    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
-    if (woff) return woff[1];
-    return matches[0][1];
-  }
-
-  // Cache resolved font URL -> data URI across captures. Fonts on a page
-  // essentially never change, and a batch run emits multiple captures back to
-  // back — without this we'd refetch + re-base64 every time.
-  const fontDataUriCache = new Map();
-  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
-
-  async function fetchAsDataUri(url) {
-    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
-    let dataUri = null;
-    try {
-      const response = await fetch(url, { mode: "cors", credentials: "omit" });
-      if (response.ok) {
-        const blob = await response.blob();
-        if (blob.size <= MAX_FONT_BYTES) {
-          dataUri = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () =>
-              resolve(typeof reader.result === "string" ? reader.result : null);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
-          });
-        }
-      }
-    } catch (_error) {
-      dataUri = null;
-    }
-    fontDataUriCache.set(url, dataUri);
-    return dataUri;
-  }
-
-  function collectFontFaceRuleTexts() {
-    const rules = [];
-    for (const sheet of document.styleSheets) {
-      let cssRules;
-      try {
-        cssRules = sheet.cssRules;
-      } catch (_error) {
-        continue;
-      }
-      if (!cssRules) continue;
-      for (const rule of cssRules) {
-        const cssText = rule.cssText || "";
-        if (cssText.startsWith("@font-face")) rules.push(cssText);
-      }
-    }
-    return rules;
-  }
-
-  async function buildInlinedFontCss() {
-    const ruleTexts = collectFontFaceRuleTexts();
-    if (ruleTexts.length === 0) return null;
-
-    const resolved = ruleTexts.map((cssText) => {
-      if (!SRC_DECLARATION_RE.test(cssText)) return null;
-      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
-      if (!srcMatch) return null;
-      const url = extractFontUrl(srcMatch[1]);
-      if (!url) return null;
-      try {
-        return { cssText, url: new URL(url, document.baseURI).href };
-      } catch (_error) {
-        return null;
-      }
-    });
-
-    const dataUris = await Promise.all(
-      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
-    );
-
-    const inlined = [];
-    let totalBytes = 0;
-    for (let index = 0; index < resolved.length; index += 1) {
-      const entry = resolved[index];
-      const dataUri = dataUris[index];
-      if (!entry || !dataUri) continue;
-      const approxBytes = dataUri.length * 0.75;
-      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
-      totalBytes += approxBytes;
-      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
-    }
-    return inlined.length > 0 ? inlined.join("\n") : null;
-  }
-
-  function stripExternal(clone) {
-    const images = clone.querySelectorAll("img");
-    for (let index = 0; index < images.length; index += 1) {
-      const src = images[index].getAttribute("src");
-      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
-    }
-
-    const elements = clone.querySelectorAll("*");
-    for (let index = 0; index < elements.length; index += 1) {
-      const style = elements[index].style.cssText;
-      if (style && style.includes("url(")) {
-        elements[index].style.cssText = style.replace(
-          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
-          "none",
-        );
-      }
-    }
-  }
-
-  function emitScroll() {
-    scrollRaf = 0;
-    if (!scrollForwarding) return;
-    postToTrustedTop({
-      type: "INLINE_EDIT_SCROLL",
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-    });
-  }
-
-  window.addEventListener(
-    "scroll",
-    function () {
-      if (!scrollForwarding || scrollRaf) return;
-      scrollRaf = requestAnimationFrame(emitScroll);
-    },
-    { passive: true, capture: true },
-  );
-
-  async function handleCaptureRequest(event) {
-    const requestId = event.data.requestId;
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    function postResult(dataUrl) {
-      postToTrustedTop({
-        type: "INLINE_EDIT_SCREENSHOT_RESULT",
-        requestId,
-        dataUrl,
-        scrollX,
-        scrollY,
-      });
-    }
-
-    try {
-      // Wait for any pending web fonts to resolve so both inline metrics and
-      // the @font-face inlining below see the same loaded faces.
-      if (document.fonts && document.fonts.ready) {
-        try {
-          await document.fonts.ready;
-        } catch (_error) {}
-      }
-
-      const clone = document.documentElement.cloneNode(true);
-      inlineAll(document.documentElement, clone);
-
-      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
-      for (let index = 0; index < removedNodes.length; index += 1) {
-        removedNodes[index].remove();
-      }
-
-      stripExternal(clone);
-
-      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
-      // can resolve them — external font URLs aren't fetched during
-      // foreignObject rendering, which would otherwise force a fallback face
-      // and change text metrics.
-      const inlinedFontCss = await buildInlinedFontCss();
-      if (inlinedFontCss) {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = inlinedFontCss;
-        const head = clone.querySelector("head");
-        if (head) head.appendChild(styleEl);
-        else clone.insertBefore(styleEl, clone.firstChild);
-      }
-
-      const html = new XMLSerializer().serializeToString(clone);
-      const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
-        '<foreignObject width="100%" height="100%">' +
-        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
-        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
-        html +
-        "</div></div></foreignObject></svg>";
-      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      const image = new Image();
-      image.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d").drawImage(image, 0, 0);
-        postResult(canvas.toDataURL("image/png"));
-      };
-      image.onerror = function () {
-        postResult(null);
-      };
-      image.src = svgUrl;
-    } catch (_error) {
-      postResult(null);
-    }
-  }
-
-  window.addEventListener("message", function (event) {
-    if (!event.data) return;
-    // Only accept messages from the direct parent frame. Blocks sibling /
-    // unrelated-window postMessage senders that could otherwise reach us.
-    if (event.source !== window.parent) return;
-
-    const trustedParentOrigin = getTrustedParentOrigin(event);
-    if (!trustedParentOrigin) return;
-    trustedTopOrigin = trustedParentOrigin;
-
-    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
-      scrollForwarding = true;
-      emitScroll();
-      return;
-    }
-
-    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
-      scrollForwarding = false;
-      if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      scrollRaf = 0;
-      return;
-    }
-
-    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
-
-    handleCaptureRequest(event);
   });
-})();
+  return spans;
+}
+function gradeAnswer(cs,answer){
+  var criteria=cs.rubric.map(function(c){
+    var groupsHit=0, spans=[], anyPos=false, allNeg=true;
+    c.groups.forEach(function(g){
+      var s=findSpans(answer,g);
+      if(s.length){ var pos=s.some(function(x){return !x.neg;});
+        if(c.negFlip){ if(pos){groupsHit++;anyPos=true;allNeg=false;} }
+        else { groupsHit++; if(pos)allNeg=false; }
+        spans=spans.concat(s.map(function(x){return Object.assign({cat:c.cat},x);}));
+      }
+    });
+    var frac=groupsHit/c.groups.length;
+    if(c.negFlip && !anyPos) frac=0;
+    var earned=Math.round(c.w*frac);
+    var conf = frac===0?0 : Math.min(99, 60+Math.round(frac*35)+(spans.length>1?4:0));
+    return Object.assign({},c,{frac:frac,earned:earned,hit:frac>0,partial:frac>0&&frac<1,spans:spans,conf:conf});
+  });
+  var total=criteria.reduce(function(s,c){return s+c.earned;},0);
+  var max=cs.rubric.reduce(function(s,c){return s+c.w;},0);
+  var pct=Math.round(total/max*100);
+  function get(id){return criteria.filter(function(c){return c.id===id;})[0];}
 
+  var dxC=criteria.find(function(c){return c.cat==="dx";});
+  var diagnostic=dxC?Math.round(dxC.frac*100):0;
+  var ddxHit=criteria.filter(function(c){return c.cat==="ddx";}).some(function(c){return c.hit;});
+  var justHit=!!(get("just")&&get("just").hit);
+  var reasoning=Math.round((ddxHit?60:0)+(justHit?40:0));
+  var safeCrit=criteria.filter(function(c){return c.safety;});
+  var safety=safeCrit.length?Math.round(safeCrit.reduce(function(s,c){return s+c.frac;},0)/safeCrit.length*100):0;
+  var coverage=Math.round(criteria.filter(function(c){return c.hit;}).length/criteria.length*100);
+  var at=norm(answer);
+  var clueHits=cs.clues.filter(function(cl){ var t=(cl[1]||"").toLowerCase().split(/[^a-z]+/).filter(function(w){return w.length>3;});
+    return t.some(function(w){return at.indexOf(w)!==-1;}); }).length;
+  var dataGather=Math.round(Math.min(1,clueHits/Math.max(3,cs.clues.length-2))*100);
 
-</script></body>
+  var metrics=[
+    {k:"Diagnostic Accuracy",s:"Diagnostic",v:diagnostic,plain:"Did you reach the main diagnosis?"},
+    {k:"Clinical Reasoning Path",s:"Reasoning",v:reasoning,plain:"Dangerous diagnoses first, and justified?"},
+    {k:"Safety",s:"Safety",v:safety,plain:"Was the plan safe & time-appropriate?"},
+    {k:"Data-Gathering",s:"Data",v:dataGather,plain:"Did you use the clues in the case?"},
+    {k:"Knowledge Coverage",s:"Coverage",v:coverage,plain:"How much of the rubric did you cover?"}
+  ];
+  var low=norm(answer);
+  var path=cs.cm.map(function(p){var idx=Math.min.apply(null,p.keys.map(function(k){var i=low.indexOf(k);return i<0?1e9:i;}));return {label:p.label,cm:true,idx:idx};})
+    .filter(function(p){return p.idx<1e9;}).sort(function(a,b){return a.idx-b.idx;});
+  var missed=criteria.filter(function(c){return !c.hit;});
+  return {criteria:criteria,pct:pct,metrics:metrics,path:path,missed:missed,get:get};
+}
+function verdictOf(p){ if(p>=75)return{t:"Strong clinical reasoning",c:"var(--good)",bg:"var(--good-s)"}; if(p>=50)return{t:"Passing — with gaps",c:"var(--warn)",bg:"var(--warn-s)"}; return{t:"Unsafe — major gaps",c:"var(--bad)",bg:"var(--bad-s)"};}
+function barColor(v){return v>=70?"var(--good)":v>=40?"var(--warn)":"var(--bad)";}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* highlight evidence: rebuild answer with <mark> around matched spans (positions from norm()) */
+function highlight(cs,answer,criteria){
+  var low=norm(answer);
+  var isW=function(ch){return ch && /[a-z0-9\-]/.test(ch);};
+  var spans=[];
+  criteria.forEach(function(c){c.spans.forEach(function(s){
+    var start=s.start, end=s.start+s.len;
+    while(start>0 && isW(low[start-1])) start--;      // expand left to word boundary
+    while(end<low.length && isW(low[end])) end++;     // expand right to word boundary
+    spans.push({start:start,end:end,cat:s.cat,neg:s.neg});
+  });});
+  spans.sort(function(a,b){return a.start-b.start||b.end-a.end;});
+  var out="",cur=0;
+  spans.forEach(function(s){ if(s.start<cur)return; out+=esc(low.slice(cur,s.start));
+    out+='<mark class="'+s.cat+(s.neg?' neg':'')+'">'+esc(low.slice(s.start,s.end))+'</mark>'; cur=s.end; });
+  out+=esc(low.slice(cur));
+  return out.trim();
+}
+
+/* ---------------- Synthetic cohort (seeded, deterministic) ---------------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function cohort(cs){
+  var rnd=mulberry(cs.id.length*7919+cs.rubric.length*104729);
+  var N=28, scores=[], missTally=cs.rubric.map(function(){return 0;});
+  for(var i=0;i<N;i++){
+    // build a synthetic answer by including each criterion's first variant with prob tied to its difficulty
+    var parts=[];
+    cs.rubric.forEach(function(c,ci){
+      var pInclude = c.cantMiss?0.62 : c.gap?0.45 : 0.72; // can't-miss & history are missed more often
+      if(rnd()<pInclude){ parts.push(c.groups[0][0]); } else { missTally[ci]++; }
+    });
+    var ans=parts.join(" ");
+    var g=gradeAnswer(cs,ans); scores.push(g.pct);
+  }
+  var buckets=[0,0,0,0,0]; scores.forEach(function(s){buckets[Math.min(4,Math.floor(s/20))]++;});
+  var mean=Math.round(scores.reduce(function(a,b){return a+b;},0)/N);
+  var pass=Math.round(scores.filter(function(s){return s>=50;}).length/N*100);
+  var miss=cs.rubric.map(function(c,i){return {label:c.label,rate:Math.round(missTally[i]/N*100),cantMiss:c.cantMiss};})
+    .sort(function(a,b){return b.rate-a.rate;});
+  return {N:N,mean:mean,pass:pass,buckets:buckets,miss:miss};
+}
+
+/* ---------------- Radar ---------------- */
+function radar(metrics){
+  var cx=115,cy=115,R=86,n=metrics.length;
+  function pt(i,r){var a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+  var rings=[.25,.5,.75,1].map(function(r){return '<polygon points="'+metrics.map(function(m,i){return pt(i,R*r).join(",");}).join(" ")+'" fill="none" stroke="#cdcabf" stroke-width="1"/>';}).join("");
+  var spokes=metrics.map(function(m,i){var p=pt(i,R);return '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#cdcabf" stroke-width="1"/>';}).join("");
+  var poly='<polygon points="'+metrics.map(function(m,i){return pt(i,R*m.v/100).join(",");}).join(" ")+'" fill="rgba(222,107,31,.14)" stroke="#DE6B1F" stroke-width="2"/>';
+  var dots=metrics.map(function(m,i){var p=pt(i,R*m.v/100);return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.1" fill="#DE6B1F"/>';}).join("");
+  var labels=metrics.map(function(m,i){var p=pt(i,R+15);return '<text x="'+p[0]+'" y="'+p[1]+'" fill="#8a8578" font-size="9.5" font-family="ui-sans-serif,Arial,sans-serif" text-anchor="middle" dominant-baseline="middle">'+esc(m.s)+'</text>';}).join("");
+  return '<svg viewBox="-22 0 274 230" width="100%" style="max-width:290px;display:block;margin:2px auto 0">'+rings+spokes+poly+dots+labels+'</svg>';
+}
+
+/* ================= App state & router ================= */
+var S={screen:"login",role:"student",user:null,caseId:null,answer:"",data:null,layer:0,
+  history:JSON.parse('{}')}; // history: {caseId: [pct,...]}
+var app=document.getElementById("app");
+function go(scr){S.screen=scr;draw();window.scrollTo(0,0);}
+
+var LAYERS=[
+  ["Layer A · Normalise","Mapping terms & abbreviations to standard concepts (“lung clot” → pulmonary embolism)"],
+  ["Layer B · Semantic match","Comparing meaning to the model answer — negation-aware, synonym-aware"],
+  ["Layer C · Rubric reasoning","Scoring each criterion, weighing the reasoning path & confidence"],
+  ["Layer D · Safety & audit","Validating the grade, flagging gamed / injected text for human review"]
+];
+
+/* ---------- shared chrome ---------- */
+function bar(active){
+  var studentNav='<a data-go="library" class="'+(active==="library"||active==="case"||active==="result"?"on":"")+'">Cases</a>'
+    +'<a data-go="progress" class="'+(active==="progress"?"on":"")+'">My progress</a>';
+  var facultyNav='<a data-go="cohort" class="'+(active==="cohort"?"on":"")+'">Cohort</a>'
+    +'<a data-go="library" class="'+(active==="library"||active==="case"?"on":"")+'">Cases</a>';
+  var initials=S.user?S.user.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase():"–";
+  return '<div class="appbar"><a class="brandmark" data-go="'+(S.role==="faculty"?"cohort":"library")+'">'
+    +'<div class="mono-logo">FT</div><div class="wordmark">Follow the Tracks<small>Clinical Reasoning</small></div></a>'
+    +'<div class="nav">'+(S.role==="faculty"?facultyNav:studentNav)+'</div>'
+    +'<div class="spacer"></div>'
+    +'<div class="userchip"><span class="rolebadge">'+esc(S.role)+'</span><div class="avatar">'+esc(initials)+'</div>'
+    +'<span>'+esc(S.user||"")+'</span><button class="linkbtn" data-go="logout">Sign out</button></div></div>';
+}
+
+/* ================= Screens ================= */
+function draw(){
+  var h="";
+  if(S.screen==="login"){ h=loginView(); app.innerHTML=h; wire(); return; }
+  h+=bar(S.screen);
+  if(S.screen==="library") h+=libraryView();
+  else if(S.screen==="case"||S.screen==="grading") h+=caseView();
+  else if(S.screen==="result") h+=resultView();
+  else if(S.screen==="progress") h+=progressView();
+  else if(S.screen==="cohort") h+=cohortView();
+  h+='<div class="footer">Follow the Tracks — proof of concept · clinical reasoning graded on meaning, not multiple choice.<br>Grading is an in-browser NLP stand-in for the production LLM + embeddings examiner.</div>';
+  app.innerHTML=h; wire();
+}
+
+function loginView(){
+  return '<div class="loginwrap"><div class="logincard">'
+    +'<div class="lg"><div class="mono-logo">FT</div><div class="wordmark" style="font-size:18px">Follow the Tracks<small>Clinical Reasoning Simulator</small></div></div>'
+    +'<div style="font-size:13px;color:var(--ink2);margin-bottom:6px">Sign in to your college workspace</div>'
+    +'<div class="field"><label>Institution email</label><input id="email" value="s.rao@med.example.edu"/></div>'
+    +'<div class="field"><label>Password</label><input type="password" value="••••••••"/></div>'
+    +'<div class="field"><label>Sign in as</label><div class="roletoggle">'
+    +'<button data-role="student" class="'+(S.role==="student"?"on":"")+'">Student</button>'
+    +'<button data-role="faculty" class="'+(S.role==="faculty"?"on":"")+'">Faculty</button></div></div>'
+    +'<button class="btn primary block" id="signin" style="margin-top:16px">Continue →</button>'
+    +'<div class="small" style="text-align:center;margin-top:14px">Demo · single sign-on mocked. No real credentials used.</div>'
+    +'</div></div>';
+}
+
+function libraryView(){
+  var cards=CASES.map(function(cs){
+    var hist=S.history[cs.id], done=hist&&hist.length;
+    return '<div class="casecard live" data-case="'+cs.id+'">'
+      +'<div class="sys">'+esc(cs.system)+'</div><h3>'+esc(cs.title)+'</h3>'
+      +'<div class="ol">'+esc(cs.ol)+'</div>'
+      +'<div class="meta"><span class="dchip">'+esc(cs.diff)+'</span><span class="mono">'+esc(cs.id)+'</span>'
+      +(done?'<span class="spacer"></span><span class="status-done">✓ best '+Math.max.apply(null,hist)+'%</span>':'<span class="spacer"></span><span>Not attempted</span>')
+      +'</div></div>';
+  }).join("");
+  var locked=LOCKED.map(function(l){return '<div class="casecard locked"><div class="sys">'+esc(l.system)+'</div><h3>'+esc(l.title)+'</h3><div class="ol">'+esc(l.ol)+'</div><div class="meta"><span class="dchip">Locked</span><span class="spacer"></span><span>Coming soon</span></div></div>';}).join("");
+  return '<div class="wrapn"><div class="crumbs">Cases</div><h1 class="pagetitle">Case library</h1>'
+    +'<p class="pagesub">Free-text clinical reasoning cases. No multiple choice — you write the note, the engine grades the meaning.</p>'
+    +'<div class="libgrid">'+cards+locked+'</div></div>';
+}
+
+function caseView(){
+  var cs=CASES.find(function(c){return c.id===S.caseId;});
+  var h='<div class="wrapn"><div class="crumbs"><a data-go="library">Cases</a> › '+esc(cs.title)+'</div>';
+  h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">'
+    +'<h2>'+esc(cs.title)+'</h2><span class="small mono">'+esc(cs.id)+' · '+esc(cs.level)+'</span></div>'
+    +'<div class="vignette">'+esc(cs.vignette)+'</div>'
+    +'<div class="chips">'+cs.clues.map(function(c){return '<span class="chip"><b>'+esc(c[0])+'</b>'+esc(c[1])+'</span>';}).join("")+'</div>'
+    +'<div class="media">'+cs.media.map(function(m){var p=m.split(" ");return '<div class="m"><span class="ico">'+p[0]+'</span>'+esc(p.slice(1).join(" "))+'<br><span class="small">(attached)</span></div>';}).join("")+'</div>'
+    +'<h3>Your answer — the blank box</h3>'
+    +'<div class="q">As the attending clinician, write your differential (most dangerous first), investigations and initial management. Reason it out — there are no options.</div>'
+    +'<textarea id="ans" '+(S.screen==="grading"?"disabled":"")+' placeholder="My leading diagnosis is… because… I would exclude… I would investigate with… and start…">'+esc(S.answer)+'</textarea>';
+  if(S.screen==="case"){
+    h+='<div class="row"><button class="btn primary" id="submit" '+(S.answer.trim().length<8?"disabled":"")+'>Submit for grading →</button>'
+      +'<button class="btn ghost" id="loadStrong">Load model answer</button>'
+      +'<button class="btn ghost" id="loadWeak">Load a weak answer</button>'
+      +(S.answer?'<button class="btn ghost" id="clear">Clear</button>':'')+'</div>'
+      +'<div class="hint">Type freely — the engine handles synonyms, abbreviations and negation. Try "excluded a dissection" or "lung clot".</div>';
+  } else {
+    h+='<div style="margin-top:18px">'+LAYERS.map(function(L,i){var cls=i<S.layer?"ok":(i===S.layer?"on":"");var tk=i<S.layer?"✓":(i===S.layer?'<div class="spin"></div>':(i+1));
+      return '<div class="layer '+cls+'"><div class="tick">'+tk+'</div><div><div class="t">'+esc(L[0])+'</div><div class="d">'+esc(L[1])+'</div></div></div>';}).join("")+'</div>';
+  }
+  h+='</div></div>'; return h;
+}
+
+function resultView(){
+  var cs=CASES.find(function(c){return c.id===S.caseId;}); var g=S.data; var v=verdictOf(g.pct);
+  var h='<div class="wrapn"><div class="crumbs"><a data-go="library">Cases</a> › <a data-go="case">'+esc(cs.title)+'</a> › Result</div>';
+  // score
+  h+='<div class="card"><div class="scorehead"><div class="bigscore" style="color:var(--ink)">'+g.pct+'%</div>'
+    +'<div><span class="verdict" style="color:'+v.c+';background:'+v.bg+'">'+v.t+'</span>'
+    +'<div class="small" style="margin-top:6px">Weighted rubric score for '+esc(cs.id)+' — every point is explainable below.</div></div>'
+    +'<div class="spacer"></div><div class="row" style="margin:0"><button class="btn ghost" id="retry">↺ Try again</button><button class="btn" data-go="library">All cases</button></div></div></div>';
+  // metrics + criteria
+  h+='<div class="grid2">';
+  h+='<div class="card"><h2>Cognitive Process Metrics</h2><div class="small">How you think — not just what you scored.</div>'+radar(g.metrics)
+    +g.metrics.map(function(m){return '<div class="metric"><div class="top"><b>'+esc(m.k)+'</b><span style="color:var(--muted)">'+m.v+'%</span></div><div class="bar"><i style="width:'+m.v+'%;background:var(--accent)"></i></div><div class="small" style="margin-top:3px">'+esc(m.plain)+'</div></div>';}).join("")+'</div>';
+  h+='<div class="card"><h2>How the engine read your answer</h2><div class="small">Meaning-matched against the faculty rubric — negation-aware, with a confidence per criterion.</div><div style="margin-top:10px">'
+    +g.criteria.map(function(c){var dc=c.frac>=1?"g":(c.frac>0?"p":"r");var ic=c.frac>=1?"✓":(c.frac>0?"~":"✕");
+      var tags=(c.cantMiss?'<span class="tag safety">can\'t-miss</span>':'')+(c.safety?'<span class="tag safety">safety</span>':'')+(c.partial?'<span class="tag part">partial</span>':'')+(!c.hit?'<span class="tag miss">missed</span>':'');
+      var cw=c.hit?('recognised '+(c.spans.filter(function(s){return !s.neg;}).length)+' concept(s) · <span class="conf">confidence '+c.conf+'%</span>'):'no matching concept found';
+      return '<div class="crit"><div class="dot '+dc+'">'+ic+'</div><div style="flex:1"><div>'+esc(c.label)+tags+'</div><div class="cw">'+c.earned+'/'+c.w+' pts · '+cw+'</div></div></div>';}).join("")
+    +'</div><h3>Reasoning path (order you raised the dangers)</h3>'
+    +(g.path.length?'<div class="path">'+g.path.map(function(p,i){return '<span class="pnode '+(p.cm?"cm":"")+'">'+esc(p.label)+(p.cm?" ⚠":"")+'</span>'+(i<g.path.length-1?'<span class="parrow">→</span>':'');}).join("")+'</div>':'<div class="small">No differential diagnoses detected in your answer.</div>')
+    +'<div class="small" style="margin-top:6px">⚠ = a can\'t-miss diagnosis. Good clinicians surface these first.</div></div>';
+  h+='</div>';
+  // evidence highlight
+  h+='<div class="card"><h2>Evidence — what the engine understood</h2><div class="small">Your own words, colour-coded by the concept each phrase mapped to. Struck-through = detected as negated / excluded.</div>'
+    +'<div class="evidence" style="margin-top:10px">'+highlight(cs,S.answer,g.criteria)+'</div>'
+    +'<div class="legend"><span><i class="lgdot" style="background:#DE6B1F"></i>Diagnosis</span><span><i class="lgdot" style="background:#4f6472"></i>Differential</span><span><i class="lgdot" style="background:#3d6a8a"></i>Investigation</span><span><i class="lgdot" style="background:#3B7A57"></i>Management</span><span><i class="lgdot" style="background:#8a8578"></i>History</span></div></div>';
+  // feedback
+  var wins=g.criteria.filter(function(c){return c.hit;});
+  var winText=wins.length?("You covered "+wins.slice(0,3).map(function(c){return c.label.split(":")[0].toLowerCase();}).join(", ")+(g.metrics[0].v>=100?" and reached the correct primary diagnosis.":".")):"Very little was recognised — but that is exactly what this simulator is for.";
+  var gapText=g.missed.length?(g.missed.map(function(c){return c.label.split(":")[0];}).join("; ")+"."):"Nothing significant — a thorough, safe work-up.";
+  var cantMissMissed=g.missed.filter(function(c){return c.cantMiss;});
+  if(cantMissMissed.length) gapText+=" ⚠ You missed a CAN'T-MISS step: "+cantMissMissed.map(function(c){return c.label.split(":")[0];}).join("; ")+".";
+  var socText=(g.metrics[0].v>=100)?"You reached the diagnosis — but what was the first thing that could have killed this patient in the next hour, and did you exclude it before you settled?":"Look again at the clues you were given: which single diagnosis ties every one of them together?";
+  h+='<div class="card"><h2>Feedback — explained simply</h2><div class="narr" style="margin-top:10px">'
+    +'<div class="blk win"><b>What you did well</b>'+esc(winText)+'</div>'
+    +'<div class="blk gap"><b>What you missed</b>'+esc(gapText)+'</div>'
+    +'<div class="blk soc"><b>One question to sharpen your thinking</b>'+esc(socText)+'</div></div>'
+    +'<div class="disclaimer"><b>How this was graded:</b> an in-browser concept + negation engine standing in for the production LLM examiner. It generalises to free text you type, but a deployed system uses an LLM with embeddings behind this same rubric, plus human review for appeals.</div></div>';
+  h+='</div>'; return h;
+}
+
+function progressView(){
+  var attempts=Object.keys(S.history).reduce(function(a,k){return a+S.history[k].length;},0);
+  var all=[]; Object.keys(S.history).forEach(function(k){S.history[k].forEach(function(p){all.push(p);});});
+  var avg=all.length?Math.round(all.reduce(function(a,b){return a+b;},0)/all.length):0;
+  var best=all.length?Math.max.apply(null,all):0;
+  var h='<div class="wrapn"><div class="crumbs">My progress</div><h1 class="pagetitle">My progress</h1><p class="pagesub">Your clinical-reasoning trend across attempts.</p>';
+  h+='<div class="tiles"><div class="tile"><div class="v">'+attempts+'</div><div class="k">Attempts</div></div>'
+    +'<div class="tile"><div class="v">'+avg+'%</div><div class="k">Average</div></div>'
+    +'<div class="tile"><div class="v">'+best+'%</div><div class="k">Best</div></div>'
+    +'<div class="tile"><div class="v">'+Object.keys(S.history).length+'/'+CASES.length+'</div><div class="k">Cases done</div></div></div>';
+  if(!attempts){ h+='<div class="card" style="margin-top:16px"><div class="small">No attempts yet. <a data-go="library" style="color:var(--accent)">Start a case →</a></div></div>'; }
+  else {
+    h+='<div class="card" style="margin-top:16px"><h2>By case</h2>'+Object.keys(S.history).map(function(k){var cs=CASES.find(function(c){return c.id===k;});var arr=S.history[k];var mx=Math.max.apply(null,arr);
+      return '<div class="progressrow"><div style="flex:1"><b style="font-family:var(--serif)">'+esc(cs.title)+'</b><div class="small mono">'+esc(k)+' · '+arr.length+' attempt(s)</div></div>'
+      +'<div class="spark">'+arr.map(function(p){return '<i style="height:'+Math.max(4,p/100*34)+'px;background:'+barColor(p)+'"></i>';}).join("")+'</div>'
+      +'<div style="flex:0 0 60px;text-align:right;font-family:var(--serif);font-size:20px;font-weight:700;color:'+barColor(mx)+'">'+mx+'%</div></div>';}).join("")+'</div>';
+  }
+  h+='</div>'; return h;
+}
+
+function cohortView(){
+  var cs=CASES.find(function(c){return c.id===(S.caseId||CASES[0].id);}); var co=cohort(cs);
+  var options=CASES.map(function(c){return '<button class="btn '+(c.id===cs.id?"":"ghost")+'" data-cohort="'+c.id+'" style="padding:7px 12px;font-size:12.5px">'+esc(c.title)+'</button>';}).join(" ");
+  var maxb=Math.max.apply(null,co.buckets);
+  var histo='<div class="histo">'+co.buckets.map(function(b,i){var hh=maxb?Math.round(b/maxb*100):0;return '<div class="col"><div class="cl" style="margin-bottom:3px;color:var(--ink2)">'+b+'</div><i style="height:'+hh+'%"></i><div class="cl">'+(i*20)+'–'+(i*20+19)+'</div></div>';}).join("")+'</div>';
+  var missBars=co.miss.slice(0,6).map(function(m){return '<div class="hbar"><div class="lbl">'+esc(m.label.split(":")[0])+(m.cantMiss?' <span class="tag safety">can\'t-miss</span>':'')+'</div><div class="track"><i style="width:'+m.rate+'%"></i></div><div class="num">'+m.rate+'%</div></div>';}).join("");
+  var h='<div class="wrapn"><div class="crumbs">Cohort analytics</div><h1 class="pagetitle">Cohort analytics</h1>'
+    +'<p class="pagesub">Aggregate reasoning performance across the batch — where the whole cohort is weak, not just individuals.</p>'
+    +'<div class="row" style="margin:0 0 16px">'+options+'</div>';
+  h+='<div class="tiles"><div class="tile"><div class="v">'+co.N+'</div><div class="k">Students</div></div>'
+    +'<div class="tile"><div class="v">'+co.mean+'%</div><div class="k">Mean score</div></div>'
+    +'<div class="tile"><div class="v">'+co.pass+'%</div><div class="k">Pass rate</div></div>'
+    +'<div class="tile"><div class="v">'+co.miss[0].rate+'%</div><div class="k">Top miss rate</div></div></div>';
+  h+='<div class="grid2" style="margin-top:16px">'
+    +'<div class="card"><h2>Most-missed criteria</h2><div class="small">Share of the cohort who failed each rubric point — the teaching targets.</div><div style="margin-top:12px">'+missBars+'</div></div>'
+    +'<div class="card"><h2>Score distribution</h2><div class="small">Number of students in each 20-point band for '+esc(cs.title)+'.</div>'+histo+'</div>';
+  h+='</div>';
+  h+='<div class="card"><h2>Criterion difficulty ('+esc(cs.title)+')</h2><table class="data"><thead><tr><th>Rubric criterion</th><th>Weight</th><th>Miss rate</th><th>Flag</th></tr></thead><tbody>'
+    +co.miss.map(function(m){var c=cs.rubric.find(function(x){return x.label===m.label;});return '<tr><td>'+esc(m.label)+'</td><td class="mono">'+c.w+'</td><td class="mono" style="color:'+(m.rate>50?'var(--bad)':'var(--ink2)')+'">'+m.rate+'%</td><td>'+(m.cantMiss?'<span class="tag safety">can\'t-miss</span>':(c.safety?'<span class="tag safety">safety</span>':'—'))+'</td></tr>';}).join("")
+    +'</tbody></table><div class="disclaimer" style="margin-top:14px">Cohort figures are generated by running '+co.N+' synthetic student answers of varied quality through the same grading engine — illustrating the analytics faculty would see from real submissions.</div></div>';
+  h+='</div>'; return h;
+}
+
+/* ================= Events ================= */
+function wire(){
+  document.querySelectorAll("[data-go]").forEach(function(el){el.addEventListener("click",function(){
+    var d=el.getAttribute("data-go");
+    if(d==="logout"){S.user=null;S.screen="login";draw();return;}
+    if(d==="case"){go("case");return;}
+    go(d);
+  });});
+  // login
+  document.querySelectorAll("[data-role]").forEach(function(b){b.addEventListener("click",function(){S.role=b.getAttribute("data-role");draw();});});
+  bind("signin",function(){var e=document.getElementById("email");S.user=S.role==="faculty"?"Dr. A. Menon":"S. Rao";S.screen=(S.role==="faculty"?"cohort":"library");draw();window.scrollTo(0,0);});
+  // library
+  document.querySelectorAll("[data-case]").forEach(function(el){el.addEventListener("click",function(){S.caseId=el.getAttribute("data-case");S.answer="";S.data=null;go("case");});});
+  // cohort switch
+  document.querySelectorAll("[data-cohort]").forEach(function(el){el.addEventListener("click",function(){S.caseId=el.getAttribute("data-cohort");draw();});});
+  // case
+  var ta=document.getElementById("ans");
+  if(ta) ta.addEventListener("input",function(e){S.answer=e.target.value;var s=document.getElementById("submit");if(s)s.disabled=S.answer.trim().length<8;});
+  var cs=CASES.find(function(c){return c.id===S.caseId;});
+  bind("loadStrong",function(){S.answer=cs.strong;draw();});
+  bind("loadWeak",function(){S.answer=cs.weak;draw();});
+  bind("clear",function(){S.answer="";draw();});
+  bind("submit",runGrade);
+  bind("retry",function(){S.screen="case";S.answer="";S.data=null;S.layer=0;draw();window.scrollTo(0,0);});
+}
+function bind(id,fn){var el=document.getElementById(id);if(el)el.addEventListener("click",fn);}
+
+function runGrade(){
+  var cs=CASES.find(function(c){return c.id===S.caseId;});
+  S.screen="grading";S.layer=0;draw();
+  var g=gradeAnswer(cs,S.answer);var i=0;
+  function tick(){i++;S.layer=i;draw();
+    if(i<LAYERS.length){setTimeout(tick,620);}
+    else{setTimeout(function(){S.data=g;(S.history[cs.id]=S.history[cs.id]||[]).push(g.pct);S.screen="result";draw();window.scrollTo(0,0);},680);}}
+  setTimeout(tick,480);
+}
+
+/* expose for tests */
+window.__grade=function(id,ans){return gradeAnswer(CASES.find(function(c){return c.id===id;}),ans);};
+window.__cases=CASES;
+
+draw();
+</script>
+</body>
 </html>
