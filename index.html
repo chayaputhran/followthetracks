@@ -652,297 +652,6 @@ function gradeReply(caseObj,concepts,text){var an=analyseStage(caseObj,text);ret
 var BEDBASE={accuracyMax:12,simplicityMax:8,weight:20};
 var CASES=[
 {
- id:"PE-014",title:"Breathless after a plaster cast",specialty:"Internal Medicine",difficulty:"Moderate",minutes:15,
- oneLiner:"An autorickshaw driver from Kolhapur, six days after a leg cast, now breathless and hypoxic.",
- competency:{code:"IM 2.15",text:"Generate a differential for acute breathlessness"},
- target:"pe",
- concepts:[
-  {id:"pe",label:"Pulmonary embolism",cat:"dx",formal:["pulmonary embolism","pulmonary embolus","pulmonary thromboembolism","pe","pte","thromboembolism","embolus"],
-   synonyms:["pulmonary embolism","pulmonary embolus","pulmonary thromboembolism","pe","pte","lung clot","clot in lung","clot in the lung","blood clot in the lung","clot in the lungs","clot to the lung","clot travelled to lung","clot travelled to your lung","clot in your lung","blood clot in your lung","embolus in lung","thromboembolism"]},
-  {id:"dissection",label:"Aortic dissection",cat:"dx",synonyms:["aortic dissection","dissection","dissecting aneurysm","torn aorta","aortic tear"]},
-  {id:"acs",label:"Acute coronary syndrome",cat:"dx",synonyms:["acute coronary syndrome","acs","myocardial infarction","heart attack","cardiac event","mi","angina","ischaemic heart disease"]},
-  {id:"pneumothorax",label:"Pneumothorax",cat:"dx",synonyms:["pneumothorax","collapsed lung","lung collapse","air in the chest","ptx"]},
-  {id:"pneumonia",label:"Pneumonia / pleurisy",cat:"dx",synonyms:["pneumonia","chest infection","lung infection","pleurisy","pleuritis"]},
-  {id:"wells",label:"Wells score / pre-test probability",cat:"test",synonyms:["wells score","wells","pre-test probability","pretest probability","risk stratification","geneva score"]},
-  {id:"ddimer",label:"D-dimer",cat:"test",synonyms:["d-dimer","d dimer","ddimer"]},
-  {id:"ctpa",label:"CT pulmonary angiography",cat:"test",synonyms:["ctpa","ct pulmonary angiography","ct pulmonary angiogram","ct angiogram","ct angio","ct chest","spiral ct"]},
-  {id:"ecg",label:"ECG",cat:"test",synonyms:["ecg","ekg","electrocardiogram","electrocardiograph"]},
-  {id:"cxr",label:"Chest X-ray",cat:"test",synonyms:["chest x-ray","chest xray","cxr","chest radiograph"]},
-  {id:"abg",label:"Arterial blood gas",cat:"test",synonyms:["abg","arterial blood gas","blood gas"]},
-  {id:"troponin",label:"Troponin",cat:"test",synonyms:["troponin","trop","cardiac enzymes"]},
-  {id:"oxygen",label:"Supplemental oxygen",cat:"rx",synonyms:["oxygen","o2","supplemental oxygen","high flow oxygen","oxygen therapy"]},
-  {id:"anticoag",label:"Anticoagulation",cat:"rx",formal:["anticoagulation","anticoagulant","heparin","lmwh","enoxaparin"],
-   synonyms:["anticoagulation","anticoagulant","heparin","lmwh","enoxaparin","low molecular weight heparin","blood thinner","blood thinning medicine","blood thinning tablets","medicine that thins the blood","medicine to thin the blood","doac","apixaban","rivaroxaban"]},
-  {id:"analgesia",label:"Analgesia",cat:"rx",synonyms:["analgesia","analgesic","pain relief","painkiller","paracetamol"]},
-  {id:"nsaid_avoid",label:"Avoid NSAIDs",cat:"rx",synonyms:["avoid nsaids","avoid nsaid","no nsaids","avoid ibuprofen","avoid diclofenac","hold nsaids"]},
-  {id:"immobility",label:"Immobility / plaster cast",cat:"track",synonyms:["immobility","immobile","immobilisation","plaster cast","plaster","cast","bed rest","not walking","could not move","cannot move about","leg was in a cast","leg in a cast","not moving"]},
-  {id:"smoking",label:"Smoking",cat:"track",synonyms:["smoking","smoker","bidis","bidi","cigarettes","tobacco"]},
-  {id:"hypoxia",label:"Hypoxia",cat:"track",synonyms:["hypoxia","hypoxic","low oxygen","low saturation","desaturation","spo2 low"]},
-  {id:"tachycardia",label:"Tachycardia",cat:"track",synonyms:["tachycardia","fast heart","racing heart","heart racing","fast pulse","raised heart rate"]},
-  {id:"dvt_sign",label:"DVT / calf source",cat:"track",synonyms:["dvt","deep vein thrombosis","leg clot","calf clot","calf swelling","swollen calf","clot in the leg","clot in your leg","leg vein clot"]},
-  {id:"worsening_sob",label:"Worsening breathlessness",cat:"sign",synonyms:["breathing gets worse","more breathless","worsening breathlessness","harder to breathe","cannot breathe","short of breath at rest"]},
-  {id:"syncope",label:"Fainting / collapse",cat:"sign",synonyms:["faint","fainting","feel faint","collapse","pass out","black out","dizzy and fall"]},
-  {id:"haemoptysis",label:"Coughing up blood",cat:"sign",synonyms:["cough up blood","coughing up blood","blood in cough","spit blood","haemoptysis"]}
- ],
- tracks:[
-  {label:"Recent",value:"Below-knee plaster cast, resting at home",conceptId:"immobility"},
-  {label:"Habit",value:"15 bidis a day for 20 years",conceptId:"smoking"},
-  {label:"Vitals",value:"SpO2 89% on room air",conceptId:"hypoxia"},
-  {label:"Vitals",value:"Pulse 118, heart racing",conceptId:"tachycardia"}
- ],
- stages:[
-  {id:"patient",title:"The patient",kicker:"History and vitals only. No labs yet — just the patient in front of you.",
-   reveal:{history:"Mr. Ramesh Naik, 45, an autorickshaw driver from Kolhapur, comes to casualty at 2 PM with sudden right-sided chest pain and breathlessness for three hours. The pain is sharp, worse on deep breaths and coughing, and does not radiate. He feels his heart racing. He denies fever or coughing up blood.\n\nTwo weeks ago he fractured his right ankle and has been in a below-knee plaster cast, mostly resting at home. He has smoked about 15 bidis a day for 20 years. No diabetes or hypertension, no prior heart or lung disease.",
-     vitals:[{label:"Temp",value:"37.1 C"},{label:"Pulse",value:"118/min"},{label:"BP",value:"108/72"},{label:"Resp rate",value:"28/min"},{label:"SpO2",value:"89% RA"},{label:"GCS",value:"15/15"}]},
-   prompt:"List your differential diagnoses in order of priority, each with a reason. Put the diagnoses you cannot afford to miss first.",
-   placeholder:"1. ... — because ...\n2. ... — because ..."},
-  {id:"workup",title:"Your workup",kicker:"Examination findings are back. Plan your tests.",
-   reveal:{exam:"Anxious, mildly tachypnoeic, using accessory muscles. Chest clear, equal air entry, trachea central. Heart sounds normal, loud P2. The right calf is inside the plaster cast and cannot be examined; exposed toes are warm."},
-   prompt:"What will you examine and order — and what single test comes FIRST, and why?",
-   placeholder:"First I would ... because ... then ..."},
-  {id:"results",title:"The results",
-   reveal:{narrative:"A bedside Wells score places him in the high-probability band. ABG, D-dimer, ECG and a portable chest X-ray are done.",
-     tables:[{title:"Arterial blood gas (room air)",rows:[{test:"pH",value:"7.48",ref:"7.35-7.45",flag:"H",conceptId:"abg"},{test:"PaO2",value:"58 mmHg",ref:"80-100",flag:"L",conceptId:"abg"},{test:"PaCO2",value:"30 mmHg",ref:"35-45",flag:"L",conceptId:"abg"}]},
-       {title:"Bloods",rows:[{test:"Troponin I",value:"0.01 ng/mL",ref:"<0.04",flag:"",conceptId:"troponin"},{test:"D-dimer",value:"4.8 ug/mL",ref:"<0.5",flag:"H",conceptId:"ddimer"},{test:"Haemoglobin",value:"14.2 g/dL",ref:"13-17",flag:"",conceptId:null}]}],
-     findings:[{label:"ECG",text:"Sinus tachycardia. S wave in lead I, Q wave and inverted T in lead III (S1Q3T3). Incomplete RBBB. No ST-elevation.",conceptId:"ecg"},{label:"Chest X-ray",text:"Lungs clear, no pneumothorax, no consolidation, no effusion. Mediastinum not widened.",conceptId:"cxr"},{label:"CTPA",text:"Filling defects in the right lower-lobe segmental pulmonary arteries — confirms pulmonary embolism.",conceptId:"ctpa"}]},
-   prompt:"Revise your diagnosis. How do the results fit together — and what did they rule out?",
-   placeholder:"The working diagnosis is ... because ..."},
-  {id:"management",title:"Management",reveal:null,
-   prompt:"Your immediate management plan, in order. Name what you would give first and what you would deliberately avoid.",
-   placeholder:"First ... because ... I would avoid ..."},
-  {id:"bedside",title:"At the bedside",
-   reveal:{patientLine:"Doctor, tell me plainly — what has happened to me, and what will you do now?"},
-   caption:"He left school at 14. He is frightened. No medical words he would not know.",
-   prompt:"(the patient's question is your prompt)",placeholder:"In plain words ..."}
- ],
- rubric:[
-  {id:"killers",stage:"patient",mode:"consider",dim:"danger",w:15,safety:true,concepts:["dissection","acs","pneumothorax"],
-   probe:"Which diagnosis here could have killed him within the hour, and how would you have excluded it?",
-   capsule:"Dissection kills in minutes and anticoagulation makes it worse — it must be excluded before you treat a clot."},
-  {id:"danger-order",stage:"patient",mode:"pathorder",dim:"danger",w:5,target:"pe",concepts:["dissection","acs","pneumothorax"]},
-  {id:"dx-early",stage:"patient",mode:"commit",dim:"diagnostic",w:8,concepts:["pe"],
-   probe:"On the history alone, what was your single leading diagnosis and why?",capsule:"Immobility, a swollen calf and sudden pleuritic hypoxia name themselves — this is a PE until proven otherwise."},
-  {id:"workup",stage:"workup",mode:"do",dim:"investigation",w:12,concepts:["wells","ddimer","ctpa","ecg","cxr"],scattergunCap:0.8,
-   capsule:"Wells first sets the pre-test probability; CTPA confirms. Order tests that change what you do next."},
-  {id:"sequence",stage:"workup",mode:"order",dim:"investigation",w:3,first:"wells",before:["ctpa"]},
-  {id:"dx-final",stage:"results",mode:"commit",dim:"diagnostic",w:17,cantMiss:true,concepts:["pe"],
-   probe:"The D-dimer is raised, troponin normal, X-ray clear and there is an S1Q3T3 pattern — what is your working diagnosis and why?",
-   capsule:"High Wells + raised D-dimer + hypoxia + right-heart strain on ECG all converge on pulmonary embolism."},
-  {id:"mgmt",stage:"management",mode:"do",dim:"management",w:15,safety:true,concepts:["oxygen","anticoag","analgesia"],critical:["oxygen","anticoag"],
-   probe:"He is hypoxic and confirmed to have a PE — what are the two things he must receive now?",
-   capsule:"Oxygen for the hypoxia and anticoagulation for the clot are the two non-negotiables."},
-  {id:"avoid",stage:"management",mode:"avoid",dim:"management",w:5,concepts:["nsaid_avoid"]}
- ],
- bedside:{accuracyMax:12,simplicityMax:8,weight:20,jargonTerms:["embolism","thrombus","anticoagulation","hypoxia","tachycardia"],
-  slots:[{id:"what",label:"What it is",concepts:["pe"],plainRequired:true},{id:"why",label:"Why it happened",concepts:["immobility","dvt_sign"]},{id:"next",label:"What we do next",concepts:["anticoag","oxygen"]},{id:"danger",label:"Danger signs to report",concepts:["worsening_sob","syncope","haemoptysis"]}],
-  patientQuestions:{what:"But what is actually wrong with me, doctor?",why:"Why did this happen to me? I only had a leg plaster.",next:"So what will you do to me now, doctor?",danger:"If something goes wrong at home tonight, how will I know?",none:"Will this come back, doctor?"}},
- revision:{target:"pe",contradicted:["pneumonia","acs"],discriminator:"ddimer",close:["dissection","pneumothorax"]},
- pathExpectation:["dissection","acs","pneumothorax","pe"],
- demo:{
-  strong:{patient:"Most dangerous first, I must exclude aortic dissection, acute coronary syndrome and a tension pneumothorax because each can kill within the hour. My leading diagnosis is a pulmonary embolism, because he has been immobile in a plaster cast for two weeks, smokes heavily, and now has sudden pleuritic chest pain with hypoxia and a racing heart.",
-   workup:"First I would calculate a Wells score to set the pre-test probability, since that guides everything else. Then I would send a D-dimer, do an ECG and a chest x-ray, and arrange a CTPA to confirm the pulmonary embolism. I would also check an ABG because he is hypoxic.",
-   results:"The working diagnosis is a pulmonary embolism, because the high Wells score, the raised D-dimer and the hypoxia all fit, and the S1Q3T3 on ECG suggests right heart strain from a clot in the lung. The normal troponin and clear chest x-ray rule out a heart attack and a pneumothorax.",
-   management:"First high-flow oxygen because he is hypoxic, then start anticoagulation with low molecular weight heparin since the clot is confirmed, and give analgesia for the pain. Admit and monitor. I would avoid NSAIDs.",
-   bedside:"A blood clot has travelled to your lung, which is why you feel so breathless. It happened because your leg was in a cast and you could not move about. We will give you oxygen and a blood thinning medicine to stop the clot growing, and watch you closely. If you cough up blood, feel faint, or your breathing gets worse, call the nurse at once."},
-  weak:{patient:"Chest pain, probably a chest infection or maybe a heart problem. I would give some painkillers and see how he goes.",
-   workup:"Do an ECG and some blood tests and a chest x-ray.",
-   results:"Looks like a chest infection, I would start antibiotics.",
-   management:"Antibiotics and rest, review him later.",
-   bedside:"You have an infection in your chest, take these tablets and you will be fine."},
-  gamed:{patient:"pulmonary embolism, aortic dissection, acute coronary syndrome, pneumothorax, myocardial infarction, dvt",
-   workup:"wells, d-dimer, ctpa, ecg, chest x-ray, abg, troponin",
-   results:"pulmonary embolism, confirmed",
-   management:"oxygen, anticoagulation, heparin, analgesia, avoid nsaids",
-   bedside:"pulmonary embolism, anticoagulation, hypoxia, tachycardia"}
- }
-},
-{
- id:"ACS-021",title:"Crushing chest pain in a diabetic",specialty:"Cardiology",difficulty:"Moderate",minutes:15,
- oneLiner:"A diabetic man with crushing chest pain radiating to the jaw, cold and sweating.",
- competency:{code:"IM 1.14",text:"Recognise and manage acute coronary syndrome"},
- target:"acs",
- concepts:[
-  {id:"acs",label:"Acute coronary syndrome / STEMI",cat:"dx",formal:["acute coronary syndrome","acs","myocardial infarction","stemi","nstemi","mi"],
-   synonyms:["acute coronary syndrome","acs","stemi","nstemi","myocardial infarction","heart attack","cardiac chest pain","blocked heart artery","blocked artery in the heart","artery to the heart is blocked","mi"]},
-  {id:"dissection",label:"Aortic dissection",cat:"dx",synonyms:["aortic dissection","dissection","torn aorta","aortic tear"]},
-  {id:"pe",label:"Pulmonary embolism",cat:"dx",synonyms:["pulmonary embolism","pe","lung clot","clot in the lung"]},
-  {id:"pericarditis",label:"Pericarditis",cat:"dx",synonyms:["pericarditis","pericardial"]},
-  {id:"reflux",label:"Reflux / GORD",cat:"dx",synonyms:["reflux","gord","gerd","oesophageal","esophageal","acidity","gastritis","indigestion","heartburn"]},
-  {id:"ecg",label:"12-lead ECG",cat:"test",synonyms:["ecg","ekg","12-lead","12 lead","electrocardiogram"]},
-  {id:"troponin",label:"Troponin",cat:"test",synonyms:["troponin","trop","cardiac enzymes","cardiac markers"]},
-  {id:"cxr",label:"Chest X-ray",cat:"test",synonyms:["chest x-ray","chest xray","cxr","chest radiograph"]},
-  {id:"aspirin",label:"Aspirin",cat:"rx",synonyms:["aspirin","asa","disprin"]},
-  {id:"antiplatelet",label:"Second antiplatelet",cat:"rx",synonyms:["ticagrelor","clopidogrel","prasugrel","p2y12","dual antiplatelet","dapt","second antiplatelet"]},
-  {id:"nitrate",label:"Nitrate / GTN",cat:"rx",synonyms:["gtn","nitrate","nitroglycerine","nitroglycerin","sublingual nitrate","isordil"]},
-  {id:"analgesia",label:"Analgesia",cat:"rx",synonyms:["morphine","analgesia","opioid","pain relief"]},
-  {id:"oxygen",label:"Oxygen if hypoxic",cat:"rx",synonyms:["oxygen","o2"]},
-  {id:"pci",label:"Reperfusion / primary PCI",cat:"rx",formal:["pci","percutaneous coronary intervention","reperfusion","revascularisation"],
-   synonyms:["pci","primary angioplasty","cath lab","catheter lab","reperfusion","thrombolysis","revascularisation","open the artery","open the blocked artery","unblock the artery","stent"]},
-  {id:"nsaid_avoid",label:"Avoid NSAIDs",cat:"rx",synonyms:["avoid nsaids","avoid nsaid","no nsaids"]},
-  {id:"diabetes",label:"Diabetes",cat:"track",synonyms:["diabetes","diabetic","t2dm","sugar disease","high sugar history"]},
-  {id:"radiation",label:"Radiation to arm/jaw",cat:"track",synonyms:["radiating to the jaw","radiates to the jaw","radiating to the arm","pain in the jaw","pain going to the arm","jaw pain","arm pain"]},
-  {id:"sweating",label:"Sweating / clammy",cat:"track",synonyms:["sweating","diaphoresis","clammy","cold sweat","perspiring"]},
-  {id:"hypertension",label:"Hypertension",cat:"track",synonyms:["hypertension","high blood pressure","raised bp"]},
-  {id:"worsening",label:"Worsening / collapse",cat:"sign",synonyms:["pain gets worse","chest pain returns","collapse","pass out","faint","breathless at rest"]}
- ],
- tracks:[
-  {label:"Risk",value:"Type 2 diabetes",conceptId:"diabetes"},
-  {label:"Character",value:"Pain radiates to arm and jaw",conceptId:"radiation"},
-  {label:"Associated",value:"Sweating, clammy, grey",conceptId:"sweating"},
-  {label:"Risk",value:"Hypertension",conceptId:"hypertension"}
- ],
- stages:[
-  {id:"patient",title:"The patient",kicker:"History and vitals only.",
-   reveal:{history:"A 62-year-old man with type 2 diabetes and hypertension develops crushing central chest pain radiating to his left arm and jaw, with sweating and nausea, for 40 minutes. He looks grey and clammy. The pain is not relieved by rest.",
-     vitals:[{label:"Temp",value:"36.8 C"},{label:"Pulse",value:"96/min"},{label:"BP",value:"148/92"},{label:"Resp rate",value:"20/min"},{label:"SpO2",value:"96% RA"}]},
-   prompt:"List your differential diagnoses in order of priority, each with a reason. Put the diagnoses you cannot afford to miss first.",placeholder:"1. ... — because ..."},
-  {id:"workup",title:"Your workup",kicker:"Examination is unremarkable except distress.",
-   reveal:{exam:"Distressed and sweating. Heart sounds normal, no murmur. Chest clear. Peripheral pulses equal in both arms, no radio-radial delay. No calf swelling."},
-   prompt:"What will you examine and order — and what single test comes FIRST, and why?",placeholder:"First I would ..."},
-  {id:"results",title:"The results",
-   reveal:{narrative:"The bedside team acts on your instructions.",
-     tables:[{title:"Bloods",rows:[{test:"Troponin I",value:"3.8 ng/mL",ref:"<0.04",flag:"H",conceptId:"troponin"}]}],
-     findings:[{label:"ECG",text:"ST-elevation in leads II, III and aVF with reciprocal changes — an inferior STEMI.",conceptId:"ecg"},{label:"Chest X-ray",text:"Normal cardiac silhouette, mediastinum not widened, lungs clear.",conceptId:"cxr"}]},
-   prompt:"Revise your diagnosis. How do the results fit together — and what did they rule out?",placeholder:"The working diagnosis is ... because ..."},
-  {id:"management",title:"Management",reveal:null,
-   prompt:"Your immediate management plan, in order. Name what you would give first and what you would deliberately avoid.",placeholder:"First ..."},
-  {id:"bedside",title:"At the bedside",
-   reveal:{patientLine:"Doctor, is it my heart? Am I going to be alright — what are you going to do?"},
-   caption:"He is a schoolteacher, frightened, and wants it in plain words.",prompt:"(the patient's question is your prompt)",placeholder:"In plain words ..."}
- ],
- rubric:[
-  {id:"killers",stage:"patient",mode:"consider",dim:"danger",w:15,safety:true,concepts:["dissection","pe","pericarditis"],
-   probe:"Which mimic of a heart attack could be made lethal by the very drugs you would give, and how would you exclude it?",
-   capsule:"Aortic dissection mimics ACS and thrombolysis or antiplatelets can be fatal in it — check pulses and the mediastinum first."},
-  {id:"danger-order",stage:"patient",mode:"pathorder",dim:"danger",w:5,target:"acs",concepts:["dissection","pe","pericarditis"]},
-  {id:"dx-early",stage:"patient",mode:"commit",dim:"diagnostic",w:8,concepts:["acs"],
-   probe:"On the history alone, what is your leading diagnosis and why?",capsule:"Crushing pain to the jaw with sweating in a diabetic is ACS until an ECG says otherwise."},
-  {id:"workup",stage:"workup",mode:"do",dim:"investigation",w:12,concepts:["ecg","troponin","cxr"],scattergunCap:0.9,
-   capsule:"An immediate 12-lead ECG is the decision-maker; troponin and an X-ray support it."},
-  {id:"sequence",stage:"workup",mode:"order",dim:"investigation",w:3,first:"ecg",before:["troponin"]},
-  {id:"dx-final",stage:"results",mode:"commit",dim:"diagnostic",w:17,cantMiss:true,concepts:["acs"],
-   probe:"There is ST-elevation in II, III and aVF with a raised troponin — what is your diagnosis and what does it demand?",
-   capsule:"ST-elevation plus a rising troponin is a STEMI — it demands urgent reperfusion, not observation."},
-  {id:"mgmt",stage:"management",mode:"do",dim:"management",w:15,safety:true,concepts:["aspirin","antiplatelet","nitrate","analgesia","pci"],critical:["aspirin","pci"],
-   probe:"Beyond aspirin, what is the one intervention that actually saves myocardium here?",
-   capsule:"Aspirin now, and primary PCI without delay — time is myocardium."},
-  {id:"avoid",stage:"management",mode:"avoid",dim:"management",w:5,concepts:["nsaid_avoid"]}
- ],
- bedside:{accuracyMax:12,simplicityMax:8,weight:20,jargonTerms:["myocardial","infarction","ischaemia","reperfusion","thrombolysis"],
-  slots:[{id:"what",label:"What it is",concepts:["acs"],plainRequired:true},{id:"why",label:"Why it happened",concepts:["diabetes","hypertension"]},{id:"next",label:"What we do next",concepts:["pci","aspirin"]},{id:"danger",label:"Danger signs to report",concepts:["worsening"]}],
-  patientQuestions:{what:"But what has actually gone wrong with my heart, doctor?",why:"Why has this happened to me?",next:"What are you going to do to me now?",danger:"If the pain comes back at home, what should I do?",none:"Will my heart recover, doctor?"}},
- revision:{target:"acs",contradicted:["reflux"],discriminator:"ecg",close:["pe","pericarditis","dissection"]},
- pathExpectation:["dissection","pe","pericarditis","acs"],
- demo:{
-  strong:{patient:"Most dangerous first, I must exclude aortic dissection because thrombolysis would kill him, and consider a pulmonary embolism and pericarditis. My leading diagnosis is an acute coronary syndrome, because crushing central pain radiating to the jaw with sweating in a diabetic is classic and it is not relieved by rest.",
-   workup:"First an immediate 12-lead ECG because it decides everything, then send a troponin and do a chest x-ray to look at the mediastinum, since that helps me exclude a dissection.",
-   results:"This is a STEMI, an acute coronary syndrome, because there is ST-elevation in the inferior leads with a raised troponin. The clear mediastinum on the x-ray rules out an aortic dissection.",
-   management:"Give aspirin now, add ticagrelor, GTN and morphine for pain, oxygen only if hypoxic, and activate the cath lab for primary PCI because time is myocardium. I would avoid NSAIDs.",
-   bedside:"One of the arteries feeding your heart has become blocked, which is why you have this pain and sweating. It built up over years, and your diabetes made it more likely. We are going to take you next door to open that blocked artery quickly and give you medicines to keep it open. If the pain comes back or you feel faint, tell us straight away."},
-  weak:{patient:"Chest pain in an older man, probably acidity or reflux. I would give some antacids.",
-   workup:"Maybe an ECG at some point and observe him.",
-   results:"Could still be reflux, give antacids and see.",
-   management:"Antacids and admit for observation overnight.",
-   bedside:"It is probably acidity, take these antacids."},
-  gamed:{patient:"acute coronary syndrome, aortic dissection, pulmonary embolism, pericarditis, stemi",
-   workup:"ecg, troponin, chest x-ray",results:"acute coronary syndrome, stemi",
-   management:"aspirin, ticagrelor, gtn, morphine, pci, avoid nsaids",bedside:"acute coronary syndrome, reperfusion, myocardial infarction"}
- }
-},
-{
- id:"MEN-008",title:"Fever, headache and a rash",specialty:"Acute Medicine",difficulty:"High-stakes",minutes:15,
- oneLiner:"A drowsy student with neck stiffness and spots that do not fade under a glass.",
- competency:{code:"IM 8.9",text:"Recognise and treat bacterial meningitis without delay"},
- target:"meningitis",
- concepts:[
-  {id:"meningitis",label:"Bacterial meningitis / meningococcaemia",cat:"dx",formal:["bacterial meningitis","meningococcal meningitis","meningococcaemia","meningitis","meningococcal"],
-   synonyms:["bacterial meningitis","meningococcal meningitis","meningococcaemia","meningococcal sepsis","meningitis","meningococcal","infection of the brain lining","infection of the covering of the brain","infection around the brain"]},
-  {id:"sah",label:"Subarachnoid haemorrhage",cat:"dx",synonyms:["subarachnoid","subarachnoid haemorrhage","sah","brain bleed","bleed around the brain"]},
-  {id:"encephalitis",label:"Encephalitis",cat:"dx",synonyms:["encephalitis","brain inflammation","viral encephalitis"]},
-  {id:"sepsis",label:"Sepsis",cat:"dx",synonyms:["sepsis","septicaemia","septicemia","blood infection","systemic infection","septic shock"]},
-  {id:"migraine",label:"Migraine",cat:"dx",synonyms:["migraine","bad headache only","tension headache"]},
-  {id:"viral",label:"Viral fever / flu",cat:"dx",synonyms:["viral fever","flu","influenza","viral illness"]},
-  {id:"abx",label:"Immediate parenteral antibiotics",cat:"rx",synonyms:["ceftriaxone","cefotaxime","benzylpenicillin","antibiotics","antibiotic","iv antibiotics","parenteral antibiotics"]},
-  {id:"lp",label:"Lumbar puncture / CSF",cat:"test",synonyms:["lumbar puncture","lp","spinal tap","csf","csf analysis"]},
-  {id:"bloodculture",label:"Blood cultures",cat:"test",synonyms:["blood culture","blood cultures","cultures"]},
-  {id:"fbc",label:"FBC / CRP",cat:"test",synonyms:["fbc","full blood count","cbc","crp","c reactive protein"]},
-  {id:"pcr",label:"Meningococcal PCR",cat:"test",synonyms:["pcr","meningococcal pcr","blood pcr"]},
-  {id:"fluids",label:"IV fluids / resuscitation",cat:"rx",synonyms:["iv fluids","fluids","fluid resuscitation","crystalloid","normal saline","ringer lactate","resuscitate"]},
-  {id:"oxygen",label:"Oxygen",cat:"rx",synonyms:["oxygen","o2","high flow oxygen"]},
-  {id:"dexamethasone",label:"Dexamethasone",cat:"rx",synonyms:["dexamethasone","steroid","steroids"]},
-  {id:"notify",label:"Notify / contact prophylaxis",cat:"rx",synonyms:["notifiable","notify public health","public health","contact prophylaxis","chemoprophylaxis","ciprofloxacin for contacts"]},
-  {id:"avoid_delay",label:"Do not delay antibiotics",cat:"rx",synonyms:["do not delay","without delay","do not wait","before the lp","before lumbar puncture","without waiting for the lp","antibiotics first","antibiotics immediately","do not wait for the lp"]},
-  {id:"rash",label:"Non-blanching rash",cat:"track",synonyms:["non-blanching","non blanching","petechial","petechiae","rash that does not fade","spots that do not fade","purpuric"]},
-  {id:"neckstiff",label:"Neck stiffness",cat:"track",synonyms:["neck stiffness","stiff neck","meningism","meningismus","kernig","brudzinski"]},
-  {id:"photophobia",label:"Photophobia",cat:"track",synonyms:["photophobia","light hurts","dislike of light","bright light"]},
-  {id:"contacts",label:"Hostel contacts",cat:"track",synonyms:["hostel","contacts","classmates","close contacts","roommates"]},
-  {id:"worsen",label:"Worsening / drowsiness",cat:"sign",synonyms:["more drowsy","becomes drowsy","harder to wake","rash spreads","rash spreading","seizure","gets worse","less responsive"]}
- ],
- tracks:[
-  {label:"Rash",value:"Non-blanching petechial rash",conceptId:"rash"},
-  {label:"Sign",value:"Neck stiffness, drowsy",conceptId:"neckstiff"},
-  {label:"Symptom",value:"Photophobia",conceptId:"photophobia"},
-  {label:"Contact",value:"Classmates in hostel had fever",conceptId:"contacts"}
- ],
- stages:[
-  {id:"patient",title:"The patient",kicker:"History and vitals only.",
-   reveal:{history:"A 19-year-old university student is brought in with 12 hours of fever, severe headache, photophobia and neck stiffness. She is now drowsy. There is a non-blanching petechial rash over her trunk and legs. Several classmates in her hostel have had fever this month.",
-     vitals:[{label:"Temp",value:"39.4 C"},{label:"Pulse",value:"118/min"},{label:"BP",value:"98/60"},{label:"Resp rate",value:"24/min"},{label:"SpO2",value:"97% RA"},{label:"GCS",value:"13/15"}]},
-   prompt:"List your differential diagnoses in order of priority, each with a reason. Put the diagnoses you cannot afford to miss first.",placeholder:"1. ... — because ..."},
-  {id:"workup",title:"Your workup",kicker:"She is drowsy and hypotensive.",
-   reveal:{exam:"Drowsy but rousable, GCS 13. Neck stiff, Kernig positive. Non-blanching petechiae, some coalescing. Warm peripheries, capillary refill 3 s. No focal neurological deficit."},
-   prompt:"What will you examine and order — and what single test comes FIRST, and why?",placeholder:"First I would ..."},
-  {id:"results",title:"The results",
-   reveal:{narrative:"Bloods are sent and empirical treatment is started.",
-     tables:[{title:"Bloods",rows:[{test:"WCC",value:"19,800 /uL",ref:"4000-11000",flag:"H",conceptId:"fbc"},{test:"CRP",value:"280 mg/L",ref:"<5",flag:"H",conceptId:"fbc"},{test:"Lactate",value:"4.2 mmol/L",ref:"<2",flag:"H",conceptId:"fluids"},{test:"Platelets",value:"88,000 /uL",ref:"150000-410000",flag:"L",conceptId:null}]}],
-     findings:[{label:"Blood PCR",text:"Neisseria meningitidis DNA detected — confirms meningococcal disease.",conceptId:"pcr"},{label:"CSF (after antibiotics)",text:"Turbid CSF, high neutrophils, low glucose, high protein — bacterial meningitis.",conceptId:"lp"}]},
-   prompt:"Revise your diagnosis. How do the results fit together — and what did they rule out?",placeholder:"The working diagnosis is ... because ..."},
-  {id:"management",title:"Management",reveal:null,
-   prompt:"Your immediate management plan, in order. Name what you would give first and what you would deliberately avoid delaying.",placeholder:"First ..."},
-  {id:"bedside",title:"At the bedside",
-   reveal:{patientLine:"Doctor, I am scared — what is wrong with me, and am I going to be alright?"},
-   caption:"She is 19, frightened and far from home. No medical words she would not know.",prompt:"(the patient's question is your prompt)",placeholder:"In plain words ..."}
- ],
- rubric:[
-  {id:"killers",stage:"patient",mode:"consider",dim:"danger",w:15,safety:true,concepts:["sah","encephalitis","sepsis"],
-   probe:"Besides meningitis, which two conditions could present exactly like this and must be kept in view?",
-   capsule:"A subarachnoid bleed and encephalitis can mimic this — but none of them should delay antibiotics."},
-  {id:"danger-order",stage:"patient",mode:"pathorder",dim:"danger",w:5,target:"meningitis",concepts:["sah","encephalitis","sepsis"]},
-  {id:"dx-early",stage:"patient",mode:"commit",dim:"diagnostic",w:8,concepts:["meningitis"],
-   probe:"On the history alone, what is your leading diagnosis and why?",capsule:"Fever, neck stiffness, photophobia and a non-blanching rash is meningococcal disease until proven otherwise."},
-  {id:"workup",stage:"workup",mode:"do",dim:"investigation",w:12,concepts:["bloodculture","lp","fbc","pcr"],scattergunCap:0.9,
-   capsule:"Blood cultures and PCR before antibiotics if you can, but never let the LP hold up treatment."},
-  {id:"sequence",stage:"management",mode:"order",dim:"investigation",w:3,first:"abx",before:["lp"]},
-  {id:"dx-final",stage:"results",mode:"commit",dim:"diagnostic",w:17,cantMiss:true,concepts:["meningitis"],
-   probe:"WCC and CRP are sky-high, lactate is 4.2 and PCR is positive — what is your diagnosis?",
-   capsule:"Raised inflammatory markers, a high lactate and a positive meningococcal PCR confirm bacterial meningitis with sepsis."},
-  {id:"mgmt",stage:"management",mode:"do",dim:"management",w:15,safety:true,concepts:["abx","fluids","oxygen","dexamethasone"],critical:["abx","fluids"],
-   probe:"She is hypotensive with a high lactate — name the two things she must receive in the first minutes.",
-   capsule:"Immediate IV antibiotics and fluid resuscitation are the two that change survival."},
-  {id:"avoid",stage:"management",mode:"avoid",dim:"management",w:5,concepts:["avoid_delay"]}
- ],
- bedside:{accuracyMax:12,simplicityMax:8,weight:20,jargonTerms:["meningitis","meningococcal","septicaemia","petechiae","photophobia"],
-  slots:[{id:"what",label:"What it is",concepts:["meningitis"],plainRequired:true},{id:"why",label:"Why it happened",concepts:["contacts","sepsis"]},{id:"next",label:"What we do next",concepts:["abx","fluids"]},{id:"danger",label:"Danger signs to report",concepts:["worsen"]}],
-  patientQuestions:{what:"But what is actually wrong with me, doctor?",why:"How did I catch this?",next:"What are you going to do to me now?",danger:"How will you know if I get worse?",none:"Will I make a full recovery, doctor?"}},
- revision:{target:"meningitis",contradicted:["migraine","viral"],discriminator:"lp",close:["encephalitis","sepsis"]},
- pathExpectation:["sah","encephalitis","sepsis","meningitis"],
- demo:{
-  strong:{patient:"My leading diagnosis is bacterial, likely meningococcal, meningitis with sepsis, because she has fever, neck stiffness, photophobia and a non-blanching petechial rash. I must also keep a subarachnoid haemorrhage and encephalitis in view because they can mimic it, and she is already showing sepsis.",
-   workup:"First I would take blood cultures and start empirical IV antibiotics because delay costs lives, then send FBC, CRP, a meningococcal PCR and lactate. A lumbar puncture can follow once she is stable and it is safe.",
-   results:"This is bacterial meningitis with meningococcal sepsis, because the WCC and CRP are very high, the lactate is 4.2 and the PCR is positive for meningococcus. The turbid CSF confirms it, and this rules out a simple viral illness.",
-   management:"Give IV ceftriaxone immediately, do not delay it for the LP, and start fluid resuscitation because she is hypotensive with a high lactate. Add dexamethasone and oxygen, and notify public health for contact prophylaxis.",
-   bedside:"You have a serious infection of the covering of your brain, and it has started to affect your whole body. You likely caught it from a close contact. We have already started strong antibiotics straight into your vein and are giving you fluids to keep your blood pressure up. If you become harder to wake or the rash spreads, we will act at once. You are in the right place."},
-  weak:{patient:"Looks like a bad migraine or maybe the flu going around the hostel. I would give paracetamol and fluids.",
-   workup:"Arrange a CT scan and a lumbar puncture and see what they show.",
-   results:"Maybe a viral fever, give supportive care.",
-   management:"Start antibiotics once the lumbar puncture results are back.",
-   bedside:"It is probably a viral fever, take rest and fluids."},
-  gamed:{patient:"bacterial meningitis, meningococcal, subarachnoid haemorrhage, encephalitis, sepsis",
-   workup:"blood cultures, lumbar puncture, fbc, crp, pcr, lactate",results:"bacterial meningitis, meningococcal sepsis",
-   management:"ceftriaxone, fluids, dexamethasone, oxygen, do not delay, before the lp",bedside:"meningococcal meningitis, septicaemia, petechiae"}
- }
-},
-{
  id:"VHL-003",title:"The Case of the Man Who Was Never Short of Oxygen",specialty:"Internal Medicine / Molecular",difficulty:"Hard",minutes:20,
  oneLiner:"A software engineer, headaches and too many red cells, whose oxygen is perfectly normal.",
  competency:{code:"IM 5.12",text:"Reason from a contradiction to a molecular diagnosis"},
@@ -1281,24 +990,6 @@ function __selftest(){
     ok("gamed not flattering: "+c.id,gm.verdict.cls!=="vb-safe"&&gm.verdict.cls!=="vb-hollow");
     ok("gamed<strong-20: "+c.id,gm.pct<g.pct-20);
   });
-  // matcher precision
-  var pe=caseById("PE-014");
-  var an1=analyseStage(pe,"he has hypertension");ok("hypertension !credits pe",!(an1.byConcept["pe"]));
-  var g2=grade("PE-014",{patient:"hypertension",workup:"",results:"",management:"",bedside:""});ok("hypertension dx-early 0",g2.byId["dx-early"].earned===0);
-  var anR=analyseStage(pe,"pe ruled out, this is pneumonia");var peH=anR.byConcept["pe"]||[];ok("'pe ruled out' has hit",peH.length>0);ok("'pe ruled out' considered/neg",peH.every(function(h){return h.considered||h.negated;}));
-  var gCommit=grade("PE-014",{patient:"",workup:"",results:"pe ruled out, this is pneumonia",management:"",bedside:""});ok("'pe ruled out' fails commit",gCommit.byId["dx-final"].earned===0);
-  var gDo=grade("PE-014",{patient:"",workup:"",results:"",management:"i would not give heparin",bedside:""});ok("'not give heparin' fails do",gDo.byId["mgmt"].satisfied.indexOf("anticoag")<0);
-  var anEx=analyseStage(pe,"I would exclude aortic dissection");var dH=(anEx.byConcept["dissection"]||[])[0];ok("exclude dissection credited",!!dH&&dH.considered);ok("dissection raw offset exact",!!dH&&"I would exclude aortic dissection".slice(dH.rawStart,dH.rawEnd).toLowerCase().indexOf("dissection")>=0);
-  var bd=scoreBedside(pe,pe.demo.strong.bedside);ok("bedside plain satisfies 'what'",bd.slots.filter(function(s){return s.id==="what";})[0].satisfied);
-  var bdJ=scoreBedside(pe,"you have a pulmonary embolism");ok("jargon fails plainRequired",!bdJ.slots.filter(function(s){return s.id==="what";})[0].satisfied);
-  var anNeg=analyseStage(pe,"he denies haemoptysis. pulmonary embolism is likely");var peN=(anNeg.byConcept["pe"]||[])[0];ok("clause-boundary: pe not negated",!!peN&&!peN.negated);
-  var gAvoid=grade("PE-014",pe.demo.strong);ok("avoid nsaids credited",gAvoid.byId["avoid"].earned>0);
-  var gAnchor=grade("PE-014",{patient:"this is clearly pneumonia, a chest infection",workup:"give antibiotics",results:"still pneumonia, a chest infection",management:"antibiotics",bedside:"a chest infection"});ok("ANCHORED flagged",gAnchor.flags.anchored===true);
-  var gRev=grade("PE-014",{patient:"probably pneumonia",workup:"d-dimer and ctpa",results:"actually a pulmonary embolism because the d-dimer is high and there is a dvt",management:"oxygen and heparin",bedside:"a clot in your lung"});ok("CLEAN REVISION flagged",gRev.flags.cleanRevision===true);
-  ok("track lit (immobility)",gAvoid.trackInfo.used.some(function(t){return t.conceptId==="immobility";}));
-  // determinism
-  var d1=JSON.stringify(summ(grade("PE-014",pe.demo.strong)));var d2=JSON.stringify(summ(grade("PE-014",pe.demo.strong)));ok("deterministic",d1===d2);
-  function summ(g){return {p:g.pct,d:g.dims5.map(function(x){return x.v;}),k:g.knowledge,u:g.understanding,f:g.flags};}
   // ===== VHL-003 question layer =====
   var vhl=caseById("VHL-003");
   if(vhl){
@@ -1396,14 +1087,14 @@ function landingView(){
     +'<p class="lede">Follow the Tracks retires the multiple-choice crutch. Read a real case, write what you think, and be understood.</p></div>';
   h+='<div class="specimen"><div class="cap">The product, in one card</div>'
     +'<div class="sent" id="specSent"><span class="caret"></span></div>'
-    +'<div class="spchips" id="specChips"><span class="spchip">PE — considered first ✓</span><span class="spchip">Dissection — excluded on purpose ✓</span></div></div>';
+    +'<div class="spchips" id="specChips"><span class="spchip">False hypoxia — recognised ✓</span><span class="spchip">Reasoning over recall ✓</span></div></div>';
   h+='<div class="doors"><button class="door" data-door="student"><div class="r">Enter as a student</div><div class="n">Dr. Priya Raghavan</div><div class="d">JIPMER · 2nd yr MD Medicine</div></button>'
     +'<button class="door" data-door="faculty"><div class="r">See the college view</div><div class="n">Prof. S. Menon</div><div class="d">HOD Medicine</div></button></div>';
   h+='<div class="card"><h3>How it works</h3><div class="steps">'
     +'<div class="step"><div class="no">01</div><div class="t">Read the case</div><div class="x">History and vitals first — no answers on the page.</div></div>'
-    +'<div class="step"><div class="no">02</div><div class="t">Commit your thinking</div><div class="x">Type your differentials. Each stage locks.</div></div>'
-    +'<div class="step"><div class="no">03</div><div class="t">Face the evidence</div><div class="x">Results arrive. Revise — or defend your call.</div></div>'
-    +'<div class="step"><div class="no">04</div><div class="t">Say it plainly</div><div class="x">Explain it to the patient in the bed.</div></div></div></div>';
+    +'<div class="step"><div class="no">02</div><div class="t">Commit your thinking</div><div class="x">Type your working diagnosis in your own words — no options to pick from.</div></div>'
+    +'<div class="step"><div class="no">03</div><div class="t">Face the evidence</div><div class="x">A contradiction arrives. Revise — or defend your call.</div></div>'
+    +'<div class="step"><div class="no">04</div><div class="t">Show you understand</div><div class="x">Answer in your own words — reasoning counts for more than recall.</div></div></div></div>';
   h+='<div class="card"><h3>For the college</h3><div class="collegestrip">'
     +'<div class="cbox"><div class="t">Cohort teaching targets</div><div class="x">See exactly what the whole batch missed, per stage.</div></div>'
     +'<div class="cbox"><div class="t">NMC / CBME mapping</div><div class="x">Every case carries a competency code.</div></div>'
@@ -1414,16 +1105,14 @@ function landingView(){
 }
 function runSpecimen(){
   var el=document.getElementById("specSent");if(!el)return;
-  var full="Clot in the lung after the leg cast — I'd rule out a dissection first.";
+  var full="Too many red cells, yet the oxygen is perfectly normal — the sensor is at fault.";
   var i=0;
   var timer=setInterval(function(){
     i++;
     if(i>=full.length){clearInterval(timer);
-      var pe=caseById("PE-014");
-      // render with marks on "Clot in the lung" and "rule out a dissection"
       var html=full
-        .replace("Clot in the lung",'<mark class="dx" title="read as Pulmonary embolism">Clot in the lung</mark>')
-        .replace("rule out a dissection",'<mark class="ddx" title="exclusion credited">rule out a dissection</mark>');
+        .replace("Too many red cells",'<mark class="dx" title="read as polycythaemia">Too many red cells</mark>')
+        .replace("the sensor is at fault",'<mark class="ddx" title="reasoning credited">the sensor is at fault</mark>');
       el.innerHTML=html;
       var ch=document.getElementById("specChips");if(ch)ch.classList.add("show");
       return;
@@ -1431,7 +1120,6 @@ function runSpecimen(){
     el.innerHTML=esc(full.slice(0,i))+'<span class="caret"></span>';
   },30);
 }
-
 /* ============ LIBRARY ============ */
 function libraryView(){
   var cases=allCases();
@@ -1462,37 +1150,8 @@ function startCase(id,prefill){S.caseId=id;S._encCaseId=id;S._submittedCase=null
 function isDemoText(cs,key,val){if(!cs||!cs.demo||val==null)return false;var v=String(val);return ["strong","weak","gamed"].some(function(w){return cs.demo[w]&&cs.demo[w][key]===v;});}
 function canAdvance(cs,key,val){var wc=(String(val==null?"":val).trim().match(/\S+/g)||[]).length;return wc>=15||isDemoText(cs,key,val);}
 function encounterView(){
-  var cs=caseById(S.caseId);if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
-  if(cs.kind==="narrative")return narrativeEncounterView(cs);
-  var idx=S.stageIndex,stage=cs.stages[idx];
-  var rail=cs.stages.map(function(s,i){var cls=i<idx?"done":(i===idx?"cur":"locked");var mk=i<idx?"✓":(i===idx?(i+1):"🔒");return '<div class="railstep '+cls+'"><span class="mk">'+mk+'</span>'+esc(s.title)+'</div>';}).join("");
-  var body='<div class="crumbs"><a data-nav="#/cases">Cases</a> › '+esc(cs.title)+'</div>';
-  body+='<div class="enc"><div class="rail">'+rail+'</div><div class="stagebody">';
-  body+='<div class="kicker">Stage '+(idx+1)+' of 5 · '+esc(stage.title)+'</div>';
-  // sealed recaps
-  if(idx>=1){body+=sealed(cs,"Your differentials (committed — cannot be changed)",S.stageTexts.patient);}
-  if(idx===2){/* also pinned above reveal handled below */}
-  // reveal
-  body+=renderReveal(cs,stage,idx);
-  // prompt + textarea
-  if(idx===4){body+='<div class="patientcard"><div class="who">'+esc(cs.oneLiner.split(",")[0])+'</div><div class="say">“'+esc(stage.reveal.patientLine)+'”</div><div class="small">'+esc(stage.caption)+'</div></div>';}
-  else {body+='<div class="prompt">'+esc(stage.prompt)+'</div>';}
-  var val=S.stageTexts[STK[idx]]||"";
-  body+='<textarea id="ans" placeholder="'+esc(stage.placeholder||"")+'">'+esc(val)+'</textarea>';
-  var wc=(val.trim().match(/\S+/g)||[]).length;
-  var jargonMeter=idx===4?'<span id="jargonMeter" class="lockwarn"></span>':'';
-  body+='<div class="tacount"><span id="wc">'+wc+' words</span><span class="lockwarn">Once submitted, this stage locks. '+jargonMeter+'</span></div>';
-  var canSubmit=canAdvance(cs,STK[idx],val);
-  var label=idx===4?"Submit for grading":"Commit & continue";
-  body+='<div class="row"><button class="btn primary" id="commit" '+(canSubmit?"":"disabled")+'>'+label+' →</button>'
-    +'<span class="small" id="floorHint" '+(canSubmit?'style="display:none"':'')+'>A differential is a claim plus a reason — aim for 3–6 lines.</span></div>';
-  body+='<div class="demorow"><span>Demo:</span><button data-demo="strong">Load strong</button><button data-demo="weak">Load weak</button><button data-demo="gamed">Load gamed</button></div>';
-  body+='</div>';
-  // ledger for stages 0,1
-  if(idx<=1 && cs.tracks && cs.tracks.length){body+=''; /* ledger appended into stagebody grid on desktop via side; keep simple: add below */}
-  body+='</div>';
-  if(idx<=1){body+=ledgerHTML(cs,cumulativeText(idx));}
-  return shell("case",body);
+  var cs=caseById(S.caseId);if(!cs||cs.kind!=="narrative")return shell("cases",'<div class="card">Case not found.</div>');
+  return narrativeEncounterView(cs);
 }
 /* ---- narrative encounter (single scroll page + 8 depth questions) ---- */
 function narrativeRevealHTML(st){
@@ -1552,37 +1211,6 @@ function runGradeNarrative(){
   S._submittedCase=cs.id;S.attemptIndex=arr.length-1;
   nav("#/report/"+encodeURIComponent(cs.id)+"/"+S.attemptIndex);
 }
-function sealed(cs,label,text){return '<div class="locked-recap"><div class="lh">🔒 '+esc(label)+'</div><div class="lt">'+esc(text||"(left blank)")+'</div></div>';}
-function ledgerHTML(cs,text){
-  var an=analyseStage(cs,text||"");
-  var chips=cs.tracks.map(function(tr){var lit=(an.byConcept[tr.conceptId]||[]).length>0;return '<div class="track'+(lit?" lit":"")+'" data-track="'+esc(tr.conceptId)+'"><div><span class="tk">'+esc(tr.label)+'</span>'+esc(tr.value)+'</div>'+(lit?'<span class="ck">✓</span>':'')+'</div>';}).join("");
-  return '<div class="card" style="margin-top:16px"><div class="ledger"><h4>The tracks so far</h4><div id="ledgerChips">'+chips+'</div><div class="cap">A track you use is a track you’ve seen.</div></div></div>';
-}
-function renderReveal(cs,stage,idx){
-  if(idx===0){var r=stage.reveal;var h='<div class="small" style="margin-bottom:6px">'+esc(stage.kicker||"")+'</div><div class="reveal">'+esc(r.history)+'</div>';
-    h+='<div class="vitals">'+r.vitals.map(function(v){return '<div class="vitile"><b>'+esc(v.label)+'</b>'+esc(v.value)+'</div>';}).join("")+'</div>';return h;}
-  if(idx===1){return '<div class="small" style="margin-bottom:6px">'+esc(stage.kicker||"")+'</div><div class="reveal">'+esc(stage.reveal.exam)+'</div>';}
-  if(idx===2){var rs=stage.reveal;var h='<div class="reveal">'+esc(rs.narrative)+'</div>';
-    var wtxt=S.stageTexts.workup||"";var wan=analyseStage(cs,wtxt);
-    rs.tables.forEach(function(t){h+='<div style="overflow-x:auto"><table class="labtable"><caption>'+esc(t.title)+'</caption><thead><tr><th>Test</th><th>Value</th><th>Ref</th><th></th></tr></thead><tbody>';
-      t.rows.forEach(function(row){var ordered=row.conceptId&&(wan.byConcept[row.conceptId]||[]).length>0;
-        h+='<tr><td>'+esc(row.test)+(ordered?' <span class="ordered">✓ you ordered this</span>':(row.conceptId?' <span class="notreq">not requested — shown for teaching</span>':''))+'</td><td>'+esc(row.value)+'</td><td>'+esc(row.ref)+'</td><td>'+(row.flag?'<span class="flagpill '+row.flag+'">'+row.flag+'</span>':'')+'</td></tr>';});
-      h+='</tbody></table></div>';});
-    h+='<h3>Imaging & bedside findings</h3>';
-    rs.findings.forEach(function(f,i){h+='<div class="findingrow" data-finding="'+i+'"><span class="lb">'+esc(f.label)+'</span><span class="small">tap to view the described finding →</span></div>';});
-    return h;}
-  return "";
-}
-// tracks are cumulative — everything committed up to and including the current stage
-function cumulativeText(idx){return STK.slice(0,idx+1).map(function(k){return S.stageTexts[k]||"";}).join("\n");}
-function updateLedger(){
-  var cs=caseById(S.caseId);if(!cs)return;var el=document.getElementById("ledgerChips");if(!el)return;
-  var an=analyseStage(cs,cumulativeText(S.stageIndex));
-  el.querySelectorAll("[data-track]").forEach(function(node){var cid=node.getAttribute("data-track");var lit=(an.byConcept[cid]||[]).length>0;node.classList.toggle("lit",lit);var ck=node.querySelector(".ck");if(lit&&!ck){node.insertAdjacentHTML("beforeend",'<span class="ck">✓</span>');}else if(!lit&&ck){ck.remove();}});
-}
-function updateJargonMeter(){var cs=caseById(S.caseId);var el=document.getElementById("jargonMeter");if(!el)return;var toks=tokenize(S.stageTexts.bedside||"");var n=toks.filter(function(t){return JARGON[t.norm];}).length;el.textContent=n?(" · "+n+" medical word"+(n>1?"s":"")+" so far"):"";}
-
-
 /* ============ GRADING INTERSTITIAL ============ */
 var GLAYERS=[["Reading your words","Tokenising your note, casing and punctuation preserved"],
   ["Mapping meaning — negation-aware","‘lung clot’ becomes pulmonary embolism; ‘ruled out’ counts against a commitment"],
@@ -1593,22 +1221,6 @@ function gradingView(){
     return '<div class="layer '+cls+'"><div class="tk">'+tk+'</div><div><div class="t">'+esc(L[0])+'</div><div class="d">'+esc(L[1])+'</div></div></div>';}).join("");
   return shell("case",'<div class="card" style="max-width:640px;margin:40px auto"><h2>Grading your encounter</h2><div class="small" style="margin-bottom:14px">Four passes over your note.</div>'+layers+'<div class="disclaimer">Deterministic stand-in for the production language engine.</div></div>');
 }
-function runGrade(){
-  var cs=caseById(S.caseId);S.gradingActive=true;S.gradeLayer=0;draw();
-  var i=0;
-  (function tick(){i++;S.gradeLayer=i;draw();
-    if(i<GLAYERS.length)setTimeout(tick,640);
-    else setTimeout(function(){
-      var g=gradeAttempt(cs,S.stageTexts);
-      var rec={caseId:cs.id,startedAt:Date.now(),stages:{},grade:{pct:g.pct,verdict:g.verdict.t},followUp:null};
-      STK.forEach(function(k){rec.stages[k]={text:S.stageTexts[k]||"",committedAt:Date.now()};});
-      var arr=loadAttempts();arr.push(rec);lsSet(K_ATT,arr);
-      S.gradingActive=false;S.attemptIndex=arr.length-1;S._submittedCase=cs.id;
-      nav("#/report/"+encodeURIComponent(cs.id)+"/"+S.attemptIndex);
-    },720);
-  })();
-}
-
 /* ============ evidence highlighting ============ */
 function marksForStage(cs,text,g,stageId,isBedside){
   var an=analyseStage(cs,text);var marks=[];
@@ -1633,90 +1245,12 @@ function renderHighlight(raw,marks){
   return out.replace(/\n/g,"<br>");
 }
 
-/* ============ timeline ============ */
-function timelineHTML(cs,g){
-  var tl=g.timeline;
-  var cols=tl.nodes.map(function(name,i){
-    var here=tl.entries.filter(function(e){return e.stage===i;});
-    var dots=here.map(function(e){var cl=e.carried?"tl-solid":(e.dropped?"tl-drop":"tl-live");var star=e.isTarget?" tl-target":"";return '<div class="tldot '+cl+star+'">'+esc(e.label)+(e.carried?' ✓':(e.dropped?' ⋯':''))+'</div>';}).join("");
-    var ghosts=(i===0)?tl.entries.filter(function(e){return e.ghost;}).map(function(e){return '<div class="tldot tl-ghost">'+esc(e.label)+' — never raised</div>';}).join(""):"";
-    return '<div class="tlcol"><div class="tlnode">'+(i+1)+'</div><div class="tlname">'+esc(name)+'</div>'+dots+ghosts+'</div>';
-  }).join("");
-  var flags=[];
-  if(g.flags.cleanRevision)flags.push('<span class="tlflag good">CLEAN REVISION</span>');
-  if(g.flags.anchored)flags.push('<span class="tlflag bad">ANCHORED</span>');
-  if(g.flags.closedEarly)flags.push('<span class="tlflag bad">CLOSED EARLY</span>');
-  if(g.flags.drifted)flags.push('<span class="tlflag bad">DRIFTED</span>');
-  if(g.flags.assertionCapped)flags.push('<span class="tlflag bad">ASSERTIONS WITHOUT REASONING</span>');
-  return '<div class="card"><h2>The tracks timeline</h2><div class="small">Every diagnosis you raised, placed at the stage you first named it — solid where you carried it to a commitment, faded where you dropped it, hollow where a killer was never raised.</div>'
-    +'<div class="timeline">'+cols+'</div>'
-    +(flags.length?'<div class="tlflags">'+flags.join("")+'</div>':'')+'</div>';
-}
-
-/* ============ radar ============ */
-function radar(dims){
-  var cx=118,cy=118,R=88,n=dims.length;
-  function pt(i,r){var a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
-  var rings=[.25,.5,.75,1].map(function(r){return '<polygon points="'+dims.map(function(m,i){return pt(i,R*r).join(",");}).join(" ")+'" fill="none" stroke="#ddd4c2" stroke-width="1"/>';}).join("");
-  var spokes=dims.map(function(m,i){var p=pt(i,R);return '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#ddd4c2"/>';}).join("");
-  var poly='<polygon points="'+dims.map(function(m,i){return pt(i,R*m.v/100).join(",");}).join(" ")+'" fill="rgba(15,91,86,.14)" stroke="#0f5b56" stroke-width="2"/>';
-  var dots=dims.map(function(m,i){var p=pt(i,R*m.v/100);return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#0f5b56"/>';}).join("");
-  var labs=dims.map(function(m,i){var p=pt(i,R+16);return '<text x="'+p[0]+'" y="'+p[1]+'" fill="#8a8371" font-size="9" font-family="monospace" text-anchor="middle" dominant-baseline="middle">'+esc(m.key.split(" ")[0])+'</text>';}).join("");
-  return '<svg viewBox="-24 0 284 240" width="100%" style="max-width:300px;display:block;margin:0 auto">'+rings+spokes+poly+dots+labs+'</svg>';
-}
-
 /* ============ REPORT ============ */
 function reportView(id,gidx){
   var cs=caseById(id);var arr=loadAttempts();var rec=arr[gidx];
   if(!cs||!rec||rec.caseId!==id)return shell("cases",'<div class="card">Report not found.</div>');
   if(cs.kind==="narrative"){S._reportRec={rec:rec,gidx:gidx,cs:cs};return scorecardView(cs,rec,gidx);}
-  var texts={};STK.forEach(function(k){texts[k]=rec.stages[k]?rec.stages[k].text:"";});
-  var g=gradeAttempt(cs,texts);S.grade=g;S._reportRec={rec:rec,gidx:gidx,cs:cs};
-  var restored=(rec.followUp&&rec.followUp.recovered)?(g.followup.lost*g.followup.restore):0;
-  var recFU=(rec.followUp&&rec.followUp.recovered)?g.followup:null;
-  var dispPct=Math.min(100,Math.round(g.pct+restored));
-  if(rec.override&&typeof rec.override.score==="number")dispPct=rec.override.score;
-  var v=g.verdict;
-  var body='<div class="crumbs"><a data-nav="#/cases">Cases</a> › '+esc(cs.title)+' › Report</div>';
-  // verdict band
-  body+='<div class="verdictband '+v.cls+'"><h2>'+esc(v.t)+'</h2><div class="sm">'+esc(v.s)+'</div><span class="scorechip" id="scoreChip">'+dispPct+' / 100</span>'
-    +(rec.override?'<div class="capsule" style="margin-top:8px">Faculty override to '+esc(rec.override.score)+' — “'+esc(rec.override.note||"")+'” (engine grade was '+g.pct+').</div>':'')
-    +'</div>';
-  // timeline
-  body+=timelineHTML(cs,g);
-  // knows vs understands
-  body+='<div class="grid2">';
-  body+='<div class="card"><h2>What you know</h2>'
-    +g.dims5.slice(0,4).map(function(m){return '<div class="metric"><div class="top"><b>'+esc(m.key)+'</b><span>'+m.v+'%</span></div><div class="bar"><i style="width:'+m.v+'%;background:'+(m.v>=70?'var(--green)':m.v>=40?'var(--amber)':'var(--danger)')+'"></i></div></div>';}).join("")
-    +'<h3>The ones that can kill</h3>'+dangerRows(cs,g,recFU)+'</div>';
-  // understand
-  var bd=g.bedside;
-  var bdMarks=marksForStage(cs,texts.bedside,g,"bedside",true);
-  body+='<div class="card"><h2>'+(g.knowledge>=70&&g.expAccPct<50?"Knows it, can’t say it":"What you truly understand")+'</h2>'
-    +'<div class="small">Accuracy '+Math.round(bd.accuracy)+'/'+bd.accuracyMax+' · Simplicity '+Math.round(bd.simplicity)+'/'+bd.simplicityMax+' — shown separately, never multiplied.</div>'
-    +'<div class="evidence" style="margin-top:10px">'+(texts.bedside.trim()?renderHighlight(texts.bedside,bdMarks):'<span class="small">No bedside explanation given.</span>')+'</div>'
-    +bedsideSlots(bd,recFU)+'</div>';
-  body+='</div>';
-  // your own words
-  body+='<div class="card"><h2>Your own words, understood</h2><div class="small">Every stage as you wrote it. Teal = a concept credited · struck oxblood = detected as negated · amber dotted = asserted without a reason.</div>';
-  cs.stages.forEach(function(st,i){if(i===4)return;var t=texts[STK[i]];if(!t.trim())return;body+='<div class="evstage"><div class="eh">'+esc(st.title)+'</div><div class="evidence">'+renderHighlight(t,marksForStage(cs,t,g,STK[i],false))+'</div></div>';});
-  body+='<div class="legend"><span><i class="lgd" style="background:var(--accent)"></i>diagnosis / evidence</span><span><i class="lgd" style="background:var(--blue)"></i>investigation</span><span><i class="lgd" style="background:var(--green)"></i>management</span><span><i class="lgd" style="background:var(--ink-faint)"></i>a track used</span></div></div>';
-  // walked past
-  var walked=g.trackInfo.walked;
-  if(walked.length)body+='<div class="card"><h2>Tracks you walked past</h2><div class="walked">'+walked.map(function(t){return '<span class="wchip">'+esc(t.value)+'</span>';}).join("")+'</div><div class="small" style="margin-top:8px">A good clinician may discard a track — but never without looking at it.</div></div>';
-  // radar
-  body+='<div class="card"><h2>The five dimensions</h2>'+radar(g.dims5)+'</div>';
-  // gaps
-  if(g.gaps.length){body+='<div class="card"><h2>Gaps to close</h2>'+g.gaps.slice(0,5).map(function(gp){
-    var rec2=recFU&&((recFU.type==="patient"&&gp.id==="slot-"+recFU.slotId)||(recFU.type==="examiner"&&gp.id===recFU.itemId));
-    return '<div class="dangerrow"><div class="ic '+(rec2?"rec":"no")+'">'+(rec2?"~":"✕")+'</div><div><div>'+esc(gp.label)+(rec2?' <span class="recovered">recovered on questioning</span>':'')+'</div>'+(gp.capsule?'<div class="capsule">'+esc(gp.capsule)+'</div>':'')+'</div></div>';}).join("")+'</div>';}
-  // followup
-  body+=followupHTML(cs,g,rec);
-  // prose
-  body+='<div class="card"><h2>On the round — your examiner</h2><div class="profprose">'+profProse(cs,g)+'</div>'
-    +'<div class="disclaimer">Graded by a deterministic concept-and-negation engine standing in for the production language examiner. A deployed system uses a language model behind this same rubric, with faculty review of every grade.</div></div>';
-  body+='<div class="row"><button class="btn primary" data-revise="'+esc(cs.id)+'">Revise this note</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
-  return shell("report",body);
+  return shell("cases",'<div class="card">Report not found.</div>');
 }
 /* ---- scorecard report variant (narrative cases) ---- */
 function starGlyphs(n){var s='';for(var i=0;i<5;i++)s+='<span class="sc-star'+(i<n?' on':'')+'">'+(i<n?'★':'☆')+'</span>';return '<span class="sc-stars" title="'+n+' of 5">'+s+'</span>';}
@@ -1769,49 +1303,6 @@ function scorecardView(cs,rec,gidx){
   body+='<div class="row"><button class="btn primary" data-revise="'+esc(cs.id)+'">Revise this note</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
   return shell("report",body);
 }
-function dangerRows(cs,g,recFU){
-  var killers=cs.rubric.filter(function(it){return it.id==="killers";})[0];if(!killers)return "";
-  var ptext=(S._reportRec&&S._reportRec.rec.stages.patient)?S._reportRec.rec.stages.patient.text:"";
-  return killers.concepts.map(function(cid){var con=cs.conceptById(cid);var hits=g.SA.patient.byConcept[cid]||[];var named=hits.length>0;
-    var recovered=!named&&recFU&&recFU.type==="examiner"&&(recFU.concepts||[]).indexOf(cid)>=0;
-    var via=named?(' <span class="small">(read from “'+esc(ptext.slice(hits[0].rawStart,hits[0].rawEnd))+'”)</span>'):'';
-    var ic=named?"ok":(recovered?"rec":"no"),mk=named?"✓":(recovered?"~":"✕");
-    var tail=named?' — named before the results':(recovered?' — <span class="recovered">recovered on questioning</span>':' — <span style="color:var(--danger)">never raised</span>');
-    return '<div class="dangerrow"><div class="ic '+ic+'">'+mk+'</div><div><div>'+esc(con.label)+tail+via+'</div>'+((named||recovered)?'':'<div class="capsule">'+esc(killers.capsule||"")+'</div>')+'</div></div>';}).join("");
-}
-function bedsideSlots(bd,recFU){return '<h3>What the patient needed to hear</h3>'+bd.slots.map(function(s){
-  var recovered=!s.satisfied&&recFU&&recFU.type==="patient"&&recFU.slotId===s.id;
-  var ic=s.satisfied?"ok":(recovered?"rec":"no"),mk=s.satisfied?"✓":(recovered?"~":"✕");
-  var tail=s.satisfied&&s.via?' <span class="small">— said as “'+esc(s.via.phrase)+'”</span>':(s.satisfied?'':(recovered?' <span class="recovered">— recovered on questioning</span>':' <span style="color:var(--danger)">— not conveyed</span>'));
-  return '<div class="dangerrow"><div class="ic '+ic+'">'+mk+'</div><div><div>'+esc(s.label)+tail+'</div></div></div>';}).join("");}
-function followupHTML(cs,g,rec){
-  var f=g.followup;if(f.lost<=0&&!(rec.followUp))return "";
-  var recovered=rec.followUp&&rec.followUp.recovered;
-  var who=f.type==="patient"?"The patient asks":"Your examiner asks";
-  return '<div class="card"><h2>One question</h2><div class="followbox"><div class="small mono">'+esc(who)+'</div><div class="q">“'+esc(f.q)+'”</div>'
-    +(recovered?'<div class="recovered">Recovered on questioning — credit restored.</div>'
-      :'<div><textarea id="followReply" style="min-height:80px" placeholder="Answer in a line or two…"></textarea><div class="row"><button class="btn primary" id="followSubmit">Answer</button></div></div>')
-    +'</div></div>';
-}
-function profProse(cs,g){
-  var p=[],t=cs.target,tl=cs.conceptById(t).label.toLowerCase();
-  if(g.targetReached&&!g.hasFlags)p.push("Good. You landed on "+tl+" and, more importantly, you had the dangerous alternatives on the table from the start. That is exactly the habit to keep.");
-  else if(g.flags.anchored)p.push("You anchored on the wrong diagnosis and never revisited it after the evidence came back. When the numbers contradict your first guess, let go of it.");
-  else if(g.flags.cleanRevision)p.push("You started elsewhere and let the evidence move you to "+tl+". That willingness to revise is the mark of a safe clinician.");
-  else if(g.targetReached)p.push("You reached "+tl+" in the end — but the path had a wobble. Getting there by luck is not the same as getting there safely.");
-  else p.push("This one got away from you. The working diagnosis was "+tl+", and it was in the history if you read it slowly.");
-  var killers=cs.rubric.filter(function(i){return i.id==="killers";})[0];
-  var missedK=killers.concepts.filter(function(c){return !(g.SA.patient.byConcept[c]||[]).length;});
-  if(missedK.length)p.push("You did not raise "+missedK.map(function(c){return cs.conceptById(c).label.toLowerCase();}).join(", ")+" at the first stage. Those are the ones that kill quietly; name them out loud even when you think they are unlikely, then rule them out on purpose.");
-  else p.push("Your first-stage list covered every must-not-miss diagnosis. Ruling out the killers before you get comfortable is the whole game.");
-  if(g.DIM.investigation.earned<g.DIM.investigation.max*0.5)p.push("Ask for tests that will change what you do next, not a panel to feel safe.");
-  if(g.criticalMiss)p.push("On management you left out something that cannot be left out. A tidy diagnosis with unsafe management still harms the patient.");
-  if(g.expAccPct>=70&&g.bedside.simplicity>=6)p.push("Your explanation to the patient was plain and followed cause to effect. Say it as you would to a nervous intern at 3 AM: short sentences, cause then effect, no showing off.");
-  else if(g.expAccPct<50)p.push("At the bedside you slipped into words the patient could not follow. If you cannot say it simply, you do not yet own it.");
-  return p.map(function(x){return "<p>"+esc(x)+"</p>";}).join("");
-}
-
-
 /* ============ extra CSS (timeline / scatter) ============ */
 var EXTRA_CSS="\
 .timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;overflow-x:auto}\
@@ -1935,7 +1426,7 @@ function reviewTab(){
   return h;
 }
 function forgeTab(){
-  var sample="Mr. Sharma, 58, a farmer, comes with sudden severe tearing chest pain radiating to the back, worse than any pain before. He is sweating and restless. He has long-standing untreated hypertension.\nO/E: BP 176/104 in the right arm, 138/88 in the left arm. Early diastolic murmur. Pulses unequal.\nInvestigations: chest x-ray shows a widened mediastinum.\nWorking diagnosis: aortic dissection. Must exclude a myocardial infarction. Give analgesia and control the blood pressure; avoid anticoagulation.";
+  var sample="Mr. Rao, 46, three months of headaches and facial flushing. No breathlessness, no weight loss; he has never smoked and lives at sea level.\nO/E: plethoric but comfortable. SpO2 98% on room air, no cyanosis or clubbing.\nInvestigations: haemoglobin 19.8, haematocrit 60% — polycythaemia. Arterial blood gas normal. Serum erythropoietin is raised despite normal oxygen. CT abdomen shows a small renal mass.\nWorking diagnosis: false hypoxia from faulty oxygen sensing; consider von Hippel-Lindau. Refer for genetic testing and surveillance imaging.";
   var h='<div class="card"><div class="small">Drafting uses the same deterministic lexicon that grades answers. The production system drafts with the language engine; the editing workflow is identical.</div>'
     +'<h3>Paste your ward case</h3><textarea id="forgeText" placeholder="Paste your ward case as you’d tell it on rounds…">'+esc(S.authoredDraft&&S.authoredDraft.raw||"")+'</textarea>'
     +'<div class="row"><button class="btn" id="forgeSample">Load a sample ward case</button><button class="btn primary" id="forgeDraft">Draft the case</button></div></div>';
@@ -2017,18 +1508,22 @@ function publishDraft(){
 
 /* ============ GUIDED DEMO ============ */
 var DEMO_STEPS=[
-  {cap:"The landing card writes itself — the product in one sentence. Watch ‘Clot in the lung’ resolve to Pulmonary embolism.",run:function(){nav("#/");}},
-  {cap:"Open the PE case with a strong note pre-loaded across all five stages. The tracks ledger lights as the machine reads meaning.",run:function(){var cs=caseById("PE-014");S.caseId="PE-014";S._encCaseId="PE-014";S._submittedCase=null;S.stageIndex=0;S.stageTexts={};STK.forEach(function(k){S.stageTexts[k]=cs.demo.strong[k];});S.gradingActive=false;nav("#/case/PE-014");}},
-  {cap:"The report. The Tracks Timeline turns ‘we grade thinking order’ into a picture — and ‘excluded a dissection’ is credited in the student’s own sentence.",run:function(){demoReport("PE-014","strong");}},
-  {cap:"Now a keyword-stuffed answer. The verdict lands ‘assertions without reasoning — capped’ — concepts without a reason earn half credit.",run:function(){demoReport("PE-014","gamed");}},
-  {cap:"One question. The student left the danger-signs line out at the bedside; asked directly, they recover it — that row turns amber ‘recovered on questioning’ and credit is restored.",run:function(){demoReport("PE-014","strong-recover",{asked:"recovered",recovered:true});}},
-  {cap:"The college view. See how much of the batch missed each danger before the reveal; the quadrant scatter is the money slide; Export prints to PDF.",run:function(){S.role="faculty";S.facultyTab="cohort";S.facultyCase="PE-014";nav("#/faculty?tab=cohort");}},
-  {cap:"Case Forge. Paste a ward case, draft it with the same tokenizer, publish — it appears in the student library, fully playable.",run:function(){S.role="faculty";S.facultyTab="author";S.authoredDraft=null;nav("#/faculty?tab=author");}},
-  {cap:"Any student can name the disease to an examiner. The ones who understand it can explain it to the man in the bed.  ·  Read the case, follow the tracks.",run:function(){nav("#/");}}
+  {cap:"Read the mystery and answer in free text — no multiple choice. This opens the case with a strong narrative answer already typed across the three writing stages and the eight questions.",run:function(){var cs=caseById("VHL-003");S.caseId="VHL-003";S._encCaseId="VHL-003";S._submittedCase=null;S._qCaseId="VHL-003";S.stageTexts={};S.qAnswers={};STK.forEach(function(k){S.stageTexts[k]=cs.demo.strong[k];});cs.questions.forEach(function(it){S.qAnswers[it.id]=cs.demo.strong[it.id];});nav("#/case/VHL-003");}},
+  {cap:"The scorecard for that strong answer. Each of the eight questions earns its own stars, and reasoning is scored separately from recall.",run:function(){demoNarrative("strong");}},
+  {cap:"A Saba-style answer. It forgets a drug and openly meets a new concept for the first time — yet still scores 8.5, because reasoning and honesty are rewarded, not gamed keywords.",run:function(){demoNarrative("saba");}},
+  {cap:"The college view. The cohort analytics show the knowledge-versus-understanding scatter — the quadrant a college should watch.",run:function(){S.role="faculty";S.facultyTab="cohort";S.facultyCase="VHL-003";nav("#/faculty?tab=cohort");}}
 ];
-function demoReport(id,which,followUp){var cs=caseById(id);var texts={};STK.forEach(function(k){texts[k]=cs.demo[which][k];});
-  if(which==="strong-recover"){STK.forEach(function(k){texts[k]=cs.demo.strong[k];});texts.bedside=cs.demo.strong.bedside.replace(/If you.*$/,"").trim();}
-  var g=gradeAttempt(cs,texts);var rec={caseId:id,startedAt:Date.now(),stages:{},grade:{pct:g.pct,verdict:g.verdict.t},followUp:followUp||null,demo:true};STK.forEach(function(k){rec.stages[k]={text:texts[k],committedAt:Date.now()};});var arr=loadAttempts();arr.push(rec);lsSet(K_ATT,arr);nav("#/report/"+encodeURIComponent(id)+"/"+(arr.length-1));}
+function demoNarrative(key){
+  var cs=caseById("VHL-003");if(!cs)return;
+  var d=cs.demo[key]||{};
+  var rec={caseId:cs.id,startedAt:0,stages:{},answers:{},grade:{},followUp:null,kind:"narrative",demo:true};
+  STK.forEach(function(k){rec.stages[k]={text:d[k]||"",committedAt:0};});
+  cs.questions.forEach(function(it){rec.answers[it.id]=d[it.id]||"";});
+  var Q=gradeQuestions(cs,d);
+  rec.grade={pct:Math.round(Q.earned100),overall10:Q.overall10,verdict:"Scorecard"};
+  var arr=loadAttempts();arr.push(rec);lsSet(K_ATT,arr);
+  nav("#/report/"+encodeURIComponent(cs.id)+"/"+(arr.length-1));
+}
 function demoView(){if(S.demoStep<0)S.demoStep=0;DEMO_STEPS[S.demoStep].run();return "";}
 function maybeDemo(){
   document.querySelectorAll(".demobar").forEach(function(b){b.remove();});
@@ -2063,7 +1558,6 @@ function draw(){
   else if(hash.indexOf("#/faculty")===0){ensureRole("faculty");parseFacultyTab(hash);h=facultyView();}
   else {h=landingView();}
   app.innerHTML=h;wire();
-  if(hash.indexOf("#/case/")===0&&!S.gradingActive&&S.stageIndex<=1)updateLedger();
   if(S.demoStep>=0)maybeDemo();
 }
 function route(){draw();window.scrollTo(0,0);}
@@ -2077,14 +1571,7 @@ function wire(){
   document.querySelectorAll("[data-fcase]").forEach(function(el){el.onclick=function(){S.facultyCase=el.getAttribute("data-fcase");S.reviewSel=null;draw();};});
   document.querySelectorAll("[data-ftab]").forEach(function(el){el.onclick=function(){S.facultyTab=el.getAttribute("data-ftab");S.reviewSel=null;nav("#/faculty?tab="+S.facultyTab);};});
   document.querySelectorAll("[data-review]").forEach(function(el){el.onclick=function(){S.reviewSel=parseInt(el.getAttribute("data-review"),10);draw();};});
-  document.querySelectorAll("[data-demo]").forEach(function(el){el.onclick=function(){var cs=caseById(S.caseId);var which=el.getAttribute("data-demo");S.stageTexts[STK[S.stageIndex]]=cs.demo[which][STK[S.stageIndex]];draw();};});
   document.querySelectorAll("[data-revise]").forEach(function(el){el.onclick=function(){var id=el.getAttribute("data-revise");var texts={};STK.forEach(function(k){texts[k]=S._reportRec?S._reportRec.rec.stages[k].text:"";});startCase(id,texts);};});
-  document.querySelectorAll("[data-finding]").forEach(function(el){el.onclick=function(){var cs=caseById(S.caseId);var f=cs.stages[2].reveal.findings[parseInt(el.getAttribute("data-finding"),10)];openModal('<h2>'+esc(f.label)+'</h2><p class="serif">'+esc(f.text)+'</p><div class="row"><button class="btn primary" id="modalClose">Close</button></div>');};});
-  // textarea
-  var ta=document.getElementById("ans");
-  if(ta)ta.oninput=function(e){S.stageTexts[STK[S.stageIndex]]=e.target.value;var wc=(e.target.value.trim().match(/\S+/g)||[]).length;var w=document.getElementById("wc");if(w)w.textContent=wc+" words";var cs2=caseById(S.caseId);var okAdv=canAdvance(cs2,STK[S.stageIndex],e.target.value);var c=document.getElementById("commit");if(c)c.disabled=!okAdv;var fh=document.getElementById("floorHint");if(fh)fh.style.display=okAdv?"none":"";if(S.stageIndex<=1)updateLedger();if(S.stageIndex===4)updateJargonMeter();};
-  var commit=document.getElementById("commit");
-  if(commit)commit.onclick=function(){var cs2=caseById(S.caseId);if(!canAdvance(cs2,STK[S.stageIndex],S.stageTexts[STK[S.stageIndex]]||""))return;if(S.stageIndex<4){S.stageIndex++;draw();window.scrollTo(0,0);}else{runGrade();}};
   // followup
   var fs=document.getElementById("followSubmit");
   if(fs)fs.onclick=function(){var cs=S._reportRec.cs;var g=S.grade;var txt=document.getElementById("followReply").value;var okr=gradeReply(cs,g.followup.concepts,txt);var rec=S._reportRec.rec;rec.followUp={asked:g.followup.q,replyText:txt,recovered:okr};var arr=loadAttempts();arr[S._reportRec.gidx]=rec;lsSet(K_ATT,arr);draw();window.scrollTo(0,document.body.scrollHeight/2);};
