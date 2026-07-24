@@ -342,6 +342,109 @@ function mergeHits(hits){if(!hits.length)return [];hits=hits.slice().sort(functi
 function analyseStage(caseObj,rawText){var toks=tokenize(rawText);assignClauses(rawText,toks);var neg=findCues(toks,NEG_CUES),con=findCues(toks,CON_CUES);var byConcept={};caseObj.concepts.forEach(function(c){var merged=mergeHits(matchConcept(toks,c));merged.forEach(function(h){h.conceptId=c.id;h.cat=c.cat;h.clause=toks[h.tokenStart].clause;h.negated=cueNear(neg,h,5,true);h.considered=cueNear(con,h,5,false);h.rawStart=toks[h.tokenStart].start;h.rawEnd=toks[h.tokenEnd].end;h.hasReason=connNear(toks,h,12);});if(merged.length)byConcept[c.id]=merged;});return {toks:toks,byConcept:byConcept};}
 
 
+/* ============================================================
+   QUESTION LAYER (additive) — powers the narrative VHL-003 case.
+   Reuses the primitives above; never touches gradeAttempt.
+   ============================================================ */
+/* Q_CONN: superset of CONN_CUES for the depth questions */
+var Q_CONN_EXTRA=[["increases"],["increase"],["stimulates"],["stimulate"],["releases"],["release"],
+ ["response"],["responds"],["drives"],["drive"],["produces"],["produce"],["promotes"],["promote"],
+ ["activates"],["activate"],["leads"],["lead"],["results"],["result"],["makes"],["make"],["means"],
+ ["when"],["which"],["if"],["unless"],["as"],["to"],["into"],["so"]];
+var Q_CONN=CONN_CUES.concat(Q_CONN_EXTRA);
+function connNearQ(toks,hit,win){var c=hit.clause,lo=Math.max(0,hit.tokenStart-win),hi=Math.min(toks.length-1,hit.tokenEnd+win);
+ for(var k=lo;k<=hi;k++){if(toks[k].clause!==c)continue;for(var q=0;q<Q_CONN.length;q++){var cu=Q_CONN[q];if(k+cu.length>toks.length)continue;var ok=true;for(var j=0;j<cu.length;j++){if(toks[k+j].norm!==cu[j]){ok=false;break;}}if(ok)return true;}}return false;}
+
+var HONESTY_RE=/(not come across|haven'?t (met|come across|encountered)|never (heard|came across)|fails my memory|don'?t know|do not know|not sure|can'?t recall|cannot recall|unfamiliar|no idea|blanking)/i;
+
+/* ad-hoc concept for a question (no case.concepts bloat) */
+function qConcept(id,syns){return {id:id,synonyms:syns,_syn:syns.map(synStruct)};}
+function analyseAnswer(rawText,concepts){
+ var toks=tokenize(rawText);assignClauses(rawText,toks);
+ var neg=findCues(toks,NEG_CUES),con=findCues(toks,CON_CUES);var by={};
+ concepts.forEach(function(c){var m=mergeHits(matchConcept(toks,c));m.forEach(function(h){
+   h.conceptId=c.id;h.clause=toks[h.tokenStart].clause;
+   h.negated=cueNear(neg,h,5,true);h.considered=cueNear(con,h,5,false);
+   h.rawStart=toks[h.tokenStart].start;h.rawEnd=toks[h.tokenEnd].end;
+   h.reasoned=connNearQ(toks,h,12);});
+   if(m.length)by[c.id]=m;});
+ return {toks:toks,byConcept:by};
+}
+function cleanHit(by,id){var hs=by[id]||[];return hs.some(function(h){return !h.negated&&!h.considered;});}
+
+/* star verdict for one question item */
+function gradeQuestion(item,answer){
+ answer=String(answer==null?"":answer);
+ var out={id:item.id,recall:!!item.recall,w:item.w,verdict:null,stars:null,frac:0,assertionFlag:false,reasoned:false,feedback:""};
+ if(!answer.trim()){out.verdict="blank";out.stars=0;out.frac=0;out.feedback="No answer given.";return out;}
+ var pool=(item.core||[]).slice();
+ if(item.refine)pool.push(item.refine);
+ if(item.exclude)pool.push(item.exclude);
+ (item.pivot||[]).forEach(function(c){pool.push(c);});
+ (item.contra||[]).forEach(function(c){pool.push(c);});
+ var an=analyseAnswer(answer,pool),by=an.byConcept;
+ var wrongAssertion=(item.contra||[]).some(function(c){return cleanHit(by,c.id);});
+ // core coverage (computed early so the honest-gap short-circuit cannot override a substantively correct answer)
+ var coreHits=(item.core||[]).filter(function(c){return cleanHit(by,c.id);});
+ var coreHit=coreHits.length>0;
+ // STEP 0 — honest gap (only when there is no substantive core coverage)
+ if(HONESTY_RE.test(answer) && !wrongAssertion && !coreHit){
+   out.verdict="gap";out.stars=null;out.frac=0.65;out.assertionFlag=false;out.feedback=item.feedbackGap||"New concept — worth learning.";return out;}
+ // STEP 1 — core coverage
+ var refineHit=item.refine?cleanHit(by,item.refine.id):false;
+ var reasoned=item.recall?true:(item.core||[]).some(function(c){var hs=by[c.id]||[];return hs.some(function(h){return !h.negated&&!h.considered&&h.reasoned;});});
+ out.reasoned=reasoned;
+ // RECALL questions
+ if(item.recall){
+   var fact=(item.core||[]).some(function(c){return cleanHit(by,c.id);});
+   out.verdict=fact?"star":"blank";out.stars=fact?5:0;out.frac=fact?1:0;
+   out.feedback=fact?item.feedback5:(item.feedbackGap||"Not named.");return out;}
+ // wrong assertion
+ if(wrongAssertion){out.verdict="wrong";out.stars=0;out.frac=0;out.feedback="Contradicts the evidence.";return out;}
+ // SPECIAL: Q2 exclusion-of-reasoning — count investigations from RAW hits (a leading
+ // "no evidence of hypoxia" spuriously negates a trailing normal-test mention across the comma).
+ if(item.special==="exclusion"){
+   var nInv=(item.core||[]).filter(function(c){return (by[c.id]||[]).length>0;}).length;
+   var exHit=item.exclude?cleanHit(by,item.exclude.id):false;
+   if(nInv>=1 && exHit){out.verdict="star";out.stars=5;out.frac=1;out.feedback=item.feedback5;return out;}
+   if(nInv>=2){out.verdict="star";out.stars=4;out.frac=0.8;out.feedback=item.feedback4;return out;}
+   // fall through to generic ladder
+ }
+ // SPECIAL: Q3 contradiction reward
+ if(item.special==="contradiction"){
+   var epoHit=cleanHit(by,"epo"), pivotHit=(item.pivot||[]).some(function(c){return cleanHit(by,c.id);});
+   if(epoHit && pivotHit && reasoned){out.verdict="star";out.stars=5;out.frac=1;out.feedback=item.feedback5;return out;}
+ }
+ // GENERIC reasoning ladder
+ if(!coreHit){out.verdict="star";out.stars=1;out.frac=0.2;out.feedback="Only a tangential idea appears — name the core mechanism.";return out;}
+ if(coreHit && !reasoned){out.verdict="assert";out.stars=2;out.frac=0.4;out.assertionFlag=true;out.feedback="Concepts named without linking them — state the reason.";return out;}
+ if(item.refine && !refineHit){out.verdict="star";out.stars=4;out.frac=0.8;out.feedback=item.feedback4||item.feedback5;return out;}
+ var enough=(item.core.length<=1)||coreHits.length>=2;
+ if(enough){out.verdict="star";out.stars=5;out.frac=1;out.feedback=item.feedback5;return out;}
+ out.verdict="star";out.stars=3;out.frac=0.6;out.feedback=item.feedback4||item.feedback5;return out;
+}
+
+/* whole-question-set wrapper: Overall /10 + bars + flags */
+function gradeQuestions(caseObj,ans){
+ ans=ans||{};
+ var qs=caseObj.questions||[], res={}, reasonEarned=0, recallEarned=0, earned100=0, assertionCount=0, honestGapCount=0;
+ qs.forEach(function(item){
+   var r=gradeQuestion(item,ans[item.id]||"");res[item.id]=r;
+   var pts=r.frac*item.w; earned100+=pts;
+   if(item.recall)recallEarned+=pts; else reasonEarned+=pts;
+   if(!item.recall && r.assertionFlag)assertionCount++;
+   if(r.verdict==="gap")honestGapCount++;
+ });
+ var overall10=Math.round(earned100)/10;
+ var stk={patient:ans.patient||"",workup:ans.workup||"",results:ans.results||"",management:ans.management||"",bedside:ans.bedside||""};
+ var g=gradeAttempt(caseObj,stk);
+ var flags={anchored:g.flags.anchored,cleanRevision:g.flags.cleanRevision,assertionCapped:assertionCount>=3};
+ return {q:res, earned100:earned100, overall10:overall10,
+   reasoningPct:Math.round(reasonEarned/90*100), recallPct:Math.round(recallEarned/10*100),
+   assertionCount:assertionCount, honestGapCount:honestGapCount, flags:flags, engine:g};
+}
+
+
 /* ================= SCORING ENGINE ================= */
 function firstMention(an,cid){var h=an.byConcept[cid];return (h&&h.length)?h[0].tokenStart:Infinity;}
 
@@ -828,6 +931,250 @@ var CASES=[
    workup:"blood cultures, lumbar puncture, fbc, crp, pcr, lactate",results:"bacterial meningitis, meningococcal sepsis",
    management:"ceftriaxone, fluids, dexamethasone, oxygen, do not delay, before the lp",bedside:"meningococcal meningitis, septicaemia, petechiae"}
  }
+},
+{
+ id:"VHL-003",title:"The Case of the Man Who Was Never Short of Oxygen",specialty:"Internal Medicine / Molecular",difficulty:"Hard",minutes:20,
+ oneLiner:"A software engineer, headaches and too many red cells, whose oxygen is perfectly normal.",
+ competency:{code:"IM 5.12",text:"Reason from a contradiction to a molecular diagnosis"},
+ kind:"narrative",
+ target:"false_hypoxia",
+ concepts:[
+  {id:"chronic_hypoxia",label:"Chronic hypoxia",cat:"dx",
+   synonyms:["chronic hypoxia","hypoxia","low oxygen","oxygen deprivation","tissue hypoxia","secondary polycythaemia"]},
+  {id:"lung_disease",label:"Chronic lung disease",cat:"dx",
+   synonyms:["chronic lung disease","lung disease","copd","respiratory disease","chronic obstructive pulmonary disease"]},
+  {id:"osa",label:"Obstructive sleep apnoea",cat:"dx",
+   synonyms:["obstructive sleep apnoea","sleep apnoea","sleep apnea","osa"]},
+  {id:"false_hypoxia",label:"False hypoxia (faulty oxygen sensing)",cat:"dx",
+   synonyms:["false hypoxia","faulty oxygen sensing","oxygen sensing failure","oxygen sensing",
+             "pseudohypoxia","sensor fault","primary polycythaemia sensing","how oxygen is sensed"]},
+  {id:"vhl",label:"Von Hippel-Lindau syndrome",cat:"dx",
+   synonyms:["von hippel-lindau","von hippel lindau","vhl syndrome","vhl"]},
+  {id:"polycythaemia",label:"Polycythaemia",cat:"track",synonyms:["polycythaemia","polycythemia","too many red cells","raised haemoglobin","high haemoglobin","high blood count","raised red cell count"]},
+  {id:"epo",label:"Erythropoietin",cat:"track",synonyms:["erythropoietin","epo"]},
+  {id:"family_history",label:"Family history",cat:"track",synonyms:["family history","father died","sister","retinal tumour","kidney cancer in the family"]},
+  {id:"epo_test",label:"Serum erythropoietin",cat:"test",synonyms:["serum erythropoietin","erythropoietin level","epo level","erythropoietin","raised erythropoietin"]},
+  {id:"o2studies",label:"Oxygenation studies",cat:"test",synonyms:["pulse oximetry","oxygen saturation","arterial blood gas","blood gas","lung function","pulmonary function","echocardiography","echocardiogram"]},
+  {id:"ct_abdomen",label:"CT abdomen",cat:"test",synonyms:["ct abdomen","contrast ct","abdominal imaging","ct scan"]},
+  {id:"genetics",label:"Genetic testing / referral",cat:"rx",synonyms:["genetic testing","genetics referral","refer for genetic testing","vhl testing","germline testing"]},
+  {id:"surveillance",label:"Surveillance imaging",cat:"rx",synonyms:["surveillance","surveillance imaging","screening","follow-up imaging","monitor"]},
+  {id:"belz",label:"HIF-2-alpha inhibitor",cat:"rx",synonyms:["belzutifan","hif-2 inhibitor","hif-2-alpha inhibitor"]},
+  {id:"plain_sensor",label:"Faulty oxygen sensor (plain)",cat:"track",synonyms:["faulty oxygen sensor","oxygen sensor is faulty","body thinks it is short of oxygen","acts as if short of oxygen","makes too many red cells"]},
+  {id:"plain_inherited",label:"Inherited condition (plain)",cat:"track",synonyms:["inherited condition","runs in the family","passed down in the family","a growth in your kidney","growth in the kidney"]}
+ ],
+ tracks:[
+  {label:"Bloods",value:"Haemoglobin 20.4, Haematocrit 62% — polycythaemia",conceptId:"polycythaemia"},
+  {label:"Hormone",value:"Serum erythropoietin markedly elevated",conceptId:"epo"},
+  {label:"Family",value:"Father: kidney cancer at 43; sister: retinal tumour",conceptId:"family_history"}
+ ],
+ stages:[
+  {id:"patient",title:"The patient",kicker:"St. Bartholomew's Hospital. Watson brings a fresh admission to Holmes.",
+   reveal:{dialogue:[
+      {s:"Watson",t:"Holmes, Internal Medicine requests your opinion. A 34-year-old software engineer — three months of headaches."},
+      {s:"Holmes",t:"Fatigue?"},
+      {s:"Watson",t:"Oddly, no."},
+      {s:"Holmes",t:"Breathlessness? Weight loss?"},
+      {s:"Watson",t:"None of either. He has never smoked, and he lives in London — not at altitude."}],
+     vitals:[{label:"Appearance",value:"Well"},{label:"Temp",value:"36.8 C"},{label:"BP",value:"126/78"},{label:"SpO2",value:"99% RA"}]},
+   prompt:"Before any labs — what stands out, and what is your single leading working hypothesis?",
+   placeholder:"What stands out is ... my leading hypothesis is ..."},
+  {id:"workup",title:"The remarkable finding",kicker:"Routine bloods are back — and remarkable.",
+   reveal:{dialogue:[
+      {s:"Watson",t:"Haemoglobin twenty point four. Haematocrit sixty-two per cent."},
+      {s:"Holmes",t:"Polycythaemia."},
+      {s:"Watson",t:"Exactly. The physicians suspect chronic hypoxia."},
+      {s:"Holmes",t:"A reasonable hypothesis."}],
+     tables:[{title:"Full blood count",rows:[
+      {test:"Haemoglobin",value:"20.4 g/dL",ref:"13-17",flag:"H",conceptId:"polycythaemia"},
+      {test:"Haematocrit",value:"62%",ref:"40-52",flag:"H",conceptId:"polycythaemia"}]}]},
+   prompt:"Commit to your working diagnosis now and say why.",
+   placeholder:"The working diagnosis is ... because ..."},
+  {id:"results",title:"The contradiction",kicker:"The oxygen studies come back.",
+   reveal:{findings:[
+      {label:"Pulse oximetry",text:"99% on room air.",conceptId:"o2studies"},
+      {label:"Arterial blood gas",text:"Normal.",conceptId:"o2studies"},
+      {label:"Chest X-ray",text:"Clear.",conceptId:"o2studies"},
+      {label:"Pulmonary function",text:"Normal.",conceptId:"o2studies"},
+      {label:"Echocardiography",text:"No right-to-left shunt.",conceptId:"o2studies"},
+      {label:"Serum erythropoietin",text:"MARKEDLY ELEVATED despite normal oxygen. Creatinine, urinalysis, liver function all normal.",conceptId:"epo_test"}],
+     dialogue:[
+      {s:"Holmes",t:"Excellent. Our first hypothesis is dead — not a shred of oxygen deprivation."},
+      {s:"Watson",t:"Yet the erythropoietin is markedly elevated, and the oxygen is perfectly normal!"},
+      {s:"Holmes",t:"No, Watson. The oxygen is normal. The cell merely refuses to believe it."}]},
+   prompt:"The oxygen is normal but erythropoietin is high. Revise your diagnosis — what is really going on, and what did the normal tests rule out?",
+   placeholder:"I am revising to ... because ..."},
+  {id:"management",title:"The reveal",kicker:"The picture resolves.",
+   reveal:{dialogue:[
+      {s:"Holmes",t:"The body behaves as though climbing Mount Everest — while seated in central London. This is not hypoxia. It is false hypoxia: the oxygen sensors themselves are at fault."},
+      {s:"Radiologist",t:"Contrast CT abdomen — a 2.8 cm hypervascular mass at the upper pole of the left kidney."},
+      {s:"Holmes",t:"Any family history?"},
+      {s:"Patient",t:"My father died of kidney cancer at forty-three. My sister lost vision in one eye from a retinal tumour."},
+      {s:"Holmes",t:"The family tree. There lies our diagnosis."}],
+     findings:[
+      {label:"CT abdomen",text:"2.8 cm hypervascular mass at the upper pole of the left kidney (suspected renal cell carcinoma).",conceptId:"ct_abdomen"},
+      {label:"Working diagnosis",text:"Von Hippel-Lindau (VHL) syndrome — a heritable defect of oxygen sensing.",conceptId:"family_history"}]},
+   prompt:"",placeholder:"",readOnly:true},
+  {id:"bedside",title:"Understanding check",kicker:"Eight questions. Reasoning is worth more than recall.",
+   reveal:{questionsIntro:"Answer in your own words. There is no penalty for saying you don't yet know something."},
+   prompt:"",placeholder:""}
+ ],
+ rubric:[
+  {id:"killers",stage:"patient",mode:"consider",dim:"danger",w:8,safety:true,
+   concepts:["chronic_hypoxia","lung_disease","osa"],
+   capsule:"Before calling it primary, the secondary causes of polycythaemia must be on the table."},
+  {id:"dx-early",stage:"workup",mode:"commit",dim:"diagnostic",w:16,concepts:["chronic_hypoxia"],
+   capsule:"Chronic hypoxia is the correct FIRST hypothesis once polycythaemia is seen — reasonable, not final."},
+  {id:"workup",stage:"results",mode:"consider",dim:"investigation",w:12,concepts:["o2studies","epo_test"],scattergunCap:0.9,
+   capsule:"The oxygen studies plus erythropoietin are what break the first hypothesis."},
+  {id:"dx-final",stage:"results",mode:"commit",dim:"diagnostic",w:24,cantMiss:true,concepts:["false_hypoxia"],
+   capsule:"Normal oxygen with high erythropoietin means the sensing is at fault — false hypoxia."},
+  {id:"mgmt",stage:"management",mode:"do",dim:"management",w:20,safety:true,
+   concepts:["genetics","surveillance","belz"],critical:["genetics"],
+   capsule:"A renal mass with this family history mandates VHL genetic referral and surveillance."}
+ ],
+ bedside:{accuracyMax:12,simplicityMax:8,weight:20,jargonTerms:["polycythaemia","erythropoietin","hypoxia"],
+  slots:[
+   {id:"what",label:"What it is",concepts:["plain_sensor"],plainRequired:true},
+   {id:"why",label:"Why it happened",concepts:["plain_inherited","family_history"]},
+   {id:"next",label:"What we do next",concepts:["genetics","surveillance"]},
+   {id:"danger",label:"What to watch for",concepts:["family_history","surveillance"]}],
+  patientQuestions:{what:"So what is actually wrong with me, doctor?",why:"Why did this happen to me?",next:"What happens now?",danger:"What should my family do?",none:"Will my children get this too?"}},
+ revision:{target:"false_hypoxia",contradicted:["chronic_hypoxia","lung_disease"],discriminator:"epo_test",close:["osa"]},
+ questions:[
+  {id:"q1",recall:false,w:15,qtext:"Why did the patient's elevated haemoglobin initially suggest chronic hypoxia?",
+   core:[qConcept("hypoxia",["hypoxia","chronic hypoxia","low oxygen","oxygen deprivation"]),
+         qConcept("epo",["erythropoietin","epo"]),
+         qConcept("marrow",["bone marrow","marrow"]),
+         qConcept("rbc",["red cells","red blood cells","rbc","red cell mass"]),
+         qConcept("hb_up",["haemoglobin","hb","haematocrit","hct"])],
+   refine:null,contra:[qConcept("false_hypoxia",["false hypoxia"])],
+   feedback5:"Correct — chronic hypoxia drives the kidney to release erythropoietin, which stimulates the marrow to make more red cells, so haemoglobin rises.",
+   feedback4:"State the chain, not just the parts: hypoxia to erythropoietin to red cells to a rising haemoglobin.",
+   feedbackGap:"New concept — the hypoxia to erythropoietin to red-cell chain is worth learning."},
+
+  {id:"q2",recall:false,w:15,special:"exclusion",qtext:"Which normal investigations forced you to abandon that diagnosis?",
+   core:[qConcept("spo2",["pulse oximetry","oxygen saturation","sats","spo2"]),
+         qConcept("abg",["arterial blood gas","blood gas","abg"]),
+         qConcept("cxr",["chest x-ray","cxr","chest film"]),
+         qConcept("pft",["pulmonary function","lung function","pft","spirometry"]),
+         qConcept("echo",["echocardiogram","echo","echocardiography"])],
+   exclude:qConcept("exclude_hypoxia",["no hypoxia","no evidence of hypoxia","excluded hypoxia","ruled out hypoxia"]),
+   refine:null,contra:[],
+   feedback5:"Right — normal pulse oximetry, blood gas, chest X-ray, lung function and echo together excluded every major cause of chronic hypoxia.",
+   feedback4:"Name the point of the normals — together they exclude every cause of chronic hypoxia.",
+   feedbackGap:"New concept — the normal oxygen studies are what exclude hypoxia."},
+
+  {id:"q3",recall:false,w:15,special:"contradiction",qtext:"Why is an elevated erythropoietin level unexpected when oxygen saturation is normal?",
+   core:[qConcept("epo",["erythropoietin","epo"]),
+         qConcept("o2_normal",["oxygen normal","saturation normal","spo2 99","plenty of oxygen","oxygen saturation is normal"])],
+   pivot:[qConcept("no_reason",["no reason","should not be high","no stimulus","not responding","not the case"]),
+          qConcept("primary",["primary","primary phenomenon","autonomous"]),
+          qConcept("sensing",["oxygen sensing","sensing machinery","senses oxygen","how oxygen is sensed"])],
+   refine:qConcept("sensing_ref",["oxygen sensing","sensing machinery","senses oxygen","how oxygen is sensed"]),
+   contra:[],
+   feedback5:"Exactly — with saturation normal there is no physiological reason for erythropoietin to rise; the fault is in the machinery that senses oxygen, not in oxygen itself.",
+   feedback4:"Good — now name where the fault lies: the oxygen-sensing machinery, not oxygen itself.",
+   feedbackGap:"New concept — erythropoietin should track oxygen; here it does not, which is the pivot."},
+
+  {id:"q4",recall:false,w:15,qtext:"What is meant by 'false hypoxia'?",
+   core:[qConcept("acts_hypoxic",["behaves as if oxygen absent","acts starved of oxygen","thinks it is hypoxic","act as if short of oxygen","behave as though oxygen is absent"]),
+         qConcept("o2_plentiful",["oxygen plentiful","oxygen present","oxygen rich","oxygen is there","oxygen-rich"]),
+         qConcept("sensing_fail",["failure of sensing","oxygen sensing failure","oxygen sensing","misreads oxygen"]),
+         qConcept("hypoxia_pathway",["hypoxia response pathway","hypoxia-inducible","hypoxia pathways"])],
+   refine:qConcept("sensing_ref",["failure of sensing","oxygen sensing failure","sensing failure","misreads oxygen"]),
+   contra:[qConcept("chronic_hypoxia",["chronic hypoxia"])],
+   feedback5:"Yes — the cells act as if starved of oxygen while it is plentiful; it is a failure of oxygen SENSING, not a true shortage.",
+   feedback4:"Add the distinction: it is a sensing failure, not an actual oxygen shortage.",
+   feedbackGap:"New concept — cells activate hypoxia pathways in an oxygen-rich environment; a sensing failure, not a shortage."},
+
+  {id:"q5",recall:false,w:15,qtext:"What role does the VHL protein normally play in oxygen sensing?",
+   core:[qConcept("vhl_binds",["vhl binds","vhl recognises","vhl attaches","vhl targets","vhl protein then binds","binds the hydroxylated hif","binds to hif"]),
+         qConcept("hif",["hif"]),
+         qConcept("degrade",["ubiquitin","proteasome","proteasomal","degraded","degradation","destroyed","broken down"]),
+         qConcept("o2_present",["presence of oxygen","when oxygen present","oxygen abundant","oxygen is plentiful","oxygen is present"])],
+   refine:qConcept("hydroxylated",["hydroxylated","hydroxylation","hydroxylate","prolyl hydroxylase","hydroxylase"]),
+   contra:[],
+   feedback5:"Correct and precise — prolyl hydroxylases use oxygen to hydroxylate HIF; VHL then binds the HYDROXYLATED HIF, tags it with ubiquitin, and the proteasome destroys it.",
+   feedback4:"Close. VHL binds HIF only once it has been HYDROXYLATED by oxygen-dependent prolyl hydroxylases — it is the hydroxyl tag, not oxygen alone, that VHL recognises.",
+   feedbackGap:"New concept — VHL binds hydroxylated HIF and marks it for proteasomal destruction."},
+
+  {id:"q6",recall:false,w:15,qtext:"Why do VHL mutations predispose to highly vascular tumours?",
+   core:[qConcept("hif_persists",["hif escapes","hif not destroyed","more hif","hif builds up","hif available","hif is no longer destroyed"]),
+         qConcept("acts_hypoxic",["behaves as hypoxic","permanently oxygen-starved","senses hypoxia","sense hypoxia","permanently oxygen starved"]),
+         qConcept("vegf",["vegf","vascular endothelial growth factor"]),
+         qConcept("angio",["angiogenesis","new blood vessels","new vessels","vascular growth"])],
+   refine:qConcept("vascdriver",["vegf","angiogenesis","new blood vessels","new vessels","vascular growth"]),
+   contra:[],
+   feedback5:"Right — without VHL, HIF persists and constitutively drives VEGF, so the tissue behaves as if permanently hypoxic and grows new vessels, giving the vascular tumours of VHL.",
+   feedback4:"Good — name the vascular driver: persistent HIF drives VEGF and angiogenesis.",
+   feedbackGap:"New concept — persistent HIF drives VEGF, hence the vascular tumours."},
+
+  {id:"q7",recall:true,w:5,qtext:"Which modern drug targets the HIF pathway in VHL disease?",
+   core:[qConcept("belzutifan",["belzutifan"]),qConcept("hif2",["hif-2","hif-2-alpha","hif2a inhibitor","hif 2 alpha"])],
+   refine:null,contra:[],
+   feedback5:"Belzutifan — a selective HIF-2-alpha inhibitor.",
+   feedbackGap:"The answer is Belzutifan, a selective HIF-2-alpha inhibitor — honest to flag the gap rather than guess.",
+   recallRedTag:true},
+
+  {id:"q8",recall:true,w:5,qtext:"Which Nobel Prize-winning discovery transformed our understanding of cellular oxygen sensing?",
+   core:[qConcept("nobel2019",["2019 nobel","nobel prize 2019","nobel 2019","2019"]),
+         qConcept("laureates",["kaelin","ratcliffe","semenza"])],
+   refine:null,contra:[],
+   feedback5:"The 2019 Nobel Prize in Physiology or Medicine (Kaelin, Ratcliffe, Semenza) for how cells sense and adapt to oxygen.",
+   feedbackGap:"The answer is the 2019 Nobel Prize (Kaelin, Ratcliffe, Semenza) for oxygen sensing."}
+ ],
+ demo:{
+  strong:{
+   patient:"A well-looking young man with headaches and, pointedly, none of the usual causes of secondary polycythaemia — no smoking, no breathlessness, no altitude. Nothing yet, but the one worth chasing is a hypoxia-driven picture because that is the common cause.",
+   workup:"The working diagnosis is chronic hypoxia driving a secondary polycythaemia, because a haemoglobin of 20.4 with a haematocrit of 62 means far too many red cells, and chronic hypoxia is the commonest reason the kidney pours out erythropoietin to make them.",
+   results:"This is not chronic hypoxia, because the saturation is 99%, the blood gas, chest film, lung function and echo are all normal, yet the erythropoietin is markedly high. So the fault must be in how oxygen is sensed — a false hypoxia — and with a renal mass and this family history it points to VHL.",
+   management:"I would refer for genetic testing for von Hippel-Lindau because the renal mass and family history fit, arrange surveillance imaging, and consider a HIF-2-alpha inhibitor such as belzutifan.",
+   bedside:"Your body is making too many red cells because the oxygen sensor in your cells is faulty and makes it act as if short of oxygen when you are not. We found a growth in your kidney and, with your family history, this looks like an inherited condition. We will refer you to a specialist and screen you and your family.",
+   q1:"Chronic hypoxia makes the kidney release erythropoietin, which stimulates the bone marrow to produce more red cells, so the haemoglobin and haematocrit rise — a high haemoglobin therefore points to chronic hypoxia.",
+   q2:"The pulse oximetry at 99%, a normal arterial blood gas, a clear chest X-ray, normal pulmonary function and an echo with no shunt were all normal, which together exclude every major cause of chronic hypoxia — so there is no evidence of hypoxia at all.",
+   q3:"Erythropoietin is normally the kidney's response to inadequate oxygen delivery, but with a saturation of 99% there is no physiological reason for it to be high, so the problem cannot be oxygen itself — it must be the machinery that senses oxygen.",
+   q4:"False hypoxia means the cells behave as though oxygen is absent when it is actually plentiful, activating the hypoxia-response pathways in an oxygen-rich environment — a failure of oxygen sensing rather than a real shortage.",
+   q5:"When oxygen is plentiful the prolyl hydroxylase enzymes use it to hydroxylate HIF, so the VHL protein then binds the hydroxylated HIF, attaches ubiquitin, and the proteasome destroys it.",
+   q6:"If VHL is defective, HIF is no longer destroyed, so the cell behaves as if permanently oxygen-starved and continuously drives VEGF, which grows new blood vessels and produces the highly vascular tumours of VHL such as clear-cell renal carcinoma and retinal angiomas.",
+   q7:"Belzutifan, a selective HIF-2-alpha inhibitor.",
+   q8:"The 2019 Nobel Prize in Physiology or Medicine to Kaelin, Ratcliffe and Semenza, for discovering how cells sense and adapt to oxygen."
+  },
+  saba:{
+   patient:"Young man, headaches, high haemoglobin — I would think about causes of a raised red cell count, possibly secondary to low oxygen.",
+   workup:"Raised haemoglobin from polycythaemia, likely secondary to chronic hypoxia because the kidney would make more erythropoietin in response to low oxygen.",
+   results:"This does not fit simple hypoxia, because the oxygen saturation is normal but the erythropoietin is high, so it seems to be a primary problem in how oxygen is sensed.",
+   management:"I would ask a specialist about the kidney mass and the family history.",
+   bedside:"You are making too many red cells because your body acts as if short of oxygen; there is a growth in your kidney and it may run in the family, so we will refer you.",
+   q1:"Hypoxia increases erythropoietin which increases RBC mass and Hb.",
+   q2:"no evidence of hypoxia as oxygen saturation was normal",
+   q3:"unless it is a primary phenomenon, erythropoietin levels go up usually in response to hypoxia, not the case here",
+   q4:"I have not come across 'false hypoxia' before.",
+   q5:"VHL binds to HIF in presence of oxygen??",
+   q6:"If VHL is mutated, more HIF is available and tissues sense hypoxia and promote angiogenesis.",
+   q7:"I read about it previously but it fails my memory.",
+   q8:""
+  },
+  gamed:{
+   patient:"polycythaemia hypoxia erythropoietin high haemoglobin haematocrit chronic hypoxia",
+   workup:"polycythaemia chronic hypoxia erythropoietin high haemoglobin haematocrit",
+   results:"polycythaemia chronic hypoxia erythropoietin high haemoglobin",
+   management:"genetic testing surveillance belzutifan referral",
+   bedside:"polycythaemia erythropoietin hypoxia",
+   q1:"hypoxia erythropoietin rbc haemoglobin haematocrit bone marrow",
+   q2:"pulse oximetry arterial blood gas chest x-ray pulmonary function echocardiogram normal",
+   q3:"erythropoietin oxygen saturation normal contradiction primary",
+   q4:"false hypoxia oxygen sensing pathway",
+   q5:"vhl hif oxygen prolyl hydroxylase ubiquitin proteasome degradation",
+   q6:"vhl hif vegf angiogenesis vascular tumours renal cell carcinoma haemangioblastoma",
+   q7:"hif inhibitor drug targets pathway",
+   q8:"nobel prize oxygen sensing cells discovery pathway"
+  },
+  weak:{
+   patient:"high blood count",workup:"there are too many red cells",results:"the erythropoietin is high",
+   management:"see a specialist",bedside:"too many red cells",
+   q1:"there are too many red cells",q2:"",q3:"the erythropoietin is high",q4:"",q5:"something to do with genes",q6:"it causes cancer",q7:"",q8:""
+  }
+ }
 }
 ];
 
@@ -933,6 +1280,47 @@ function __selftest(){
   // determinism
   var d1=JSON.stringify(summ(grade("PE-014",pe.demo.strong)));var d2=JSON.stringify(summ(grade("PE-014",pe.demo.strong)));ok("deterministic",d1===d2);
   function summ(g){return {p:g.pct,d:g.dims5.map(function(x){return x.v;}),k:g.knowledge,u:g.understanding,f:g.flags};}
+  // ===== VHL-003 question layer =====
+  var vhl=caseById("VHL-003");
+  if(vhl){
+    var saba=gradeQuestions(vhl,vhl.demo.saba);
+    var strong=gradeQuestions(vhl,vhl.demo.strong);
+    var gm3=gradeQuestions(vhl,vhl.demo.gamed);
+    ok("VHL Saba overall 8.5",saba.overall10===8.5);
+    ok("VHL Saba in band",saba.overall10>=8.0&&saba.overall10<=9.0);
+    ok("VHL strong perfect",strong.overall10>=9.5);
+    ok("VHL Q4 honest gap not zero",saba.q.q4.verdict==="gap"&&saba.q.q4.frac>0);
+    ok("VHL Q4 gap not gaming",saba.q.q4.assertionFlag===false);
+    ok("VHL Q7 honest gap not zero",saba.q.q7.verdict==="gap"&&saba.q.q7.frac>0);
+    ok("VHL Q7 gap no penalty & not gaming",saba.q.q7.assertionFlag===false);
+    var q5item=vhl.questions.filter(function(x){return x.id==="q5";})[0];
+    var an5a=gradeQuestion(q5item,"VHL binds to HIF in the presence of oxygen");
+    ok("VHL Q5 no-hydroxylated=4",an5a.stars===4);
+    var an5b=gradeQuestion(q5item,"prolyl hydroxylases hydroxylate HIF so VHL binds the hydroxylated HIF for proteasomal degradation");
+    ok("VHL Q5 hydroxylated=5",an5b.stars===5);
+    ok("VHL Q3 contradiction rewarded",saba.q.q3.stars===5);
+    ok("VHL Q2 exclusion reasoning=5",saba.q.q2.stars===5);
+    ok("VHL Q6 correct mechanism=5",saba.q.q6.stars===5);
+    ok("VHL Q1 chain reasoned=5",saba.q.q1.stars===5);
+    ok("VHL gamed low",gm3.overall10<=5.0);
+    ok("VHL gamed assertionCapped",gm3.flags.assertionCapped===true);
+    ok("VHL gamed >=3 assertion Qs",gm3.assertionCount>=3);
+    ok("VHL gamed not honest-misfire",gm3.honestGapCount===0);
+    var q4item=vhl.questions.filter(function(x){return x.id==="q4";})[0];
+    var hg=gradeQuestion(q4item,"I have not come across false hypoxia before");
+    ok("honesty=gap",hg.verdict==="gap");
+    var asrt=gradeQuestion(q4item,"false hypoxia oxygen sensing pathway");
+    ok("keyword-only=assertion not gap",asrt.verdict!=="gap"&&asrt.assertionFlag===true&&asrt.stars===2);
+    ok("VHL gamed anchored",gm3.flags.anchored===true);
+    ok("VHL Saba clean revision",saba.flags.cleanRevision===true);
+    ok("VHL strong clean revision",strong.flags.cleanRevision===true);
+    var wsum=vhl.questions.reduce(function(a,it){return a+(it.recall?0:it.w);},0);
+    var rsum=vhl.questions.reduce(function(a,it){return a+(it.recall?it.w:0);},0);
+    ok("VHL reasoning weighted over recall",wsum===90&&rsum===10);
+    var det1=JSON.stringify(gradeQuestions(vhl,vhl.demo.saba).q);
+    var det2=JSON.stringify(gradeQuestions(vhl,vhl.demo.saba).q);
+    ok("VHL questions deterministic",det1===det2);
+  }
   return {pass:pass,total:A.length,fails:A.filter(function(a){return !a.ok;}).map(function(a){return a.name;}),all:A};
 }
 
@@ -1056,6 +1444,7 @@ function isDemoText(cs,key,val){if(!cs||!cs.demo||val==null)return false;var v=S
 function canAdvance(cs,key,val){var wc=(String(val==null?"":val).trim().match(/\S+/g)||[]).length;return wc>=15||isDemoText(cs,key,val);}
 function encounterView(){
   var cs=caseById(S.caseId);if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
+  if(cs.kind==="narrative")return narrativeEncounterView(cs);
   var idx=S.stageIndex,stage=cs.stages[idx];
   var rail=cs.stages.map(function(s,i){var cls=i<idx?"done":(i===idx?"cur":"locked");var mk=i<idx?"✓":(i===idx?(i+1):"🔒");return '<div class="railstep '+cls+'"><span class="mk">'+mk+'</span>'+esc(s.title)+'</div>';}).join("");
   var body='<div class="crumbs"><a data-nav="#/cases">Cases</a> › '+esc(cs.title)+'</div>';
@@ -1085,6 +1474,64 @@ function encounterView(){
   body+='</div>';
   if(idx<=1){body+=ledgerHTML(cs,cumulativeText(idx));}
   return shell("case",body);
+}
+/* ---- narrative encounter (single scroll page + 8 depth questions) ---- */
+function narrativeRevealHTML(st){
+  var r=st.reveal||{},h='';
+  if(st.kicker)h+='<div class="small" style="margin-bottom:6px">'+esc(st.kicker)+'</div>';
+  if(r.history)h+='<div class="reveal">'+esc(r.history)+'</div>';
+  if(r.dialogue)h+='<div class="dlg">'+r.dialogue.map(function(d){return '<div class="dl"><span class="sp">'+esc(d.s)+'</span><span class="tx">'+esc(d.t)+'</span></div>';}).join("")+'</div>';
+  if(r.vitals)h+='<div class="vitals">'+r.vitals.map(function(v){return '<div class="vitile"><b>'+esc(v.label)+'</b>'+esc(v.value)+'</div>';}).join("")+'</div>';
+  if(r.tables)r.tables.forEach(function(t){h+='<div style="overflow-x:auto"><table class="labtable"><caption>'+esc(t.title)+'</caption><thead><tr><th>Test</th><th>Value</th><th>Ref</th><th></th></tr></thead><tbody>';
+    t.rows.forEach(function(row){h+='<tr><td>'+esc(row.test)+'</td><td>'+esc(row.value)+'</td><td>'+esc(row.ref)+'</td><td>'+(row.flag?'<span class="flagpill '+row.flag+'">'+esc(row.flag)+'</span>':'')+'</td></tr>';});
+    h+='</tbody></table></div>';});
+  if(r.findings)h+=r.findings.map(function(f){return '<div class="findingrow" style="cursor:default"><span class="lb">'+esc(f.label)+'</span><span class="small">'+esc(f.text)+'</span></div>';}).join("");
+  if(r.narrative)h+='<div class="reveal" style="margin-top:10px">'+esc(r.narrative)+'</div>';
+  return h;
+}
+function narrativeEncounterView(cs){
+  if(S._qCaseId!==cs.id){S.qAnswers={};S._qCaseId=cs.id;}
+  S.qAnswers=S.qAnswers||{};
+  var body='<div class="crumbs"><a data-nav="#/cases">Cases</a> › '+esc(cs.title)+'</div>';
+  body+='<div class="card"><div class="kicker">Narrative case · reasoning examined</div><h1 class="pagetitle" style="margin:6px 0">'+esc(cs.title)+'</h1><div class="small">'+esc(cs.oneLiner)+'</div></div>';
+  // capture map: which written stage each narrative block owns
+  var capture={patient:"patient",workup:"workup",results:"results"};
+  cs.stages.forEach(function(st,i){
+    if(i===4)return; // questions handled separately
+    body+='<div class="card"><div class="kicker">'+esc(st.title)+'</div>'+narrativeRevealHTML(st);
+    var key=capture[st.id];
+    if(key){
+      body+='<div class="prompt" style="margin-top:12px">'+esc(st.prompt)+'</div>';
+      var v=S.stageTexts[key]||"";
+      body+='<textarea id="ans-'+key+'" data-nans="'+key+'" placeholder="'+esc(st.placeholder||"")+'">'+esc(v)+'</textarea>';
+    }
+    body+='</div>';
+  });
+  // question block
+  var qs=cs.stages[4];
+  body+='<div class="card"><div class="kicker">'+esc(qs.title)+'</div>'
+    +'<div class="small">'+esc((qs.reveal&&qs.reveal.questionsIntro)||"")+'</div>';
+  (cs.questions||[]).forEach(function(it,n){
+    var v=S.qAnswers[it.id]||"";
+    body+='<div class="evstage" style="margin-top:16px"><div class="eh">Q'+(n+1)+'. '+esc(it.qtext)+'</div>'
+      +'<textarea id="ans-'+esc(it.id)+'" data-nq="'+esc(it.id)+'" placeholder="In your own words ...">'+esc(v)+'</textarea></div>';
+  });
+  body+='</div>';
+  body+='<div class="demorow"><span>Demo:</span><button data-ndemo="strong">Load strong</button><button data-ndemo="saba">Load Saba-style</button><button data-ndemo="gamed">Load gamed</button></div>';
+  body+='<div class="row"><button class="btn primary" id="nsubmit">Submit for grading →</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
+  return shell("case",body);
+}
+function runGradeNarrative(){
+  var cs=caseById(S.caseId);if(!cs)return;
+  S.qAnswers=S.qAnswers||{};
+  var rec={caseId:cs.id,startedAt:Date.now(),stages:{},answers:{},grade:{},followUp:null,kind:"narrative"};
+  STK.forEach(function(k){rec.stages[k]={text:S.stageTexts[k]||"",committedAt:Date.now()};});
+  cs.questions.forEach(function(it){rec.answers[it.id]=S.qAnswers[it.id]||"";});
+  var Q=gradeQuestions(cs,Object.assign({},S.stageTexts,rec.answers));
+  rec.grade={pct:Math.round(Q.earned100),overall10:Q.overall10,verdict:"Scorecard"};
+  var arr=loadAttempts();arr.push(rec);lsSet(K_ATT,arr);
+  S._submittedCase=cs.id;S.attemptIndex=arr.length-1;
+  nav("#/report/"+encodeURIComponent(cs.id)+"/"+S.attemptIndex);
 }
 function sealed(cs,label,text){return '<div class="locked-recap"><div class="lh">🔒 '+esc(label)+'</div><div class="lt">'+esc(text||"(left blank)")+'</div></div>';}
 function ledgerHTML(cs,text){
@@ -1203,6 +1650,7 @@ function radar(dims){
 function reportView(id,gidx){
   var cs=caseById(id);var arr=loadAttempts();var rec=arr[gidx];
   if(!cs||!rec||rec.caseId!==id)return shell("cases",'<div class="card">Report not found.</div>');
+  if(cs.kind==="narrative"){S._reportRec={rec:rec,gidx:gidx,cs:cs};return scorecardView(cs,rec,gidx);}
   var texts={};STK.forEach(function(k){texts[k]=rec.stages[k]?rec.stages[k].text:"";});
   var g=gradeAttempt(cs,texts);S.grade=g;S._reportRec={rec:rec,gidx:gidx,cs:cs};
   var restored=(rec.followUp&&rec.followUp.recovered)?(g.followup.lost*g.followup.restore):0;
@@ -1236,7 +1684,7 @@ function reportView(id,gidx){
   body+='<div class="legend"><span><i class="lgd" style="background:var(--accent)"></i>diagnosis / evidence</span><span><i class="lgd" style="background:var(--blue)"></i>investigation</span><span><i class="lgd" style="background:var(--green)"></i>management</span><span><i class="lgd" style="background:var(--ink-faint)"></i>a track used</span></div></div>';
   // walked past
   var walked=g.trackInfo.walked;
-  if(walked.length)body+='<div class="card"><h2>Tracks you walked past</h2><div class="walked">'+walked.map(function(t){return '<span class="wchip">'+esc(t.value)+'</span>';}).join("")+'</div><div class="small" style="margin-top:8px">A good detective may discard a track — but never without looking at it.</div></div>';
+  if(walked.length)body+='<div class="card"><h2>Tracks you walked past</h2><div class="walked">'+walked.map(function(t){return '<span class="wchip">'+esc(t.value)+'</span>';}).join("")+'</div><div class="small" style="margin-top:8px">A good clinician may discard a track — but never without looking at it.</div></div>';
   // radar
   body+='<div class="card"><h2>The five dimensions</h2>'+radar(g.dims5)+'</div>';
   // gaps
@@ -1248,6 +1696,51 @@ function reportView(id,gidx){
   // prose
   body+='<div class="card"><h2>On the round — your examiner</h2><div class="profprose">'+profProse(cs,g)+'</div>'
     +'<div class="disclaimer">Graded by a deterministic concept-and-negation engine standing in for the production language examiner. A deployed system uses a language model behind this same rubric, with faculty review of every grade.</div></div>';
+  body+='<div class="row"><button class="btn primary" data-revise="'+esc(cs.id)+'">Revise this note</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
+  return shell("report",body);
+}
+/* ---- scorecard report variant (narrative cases) ---- */
+function starGlyphs(n){var s='';for(var i=0;i<5;i++)s+='<span class="sc-star'+(i<n?' on':'')+'">'+(i<n?'★':'☆')+'</span>';return '<span class="sc-stars" title="'+n+' of 5">'+s+'</span>';}
+function scorecardView(cs,rec,gidx){
+  var ans={};STK.forEach(function(k){ans[k]=rec.stages[k]?rec.stages[k].text:"";});
+  (cs.questions||[]).forEach(function(it){ans[it.id]=(rec.answers&&rec.answers[it.id])||"";});
+  var Q=gradeQuestions(cs,ans);
+  var overall=Q.overall10.toFixed(1);
+  var vcls=Q.flags.anchored?"vb-unsafe":(Q.flags.assertionCapped?"vb-risky":(Q.overall10>=7.5?"vb-safe":Q.overall10<4?"vb-unsafe":"vb-risky"));
+  var vt=Q.flags.anchored?"Anchored on the first hypothesis":(Q.flags.cleanRevision?"Revised cleanly on the evidence":"Scorecard");
+  var body='<div class="crumbs"><a data-nav="#/cases">Cases</a> › '+esc(cs.title)+' › Scorecard</div>';
+  body+='<div class="verdictband '+vcls+'"><h2>'+esc(vt)+'</h2><div class="sm">'+esc(cs.title)+'</div>'
+      + '<span class="scorechip" id="scoreChip">'+esc(overall)+' / 10</span></div>';
+  // SECTION 1 — Hypothesis journey
+  var flagChip=Q.flags.cleanRevision?'<span class="tlflag good">CLEAN REVISION</span>'
+    :Q.flags.anchored?'<span class="tlflag bad">ANCHORED</span>':'';
+  body+='<div class="card"><h2>Hypothesis journey</h2>'
+    +'<div class="sc-journey"><div class="sc-jstep"><b>Initial working diagnosis</b><div class="evidence">'+esc(ans.workup||"(not stated)")+'</div></div>'
+    +'<div class="sc-jstep"><b>The disruption</b><div class="capsule">Oxygen studies normal, but erythropoietin markedly high — the first hypothesis dies.</div></div>'
+    +'<div class="sc-jstep"><b>The revision</b><div class="evidence">'+esc(ans.results||"(not stated)")+'</div></div>'
+    +'<div class="sc-flags">'+flagChip+'</div></div></div>';
+  // SECTION 2 — Question by question
+  var rows=(cs.questions||[]).map(function(it){
+    var r=Q.q[it.id], a=ans[it.id]||"";
+    var verdictCell;
+    if(r.verdict==="gap")verdictCell='<span class="sc-gappill">new concept / honest gap</span>'+(it.recallRedTag?' <span class="sc-facttag">recall</span>':'');
+    else if(r.verdict==="wrong")verdictCell='<span class="sc-gappill sc-wrong">contradicts the evidence</span>';
+    else verdictCell=starGlyphs(r.stars);
+    return '<div class="sc-row"><div class="sc-q">'+esc(it.qtext)+'</div>'
+      +'<div class="sc-ans evidence">'+(a.trim()?esc(a):'<span class="small">(blank)</span>')+'</div>'
+      +'<div class="sc-verdict">'+verdictCell+'</div>'
+      +'<div class="sc-refine small">'+esc(r.feedback||"")+'</div></div>';
+  }).join("");
+  body+='<div class="card"><h2>Question by question</h2><div class="sc-table">'+rows+'</div></div>';
+  // SECTION 3 — Reasoning vs Recall
+  function bar(lbl,v){return '<div class="metric"><div class="top"><b>'+esc(lbl)+'</b><span>'+v+'%</span></div>'
+    +'<div class="bar"><i style="width:'+v+'%;background:'+(v>=70?'var(--green)':v>=40?'var(--amber)':'var(--danger)')+'"></i></div></div>';}
+  body+='<div class="card"><h2>Reasoning vs Recall</h2>'+bar("Reasoning (Q1–Q6)",Q.reasoningPct)+bar("Recall (Q7–Q8)",Q.recallPct)
+    +'<div class="small">Reasoning is weighted 3x recall.</div></div>';
+  // SECTION 4 — Overall
+  body+='<div class="card sc-overall"><div class="sc-big">'+esc(overall)+' <span>/ 10</span></div>'
+    +'<div class="small">Overall — reasoning-weighted across all eight questions.</div></div>';
+  body+='<div class="card"><div class="disclaimer">Graded by a deterministic concept-and-negation engine standing in for the production language examiner. A deployed system uses a language model behind this same rubric, with faculty review of every grade.</div></div>';
   body+='<div class="row"><button class="btn primary" data-revise="'+esc(cs.id)+'">Revise this note</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
   return shell("report",body);
 }
@@ -1312,6 +1805,29 @@ var EXTRA_CSS="\
 @media(max-width:820px){.timeline{grid-template-columns:1fr;gap:14px}.tlcol{border-top:none;border-left:2px solid var(--line-2);padding-top:0;padding-left:14px}.tlnode{top:0;left:-13px}}\
 .qbox{fill:none;stroke:#ddd4c2}\
 .qlabel{font-family:var(--font-mono);font-size:8.5px;fill:#8a8371}\
+.sc-journey{display:grid;gap:12px}\
+.sc-jstep b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-faint);margin-bottom:4px}\
+.sc-flags{display:flex;gap:8px;flex-wrap:wrap}\
+.sc-table{display:grid;gap:14px}\
+.sc-row{display:grid;grid-template-columns:1fr;gap:6px;border-top:1px solid var(--line-2);padding-top:12px}\
+.sc-q{font-weight:600}\
+.sc-ans{white-space:pre-wrap}\
+.sc-stars{font-size:18px;letter-spacing:2px}\
+.sc-star{color:var(--line-2)}\
+.sc-star.on{color:var(--accent)}\
+.sc-gappill{display:inline-block;background:#fdf0c8;color:#6b5300;border:1px solid #e6c85a;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700}\
+.sc-gappill.sc-wrong{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}\
+.sc-facttag{display:inline-block;background:var(--danger-soft);color:var(--danger);border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700}\
+.sc-refine{color:var(--ink-soft)}\
+.sc-overall{text-align:center}\
+.sc-big{font-family:var(--font-mono);font-size:44px;font-weight:800;color:var(--accent)}\
+.sc-big span{font-size:20px;color:var(--ink-faint)}\
+@media(min-width:640px){.sc-row{grid-template-columns:1.4fr 1.6fr auto;grid-template-areas:'q a v' 'r r r';align-items:start}.sc-q{grid-area:q}.sc-ans{grid-area:a}.sc-verdict{grid-area:v}.sc-refine{grid-area:r}}\
+.dlg{margin:2px 0 4px;border-left:2px solid var(--line-2);padding-left:14px}\
+.dl{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:3px 0;align-items:baseline}\
+.dl .sp{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);white-space:nowrap}\
+.dl .tx{color:var(--ink)}\
+@media(max-width:520px){.dl{grid-template-columns:1fr;gap:1px}}\
 ";
 
 /* ============ FACULTY ============ */
@@ -1562,11 +2078,20 @@ function wire(){
   var fsam=document.getElementById("forgeSample");if(fsam)fsam.onclick=function(){document.getElementById("forgeText").value=window.__forgeSample;};
   var fdr=document.getElementById("forgeDraft");if(fdr)fdr.onclick=function(){var t=document.getElementById("forgeText").value;if(t.trim().length<20)return;S.authoredDraft=draftFromText(t);draw();};
   var fpub=document.getElementById("forgePublish");if(fpub)fpub.onclick=publishDraft;
+  // ---- narrative case (VHL-003) wiring ----
+  document.querySelectorAll("[data-ndemo]").forEach(function(el){el.onclick=function(){var cs=caseById(S.caseId);if(!cs)return;var w=el.getAttribute("data-ndemo");
+    S.qAnswers=S.qAnswers||{};
+    ["patient","workup","results"].forEach(function(k){S.stageTexts[k]=cs.demo[w][k];});
+    cs.questions.forEach(function(it){S.qAnswers[it.id]=cs.demo[w][it.id];});draw();};});
+  document.querySelectorAll("[data-nans]").forEach(function(el){el.oninput=function(){S.stageTexts[el.getAttribute("data-nans")]=el.value;};});
+  document.querySelectorAll("[data-nq]").forEach(function(el){el.oninput=function(){S.qAnswers=S.qAnswers||{};S.qAnswers[el.getAttribute("data-nq")]=el.value;};});
+  var ns=document.getElementById("nsubmit");if(ns)ns.onclick=runGradeNarrative;
 }
 function openModal(inner){var m=document.createElement("div");m.className="modal";m.innerHTML='<div class="modalcard">'+inner+'</div>';document.body.appendChild(m);m.onclick=function(e){if(e.target===m||e.target.id==="modalClose")m.remove();};}
 
 /* ============ BOOT ============ */
 window.__grade=function(id,stageTexts){return gradeAttempt(caseById(id),stageTexts||{});};
+window.__gradeQuestions=function(id,ans){return gradeQuestions(caseById(id),ans||{});};
 window.__cases=CASES;
 window.__selftest=__selftest;
 window.__cohort=cohort;

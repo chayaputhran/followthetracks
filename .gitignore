@@ -1,3 +1,13 @@
 node_modules/
 test_grading.mjs
 qa_*.png
+
+# Local screenshots / browser-automation artifacts
+vhl-*.png
+ftt-*.png
+page-*.png
+.playwright-mcp/
+
+# Client-provided source material — must NOT be published to the public Pages repo
+Use Case */
+Use Case*/
