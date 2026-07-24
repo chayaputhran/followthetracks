@@ -1009,6 +1009,10 @@ var CASES=[
       {label:"Serum erythropoietin",text:"MARKEDLY ELEVATED despite normal oxygen. Creatinine, urinalysis, liver function all normal.",conceptId:"epo_test"}],
      dialogue:[
       {s:"Holmes",t:"Excellent. Our first hypothesis is dead — not a shred of oxygen deprivation."},
+      {s:"Watson",t:"Then what drove the marrow? Chronic lung disease?"},
+      {s:"Holmes",t:"No. The chest film is clear and the lung function normal."},
+      {s:"Watson",t:"Congenital cyanotic heart disease? A life lived at altitude?"},
+      {s:"Holmes",t:"The echo shows no shunt, and he lives in London — not on Everest. He has never smoked. Sleep apnoea is possible, but increasingly unlikely."},
       {s:"Watson",t:"Yet the erythropoietin is markedly elevated, and the oxygen is perfectly normal!"},
       {s:"Holmes",t:"No, Watson. The oxygen is normal. The cell merely refuses to believe it."}]},
    prompt:"The oxygen is normal but erythropoietin is high. Revise your diagnosis — what is really going on, and what did the normal tests rule out?",
@@ -1050,6 +1054,11 @@ var CASES=[
    {id:"danger",label:"What to watch for",concepts:["family_history","surveillance"]}],
   patientQuestions:{what:"So what is actually wrong with me, doctor?",why:"Why did this happen to me?",next:"What happens now?",danger:"What should my family do?",none:"Will my children get this too?"}},
  revision:{target:"false_hypoxia",contradicted:["chronic_hypoxia","lung_disease"],discriminator:"epo_test",close:["osa"]},
+ coda:{title:"Why good clinicians still missed it",
+   points:[
+     "Every specialist who saw this patient was correct. The pulmonologist correctly excluded respiratory hypoxia. The cardiologist correctly excluded a cardiac shunt. The haematologist correctly recognised the polycythaemia as secondary.",
+     "Yet each asked the same question — “Where is the oxygen deficiency?” The diagnosis only appeared when the question itself changed: “What if the oxygen is perfectly normal, but the cell can no longer recognise it?”"],
+   close:"Medicine anchors to the common explanation, and usually that saves lives. What this case rewards is noticing when the evidence stops obeying the rule — and questioning the instrument, not just the reading."},
  questions:[
   {id:"q1",recall:false,w:15,qtext:"Why did the patient's elevated haemoglobin initially suggest chronic hypoxia?",
    core:[qConcept("hypoxia",["hypoxia","chronic hypoxia","low oxygen","oxygen deprivation"]),
@@ -1750,6 +1759,12 @@ function scorecardView(cs,rec,gidx){
   // SECTION 4 — Overall
   body+='<div class="card sc-overall"><div class="sc-big">'+esc(overall)+' <span>/ 10</span></div>'
     +'<div class="small">Overall — reasoning-weighted across all eight questions.</div></div>';
+  // SECTION 5 — teaching coda (why good clinicians missed it)
+  if(cs.coda){
+    body+='<div class="card sc-coda"><h2>'+esc(cs.coda.title)+'</h2>'
+      +(cs.coda.points||[]).map(function(p){return '<p class="sc-codap">'+esc(p)+'</p>';}).join("")
+      +'<div class="sc-codaclose">'+esc(cs.coda.close)+'</div></div>';
+  }
   body+='<div class="card"><div class="disclaimer">Graded by a deterministic concept-and-negation engine standing in for the production language examiner. A deployed system uses a language model behind this same rubric, with faculty review of every grade.</div></div>';
   body+='<div class="row"><button class="btn primary" data-revise="'+esc(cs.id)+'">Revise this note</button><button class="btn ghost" data-nav="#/cases">Back to library</button></div>';
   return shell("report",body);
@@ -1838,6 +1853,9 @@ var EXTRA_CSS="\
 .dl .sp{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);white-space:nowrap}\
 .dl .tx{color:var(--ink)}\
 @media(max-width:520px){.dl{grid-template-columns:1fr;gap:1px}}\
+.sc-coda{border-left:3px solid var(--accent)}\
+.sc-codap{margin:8px 0;color:var(--ink-soft);line-height:1.6}\
+.sc-codaclose{margin-top:10px;padding-top:10px;border-top:1px solid var(--line-2);font-style:italic;color:var(--ink)}\
 ";
 
 /* ============ FACULTY ============ */
