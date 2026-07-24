@@ -263,6 +263,16 @@ mark.jarg{background:var(--danger-soft);box-shadow:inset 0 -2px 0 var(--danger)}
   .mobtab a.on{color:var(--accent)}
   .scorechip{position:static;display:inline-block;margin-top:8px}
 }
+@media(max-width:560px){
+  .appbar{padding:0 12px;gap:10px}
+  .brandmark{gap:8px}
+  .userchip{gap:7px}
+  .userchip .small{display:none}
+}
+@media(max-width:400px){
+  .userchip .rolebadge{display:none}
+  .wordmark small{display:none}
+}
 @media print{
   .appbar,.mobtab,.demobar,.tabbar,.btn,.footer .vbadge,.row{display:none!important}
   body{background:#fff}
