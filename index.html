@@ -111,13 +111,16 @@ blockquote.qt p{margin:2px 0}
 .card h3{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--ink-faint);margin:22px 0 10px;font-weight:700}
 .small{font-size:12.5px;color:var(--ink-faint)}
 .kicker{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint);font-weight:700}
-.btn{font-size:13.5px;font-weight:600;border-radius:6px;padding:10px 18px;border:1px solid var(--ink-soft);background:transparent;color:var(--ink)}
+/* 44px is the touch-target floor; buttons were landing at 38-39px */
+.btn{font-size:13.5px;font-weight:600;border-radius:6px;padding:10px 18px;border:1px solid var(--ink-soft);
+  background:transparent;color:var(--ink);min-height:44px;display:inline-flex;align-items:center;justify-content:center}
 .btn:hover{background:var(--paper-2)}
 .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn.primary:hover{background:#083b37}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.ghost{border-color:var(--line-2);color:var(--ink-soft)}
-.btn.sm{padding:6px 12px;font-size:12px}
+.btn.sm{padding:6px 12px;font-size:12px;min-height:34px}
+@media(max-width:520px){.btn.sm{min-height:40px}}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
 textarea{width:100%;min-height:96px;padding:12px 14px;border:1px solid var(--line-2);border-radius:6px;background:var(--paper);
   font-family:var(--font-body);font-size:14.5px;line-height:1.55;color:var(--ink);resize:vertical}
@@ -360,8 +363,13 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .adv .adv-dots i.on{background:currentColor}
 .adv .adv-c{transition:transform .2s var(--ease)}
 .adv:hover .adv-c{transform:translateY(2px)}
-.adv.act{border-top:0;min-height:0;width:auto;background:var(--accent);color:#fff;border-radius:var(--r);
-  padding:10px 18px;font-family:var(--font-body);font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none}
+/* 44px minimum: when the strip morphs into the commit button it was collapsing to
+   38px, which is under the touch-target floor — on the single most-pressed
+   control in the product */
+.adv.act{border-top:0;min-height:44px;width:auto;background:var(--accent);color:#fff;border-radius:var(--r);
+  padding:11px 20px;font-family:var(--font-body);font-size:13.5px;font-weight:600;letter-spacing:0;
+  text-transform:none;justify-content:center}
+@media(max-width:520px){.adv.act{width:100%;min-height:48px;font-size:14.5px}}
 .adv.act .adv-dots{display:none}
 .adv:disabled{opacity:.45;cursor:not-allowed}
 .disruptband .adv{border-top-color:var(--band-line);color:var(--band-soft)}
@@ -2819,10 +2827,16 @@ var COHORT=null;
 function cohortOf(cs){if(!COHORT)COHORT=cohort(cs);return COHORT;}
 function facultyView(){
   var cs=CASES[0],tab=S.facultyTab;
+  /* plain labels: "Case Forge" was internal jargon and the page never said what
+     this view was or who it was for */
   var body='<div class="crumbs">College view</div><h1 class="pagetitle">'+esc(cs.title)+'</h1>'
-    +'<p class="pagesub">NMC · '+esc(cs.competency.code)+' — '+esc(cs.competency.text)+'</p>'
+    +'<p class="pagesub">What a head of department sees after a batch has sat this case: where the '
+    +'cohort actually loses marks, which grades want a human eye, and how a new case gets authored. '
+    +'The cohort below is simulated for the demonstration.</p>'
+    +'<p class="pagesub" style="margin-top:-14px"><span class="comp">NMC · '+esc(cs.competency.code)+'</span> '
+    +esc(cs.competency.text)+'</p>'
     +'<div class="tabs">'
-    +[["cohort","Cohort"],["review","Review queue"],["forge","Case Forge"]].map(function(t){
+    +[["cohort","How the batch did"],["review","Grades to review"],["forge","Author a case"]].map(function(t){
       return '<button class="'+(tab===t[0]?"on":"")+'" data-ftab="'+t[0]+'">'+t[1]+'</button>';}).join("")
     +'</div>';
   body+=tab==="review"?reviewTab(cs):(tab==="forge"?forgeTab(cs):cohortTab(cs));
@@ -2903,7 +2917,7 @@ function forgeTab(cs){
   var cons=forgeConcepts(cs),an=analyseAnswer(raw,cons);
   var found=Object.keys(an.byConcept);
   var L=lintCase(cs);
-  var h='<div class="card"><h2>Case Forge</h2>'
+  var h='<div class="card"><h2>Author a case</h2>'
     +'<div class="small" style="margin-bottom:10px">Paste a case in prose. The engine reports which of this domain\'s concepts it can already recognise, '
     +'so an author can see the coverage gap before writing a single rubric line. Analysis only — nothing is published from here in the POC.</div>'
     +'<textarea id="forgeRaw" style="min-height:150px">'+esc(raw)+'</textarea>'
