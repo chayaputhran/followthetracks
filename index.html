@@ -134,7 +134,8 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 /* landing */
 .hero{padding:20px 0 8px}
 .hero h1{font-size:clamp(30px,6vw,52px);line-height:1.02;margin:8px 0 14px;letter-spacing:-.5px}
-.hero p.lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:52ch;margin:0 0 26px;font-family:var(--font-display)}
+.hero p.lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:52ch;margin:0 0 16px;font-family:var(--font-display)}
+.hero p.lede2{font-size:15px;color:var(--ink-soft);max-width:60ch;margin:0 0 8px;line-height:1.65}
 .specimen{padding:22px 24px;max-width:640px}
 .specimen .cap{font-family:var(--font-mono);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
 .specimen .sent{font-family:var(--font-display);font-size:20px;line-height:1.55;min-height:2.6em}
@@ -143,6 +144,18 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .spchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;opacity:0;transition:opacity .6s var(--ease)}
 .spchips.show{opacity:1}
 .spchip{font-size:12px;font-family:var(--font-mono);padding:5px 10px;border-radius:20px;border:1px solid var(--green);color:var(--green);background:var(--green-soft);font-weight:600}
+/* the specimen highlight was rendering browser-default yellow — an unstyled <mark> */
+mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft);
+  border-bottom:1.5px solid var(--accent);padding:0 1px}
+/* one obvious way in */
+.startbox{margin:30px 0 34px;max-width:640px}
+.btn.lg{font-size:16px;padding:15px 30px}
+.startmeta{font-size:13.5px;color:var(--ink-soft);margin-top:14px;max-width:56ch;line-height:1.6}
+.startalt{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
+.startalt .sep{color:var(--ink-faint)}
+.linkish{background:none;border:0;padding:0;font-size:13px;color:var(--accent);
+  text-decoration:underline;text-underline-offset:3px;font-family:var(--font-body)}
+.linkish:hover{color:var(--ink)}
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:30px 0}
 /* hover is a border state, not a lift — the lift is what reads as consumer SaaS */
 .door{text-align:left;border:1px solid var(--line-2);background:var(--card);border-radius:var(--r);padding:18px 20px;transition:border-color .15s var(--ease)}
@@ -356,6 +369,19 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 /* a bordered box says "form field"; unbordered type on white says "scene" */
 .beat.scenebeat{background:none;border:0;padding:26px 0 4px}
+/* orientation: what this is, before you start */
+.orient{border:1px solid var(--line-2);border-left:3px solid var(--accent);border-radius:var(--r);
+  padding:20px 22px;margin-bottom:20px;max-width:62ch}
+.orient .oh{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;margin-bottom:10px}
+.orient p{margin:0 0 10px;font-size:14.5px;line-height:1.6;color:var(--ink-soft)}
+.orient p b{color:var(--ink)}
+/* the skip-ahead shortcut, which used to be three unexplained buttons */
+.shortcut{border:1px solid var(--line-2);border-radius:var(--r);margin-top:24px}
+.shortcut summary{padding:12px 16px;cursor:pointer;font-size:13px;color:var(--ink-soft);font-weight:600}
+.shortcut summary:hover{color:var(--accent)}
+.shortcut-in{padding:0 16px 14px}
+.shortcut-in p{margin:0 0 10px;max-width:62ch}
 .modeswitch{display:flex;gap:6px;margin-bottom:14px}
 .modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;padding:6px 11px;border-radius:var(--r);border:1px solid var(--line-2);
@@ -600,8 +626,16 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
     letter-spacing:.8px;color:var(--ink-faint);text-decoration:none;cursor:pointer;font-weight:700}
   .mobtab a.on{color:var(--accent)}
 }
-.demobar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);padding:12px 18px;z-index:60;
-  display:flex;gap:14px;align-items:center;font-size:13px}
+/* what the tour is pointing at, so a step is never invisible */
+.spot{outline:2px solid var(--accent);outline-offset:8px;border-radius:var(--r);
+  animation:spotin .5s var(--ease)}
+@keyframes spotin{from{outline-color:transparent}to{outline-color:var(--accent)}}
+.disruptband.spot{outline-color:var(--band-accent);outline-offset:-4px}
+.tourtag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:700;border:1px solid var(--band-edge);border-radius:var(--r);padding:3px 8px;flex:0 0 auto}
+.demobar .cap b{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em}
+.demobar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);padding:14px 18px;z-index:60;
+  display:flex;gap:14px;align-items:center;font-size:13.5px;line-height:1.5}
 /* the guided-demo bar is the other fixed element that needs bottom clearance */
 body:has(.demobar) .wrap{padding-bottom:110px}
 .demobar .cap{flex:1;min-width:0}
@@ -1821,7 +1855,7 @@ var S={role:null,caseId:null,beat:0,cue:0,hyp1:"",hyp2:"",
   interlock:{d1:{verdict:null,evidence:[],why:""},d2:{choice:null,why:""}},
   ledger:{},ledgerCommitted:false,askedFamily:false,
   declared:{},qAnswers:{},probeAns:{},adjudication:{},codaText:"",codaRevealed:false,
-  predict:{},strikeSeen:false,readAll:!!lsGet(K_PACE),
+  predict:{},strikeSeen:false,readAll:!!lsGet(K_PACE),oriented:false,
   attemptIndex:null,facultyTab:"cohort",demoStep:-1,revealAll:false,seq:0,_submitted:false};
 var app=null,SELFTEST=null;
 var LOGO='<svg class="logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="13" r="9" stroke="#0f5b56" stroke-width="2.2"/><path d="M20 20 L28 28" stroke="#0f5b56" stroke-width="2.6" stroke-linecap="round"/><path d="M8 13 h2.4 l1.6 -4 l2.4 8 l1.8 -5 l1.2 3 h3" stroke="#8a2d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
@@ -1924,13 +1958,16 @@ function revealHTML(r){
 
 function header(active){
   if(!S.role)return "";
-  var studentNav='<a data-nav="#/cases" class="'+(active==="cases"?"on":"")+'">Case</a>';
-  var facNav='<a data-nav="#/faculty" class="'+(active==="faculty"?"on":"")+'">College view</a>';
+  /* labels say what the thing IS, not what we call it internally */
+  /* one case, so a "library" of one is a pointless hop — go straight to it */
+  var studentNav='<a data-nav="#/case/VHL-003" class="'+(active==="cases"?"on":"")+'" title="The case you work through yourself">The case</a>';
+  var facNav='<a data-nav="#/faculty" class="'+(active==="faculty"?"on":"")+'" title="What a head of department sees across a cohort">College view</a>';
   var initials=S.role==="faculty"?"SM":"PR";
   var name=S.role==="faculty"?"Prof. S. Menon":"Dr. Priya Raghavan";
   return '<div class="appbar"><a class="brandmark" data-nav="'+(S.role==="faculty"?"#/faculty":"#/cases")+'">'+LOGO
     +'<div class="wordmark">Follow the Tracks<small>Clinical reasoning, examined</small></div></a>'
-    +'<div class="nav">'+(S.role==="faculty"?facNav:studentNav)+'<a data-nav="#/demo">Guided demo</a></div>'
+    +'<div class="nav">'+(S.role==="faculty"?facNav:studentNav)
+    +'<a data-nav="#/demo" title="A 90-second guided walkthrough of what this product does">Take the tour</a></div>'
     +'<div class="spacer"></div>'
     +'<div class="userchip"><span class="rolebadge">'+esc(S.role)+'</span><div class="avatar">'+initials+'</div>'
     +'<span class="small">'+esc(name)+'</span><button class="linkbtn" data-nav="#/">Exit</button></div></div>';
@@ -1957,19 +1994,30 @@ function shell(active,inner,mod){
 function landingView(){
   var h='<div class="appbar"><a class="brandmark" data-nav="#/">'+LOGO
     +'<div class="wordmark">Follow the Tracks<small>Clinical reasoning, examined</small></div></a>'
-    +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Guided demo</a></div>';
+    +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Take the tour</a></div>';
   h+='<div class="wrap"><div class="hero"><div class="eyebrow">Clinical reasoning, examined</div>'
     +'<h1>Recall, not recognition.</h1>'
-    +'<p class="lede">An MCQ can tell you a student recognises the right answer. It cannot tell you whether they would have got there. We grade the path.</p></div>';
+    +'<p class="lede">An MCQ can tell you a student recognises the right answer. It cannot tell you whether they would have got there. We grade the path.</p>'
+    +'<p class="lede2">This is a working demonstration. It contains one real teaching case — a patient with '
+    +'far too many red cells and perfectly normal oxygen — written by the faculty who use it. '
+    +'You play the clinician; the engine reads what you write and marks how you reasoned.</p></div>';
   h+='<div class="specimen"><div class="cap">The product, in one card</div>'
     +'<div class="sent" id="specSent"><span class="caret"></span></div>'
     +'<div class="spchips" id="specChips"><span class="spchip">Contradiction recognised ✓</span>'
     +'<span class="spchip">Reasoning weighted 9× recall ✓</span>'
     +'<span class="spchip">Honest gap credited ✓</span></div></div>';
-  h+='<div class="doors"><button class="door" data-door="student"><div class="r">Enter as a student</div>'
-    +'<div class="n">Dr. Priya Raghavan</div><div class="d">JIPMER · 2nd yr MD Medicine</div></button>'
-    +'<button class="door" data-door="faculty"><div class="r">See the college view</div>'
-    +'<div class="n">Prof. S. Menon</div><div class="d">HOD Medicine</div></button></div>';
+  /* One obvious way in. The old version offered two cards containing a person's
+     name and no verb, which told nobody what would happen if they clicked. */
+  h+='<div class="startbox">'
+    +'<button class="btn primary lg" data-start="1">Start the case →</button>'
+    +'<div class="startmeta">About 20 minutes. You will read a real case, commit a diagnosis '
+    +'before you have all the evidence, and answer eight questions at the end. '
+    +'Nothing is scored until you submit.</div>'
+    +'<div class="startalt">'
+    +'<button class="linkish" data-tour="1">Watch the 90-second tour instead</button>'
+    +'<span class="sep">·</span>'
+    +'<button class="linkish" data-door="faculty">I am faculty — show me the college view</button>'
+    +'</div></div>';
   h+='<div class="card"><h3>How it works</h3><div class="steps">'
     +'<div class="step"><div class="no">01</div><div class="t">Commit before you know</div><div class="x">The case unfolds one stage at a time. Nothing ahead of you is on the page.</div></div>'
     +'<div class="step"><div class="no">02</div><div class="t">Watch it break</div><div class="x">Evidence arrives that your hypothesis cannot survive. You decide that, before anyone tells you.</div></div>'
@@ -2367,6 +2415,21 @@ function encounterView(){
   body+='<div class="modeswitch" role="group" aria-label="Reading pace">'
     +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene">Scene</button>'
     +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full">Straight through</button></div>';
+  /* orientation on first arrival: what this is and what is being asked of you.
+     Dismissed for the session once read. */
+  if(S.beat===0&&S.cue===0&&!S.oriented){
+    body+='<div class="orient"><div class="oh">Before you start</div>'
+      +'<p>You are the clinician on this case. It arrives one step at a time and '
+      +'<b>you cannot see ahead</b> — that is deliberate.</p>'
+      +'<p>You will be asked to commit a working diagnosis early, on purpose, before you '
+      +'have enough. Later the evidence will contradict it. Changing your mind at that point '
+      +'is the skill being measured, not a mistake.</p>'
+      +'<p>At the end there are eight questions in your own words. Reasoning is worth nine times '
+      +'recall, and saying <i>"I have not met this one"</i> keeps most of the marks — guessing '
+      +'wrongly keeps none.</p>'
+      +'<div class="row"><button class="btn primary" data-orient="1">Begin →</button>'
+      +'<span class="small">About 20 minutes.</span></div></div>';
+  }
   body+='<div class="slug">'+esc(cs.place)+'</div>';
   body+='<p aria-live="polite" class="vh" id="sceneLive"></p>';
 
@@ -2401,10 +2464,18 @@ function encounterView(){
   }
   if(S.readAll||S.revealAll)
     body+='<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button></div>';
-  body+='<div class="demorow row"><span class="small">Load a worked attempt:</span>'
-    +'<button class="btn ghost sm" data-fx="strong">Model</button>'
-    +'<button class="btn ghost sm" data-fx="saba">Real student</button>'
-    +'<button class="btn ghost sm" data-fx="gamed">Keyword-stuffed</button></div>';
+  /* These used to read "Load a worked attempt: Model / Real student / Keyword-stuffed"
+     with no explanation, and silently jumped you to the end with someone else's
+     answers in the boxes. Now they say what they do before you press them. */
+  body+='<details class="shortcut"><summary>Short on time? Skip to a finished attempt</summary>'
+    +'<div class="shortcut-in"><p class="small">This fills the whole case in with somebody else\'s '
+    +'answers and takes you straight to the marked scorecard, so you can see how it grades. '
+    +'It replaces anything you have written.</p>'
+    +'<div class="row">'
+    +'<button class="btn ghost sm" data-fx="saba">A real student\'s answers — scores 8.5</button>'
+    +'<button class="btn ghost sm" data-fx="strong">A model answer — scores 10</button>'
+    +'<button class="btn ghost sm" data-fx="gamed">Right words, no reasoning — scores 4.2</button>'
+    +'</div></div></details>';
   body+='</div><div class="filewrap">'+caseFileHTML(cs)+'</div></div>';
   return shell("cases",body,"wide");
 }
@@ -2753,25 +2824,57 @@ function forgeTab(cs){
 /* ============================================================
    GUIDED DEMO
    ============================================================ */
+/* Each step names the element it is talking about, so the tour scrolls there and
+   marks it. Without that the page changed below the fold and the tour looked broken. */
 var DEMO=[
- {cap:"The case is a playscript the student walks. One control, in one place, reveals the next volley — so the conversation is experienced rather than scrolled past.",
+ {cap:"You read the case as a conversation. One button reveals the next few lines — so you go through the details instead of scrolling past them.",
+  focus:".scene.live",
   run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;S.beat=0;S.cue=0;nav("#/case/VHL-003");}},
- {cap:"A prediction stop: before Holmes asks his next question, the student commits one of their own. It is ungraded and never scored — their sentence is simply typeset into the scene beside his.",
+ {cap:"Sometimes the case stops and asks YOU first. Here you guess the next question the physician will ask. It is never scored — your line is simply set into the scene beside his.",
+  focus:"[data-pred]",
   run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;S.beat=0;S.cue=1;nav("#/case/VHL-003");}},
- {cap:"Stage 3, and the only inverted surface in the product. The student judges their own hypothesis before anyone interprets it — and must name which findings killed it.",
+ {cap:"You commit a diagnosis BEFORE the evidence that breaks it exists on the page. This is the whole point: the engine can only mark your reasoning if you actually reasoned.",
+  focus:"[data-cap]",
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;S.beat=1;S.cue=3;nav("#/case/VHL-003");}},
+ {cap:"Then the evidence arrives and your hypothesis cannot survive it. You decide that yourself — and you must name which findings killed it. Saying it is dead without naming the evidence is an outcome, not a method.",
+  focus:".disruptband",
   run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;
     S.hyp1=VHL.demo.saba.hyp1;S.predict.p1="Whether he has lost weight.";S.beat=2;S.cue=1;nav("#/case/VHL-003");}},
- {cap:"The spine rewinds. Stages 4 and 5 run a second time against the revised hypothesis — the document's own structure, and the case's argument about how diagnosis works.",
+ {cap:"Evidence you have seen collects here on the right, so you can look back at it. The normal oxygen studies and the raised erythropoietin end up side by side — which is exactly the contradiction the case turns on.",
+  focus:".filewrap",
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;
+    S.hyp1=VHL.demo.saba.hyp1;S.interlock=VHL.demo.saba.interlock;S.ledger=VHL.demo.saba.ledger;
+    S.ledgerCommitted=true;S.beat=5;S.cue=1;nav("#/case/VHL-003");}},
+ {cap:"The investigation then loops BACK a stage — see the rail on the left. Revising a dead hypothesis is the method working, not failing, and the case is built to make you do it.",
+  focus:".railwrap",
   run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;
     S.hyp1=VHL.demo.saba.hyp1;S.interlock=VHL.demo.saba.interlock;S.ledger=VHL.demo.saba.ledger;
     S.ledgerCommitted=true;S.beat=6;S.cue=0;nav("#/case/VHL-003");}},
- {cap:"The real student's answers, graded. Eight-point-five out of ten — the examiner's own mark, reproduced. She forgot a drug and met a new concept, and said so both times.",
+ {cap:"At the end, eight questions in your own words — and this is a real student's real answers, marked. 8.5 out of 10: she forgot a drug and met a new concept, and said so both times.",
+  focus:".sc-table",
   run:function(){loadDemoAttempt("saba");}},
- {cap:"A keyword-stuffed attempt scores 4.2 and is flagged for faculty review. The concepts are all present; nothing links them.",
+ {cap:"An answer stuffed with the right words but no reasoning scores 4.2 and is flagged for a human to look at. The concepts are all there; nothing links them.",
+  focus:".sc-table",
   run:function(){loadDemoAttempt("gamed");}},
- {cap:"The college view: which question the batch actually loses marks on, and where students are declaring honest gaps — a curriculum signal rather than a discipline problem.",
+ {cap:"And the college view: exactly which question the batch loses marks on, and where students are admitting gaps — a curriculum signal, not a discipline problem.",
+  focus:".statgrid",
   run:function(){S.role="faculty";S.facultyTab="cohort";nav("#/faculty?tab=cohort");}}
 ];
+/* scroll the tour to whatever the caption is describing, and mark it */
+function demoSpot(){
+  var d=DEMO[S.demoStep];
+  Array.prototype.forEach.call(document.querySelectorAll(".spot"),function(x){x.classList.remove("spot");});
+  if(!d||!d.focus)return;
+  var el=document.querySelector(d.focus);
+  if(!el)return;
+  el.classList.add("spot");
+  /* deferred a frame on purpose: demoSpot runs inside draw(), and route() does
+     window.scrollTo(0,0) immediately AFTER draw() returns — which was cancelling
+     the scroll and leaving every tour step parked at the top of the page. */
+  requestAnimationFrame(function(){
+    el.scrollIntoView({block:"center",behavior:MQ_RM.matches?"auto":"smooth"});
+  });
+}
 function loadDemoAttempt(key){
   var cs=VHL,ans=demoAnswers(cs,key),st=demoState(cs,key);
   var Q=gradeQuestions(cs,ans,st);
@@ -2785,14 +2888,21 @@ function demoBar(){
   var old=document.querySelector(".demobar");if(old)old.remove();
   if(S.demoStep<0||S.demoStep>=DEMO.length)return;
   var d=document.createElement("div");d.className="demobar";
-  d.innerHTML='<span class="cap">'+esc((S.demoStep+1)+" / "+DEMO.length+" — "+DEMO[S.demoStep].cap)+'</span>'
-    +'<button id="demoNext">'+(S.demoStep===DEMO.length-1?"Finish":"Next")+'</button>'
-    +'<button class="gh" id="demoExit">Exit</button>';
+  d.innerHTML='<span class="tourtag">Tour</span>'
+    +'<span class="cap"><b>'+(S.demoStep+1)+' of '+DEMO.length+'</b> — '+esc(DEMO[S.demoStep].cap)+'</span>'
+    +(S.demoStep>0?'<button class="gh" id="demoBack">Back</button>':"")
+    +'<button id="demoNext">'+(S.demoStep===DEMO.length-1?"Start the case →":"Next →")+'</button>'
+    +'<button class="gh" id="demoExit">Exit tour</button>';
   document.body.appendChild(d);
   document.getElementById("demoNext").onclick=function(){
-    if(S.demoStep>=DEMO.length-1){S.demoStep=-1;d.remove();nav("#/");return;}
+    if(S.demoStep>=DEMO.length-1){
+      S.demoStep=-1;d.remove();
+      S.role="student";S.caseId="VHL-003";resetEncounter();nav("#/case/VHL-003");return;}
     S.demoStep++;DEMO[S.demoStep].run();};
+  var bk=document.getElementById("demoBack");
+  if(bk)bk.onclick=function(){S.demoStep--;DEMO[S.demoStep].run();};
   document.getElementById("demoExit").onclick=function(){S.demoStep=-1;d.remove();nav("#/");};
+  demoSpot();
 }
 function demoView(){S.demoStep=0;DEMO[0].run();}
 
@@ -2862,6 +2972,10 @@ function wire(){
   all("[data-adv]",function(el){el.onclick=advance;});
   all("[data-pace]",function(el){el.onclick=function(){
     S.readAll=(el.getAttribute("data-pace")==="full");lsSet(K_PACE,S.readAll);route();};});
+  all("[data-orient]",function(el){el.onclick=function(){S.oriented=true;route();};});
+  all("[data-tour]",function(el){el.onclick=function(){nav("#/demo");};});
+  all("[data-start]",function(el){el.onclick=function(){
+    S.role="student";S.caseId="VHL-003";resetEncounter();S.oriented=false;nav("#/case/VHL-003");};});
   /* clicking the live scene also advances — guarded so it never fights text selection,
      which would be fatal in a case students are meant to quote back */
   all(".scene.live",function(el){el.onclick=function(e){
