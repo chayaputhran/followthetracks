@@ -7,12 +7,25 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='13' cy='13' r='9' stroke='%230f5b56' stroke-width='2.2'/%3E%3Cpath d='M20 20 L28 28' stroke='%230f5b56' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M8 13 h2.4 l1.6 -4 l2.4 8 l1.8 -5 l1.2 3 h3' stroke='%238a2d1f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"/>
 <style>
 :root{
-  --paper:#f4efe4; --paper-2:#efe8da; --card:#fbf8f1; --line:#ddd4c2; --line-2:#ccc1a9;
-  --ink:#26221b; --ink-soft:#55503f; --ink-faint:#8a8371;
-  --accent:#0f5b56; --accent-soft:rgba(15,91,86,.12);
-  --danger:#8a2d1f; --danger-soft:rgba(138,45,31,.10);
-  --amber:#a06a12; --amber-soft:rgba(160,106,18,.14);
-  --green:#3e6b34; --green-soft:rgba(62,107,52,.12);
+  color-scheme:only light;
+  /* ---- ground: three tones, zero shadows. Separation is a hairline, never elevation. ---- */
+  --paper:#ffffff; --paper-2:#f4f5f7; --card:#ffffff;
+  /* ---- three rule weights, one job each ---- */
+  --line:#e6e8ea; --line-2:#d7dbdf; --line-3:#b9c0c7;
+  /* ---- ink. --ink-faint moved off #8a8371, which is 3.9:1 on white and fails AA ---- */
+  --ink:#101418; --ink-soft:#454b54; --ink-faint:#656c75;
+  /* ---- colour demoted to pure signal ---- */
+  --accent:#0b4f4a; --accent-soft:#e8f0ef;
+  --danger:#8a2d1f; --danger-soft:#fbeae6;
+  --amber:#8a5a08;  --amber-soft:#fbf1dd;
+  --green:#2f6a3c;  --green-soft:#e9f2e7;
+  /* ---- the inverted disruption band, tuned off pure black: 18px serif in #fff on #000
+         halates badly across the ~40 dialogue lines that live inside these two bands ---- */
+  --band:#12171d; --band-ink:#eef1f4; --band-soft:#9aa3ae; --band-faint:#838d99;
+  --band-line:#39414c; --band-field:#1a2028; --band-edge:#5a636e;
+  --band-accent:#7fd6c9; --band-amber:#e8b661; --band-danger:#f0907c; --band-green:#86c98d;
+  /* ---- geometry: one radius, no pills, no lifts ---- */
+  --r:3px;
   --ease:cubic-bezier(0.16,1,0.3,1);
   --pad:20px; --rowh:44px;
   --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
@@ -22,7 +35,20 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{color:var(--ink);font-family:var(--font-body);line-height:1.55;font-size:15px;background:var(--paper);
-  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(15,91,86,.04),transparent 60%);overflow-x:hidden}
+  background-image:none;overflow-x:hidden}
+/* one radius everywhere; the two exceptions stay circular because they are MARKS, not containers */
+.card,.beat,.casecard,.hcard,.qcard,.specimen,.stat,.mech-box,.peerbox,.link,.cbox,.ped-node,
+.modelans,.extendbox,.probe,.provnote,.verdictband,.btn,textarea,input.line,.vbadge,.spchip,
+.echip,.evb,.sbtn,.adjset button,.delta,.vopt,.hboard-m,.belzbadge{border-radius:var(--r)}
+.avatar,.railstep .mk,.vbadge .d,.ic{border-radius:50%}
+/* white cards on a white page: a hairline edge, never a shadow */
+.card,.beat,.casecard,.hcard,.qcard,.specimen{background:var(--card);border:1px solid var(--line-2);box-shadow:none}
+textarea,input.line,.stat,.mech-box,.peerbox,.link,.cbox,.ped-node,.modelans{background:var(--paper-2)}
+/* in forced-colors a band defined only by its fill disappears; a border survives */
+@media(forced-colors:active){
+  .disruptband{border:2px solid CanvasText;background:Canvas;color:CanvasText;forced-color-adjust:none}
+  .card,.beat,.casecard{border:1px solid CanvasText}
+}
 button{font-family:var(--font-body);cursor:pointer}
 a{color:var(--accent)}
 h1,h2,h3,h4{font-family:var(--font-display);font-weight:700}
@@ -46,7 +72,7 @@ blockquote.qt p{margin:2px 0}
 .nav a.on{color:var(--accent);background:var(--accent-soft)}
 .spacer{flex:1}
 .userchip{display:flex;align-items:center;gap:9px;font-size:12.5px}
-.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#f4efe4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono)}
+.avatar{width:30px;height:30px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono)}
 .rolebadge{font-size:9px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;padding:2px 7px;border:1px solid var(--line-2);border-radius:3px;color:var(--ink-faint)}
 .linkbtn{background:none;border:none;color:var(--ink-faint);font-size:12px;text-decoration:underline;padding:0}
 /* below 700px the fixed bottom tab bar carries navigation, so the inline nav
@@ -62,22 +88,24 @@ blockquote.qt p{margin:2px 0}
 .eyebrow:after{content:"";position:absolute;left:0;bottom:0;width:24px;height:2px;background:var(--accent)}
 .pagetitle{font-size:clamp(24px,4vw,32px);margin:0 0 6px;line-height:1.1}
 .pagesub{color:var(--ink-soft);font-size:15px;margin:0 0 22px;max-width:70ch}
-.card{background:var(--card);border:1px solid var(--line-2);border-radius:7px;padding:22px 24px;margin-bottom:16px}
+.card{padding:22px 24px;margin-bottom:16px}
 .card h2{font-size:18px;margin:0 0 4px}
 .card h3{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--ink-faint);margin:22px 0 10px;font-weight:700}
 .small{font-size:12.5px;color:var(--ink-faint)}
 .kicker{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-faint);font-weight:700}
 .btn{font-size:13.5px;font-weight:600;border-radius:6px;padding:10px 18px;border:1px solid var(--ink-soft);background:transparent;color:var(--ink)}
 .btn:hover{background:var(--paper-2)}
-.btn.primary{background:var(--accent);color:#f4efe4;border-color:var(--accent)}
-.btn.primary:hover{background:#0c4a46}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#083b37}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.ghost{border-color:var(--line-2);color:var(--ink-soft)}
 .btn.sm{padding:6px 12px;font-size:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
 textarea{width:100%;min-height:96px;padding:12px 14px;border:1px solid var(--line-2);border-radius:6px;background:var(--paper);
   font-family:var(--font-body);font-size:14.5px;line-height:1.55;color:var(--ink);resize:vertical}
-textarea:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* on white a 0-offset ring reads as part of the control */
+textarea:focus,input:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.disruptband *:focus-visible{outline-color:var(--band-accent)}
 input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-radius:6px;background:var(--paper);font-family:var(--font-body);font-size:14px;color:var(--ink)}
 .prompt{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:8px}
 .footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-faint);line-height:1.7}
@@ -89,7 +117,7 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .hero{padding:20px 0 8px}
 .hero h1{font-size:clamp(30px,6vw,52px);line-height:1.02;margin:8px 0 14px;letter-spacing:-.5px}
 .hero p.lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:52ch;margin:0 0 26px;font-family:var(--font-display)}
-.specimen{background:var(--card);border:1px solid var(--line-2);border-radius:9px;padding:22px 24px;max-width:640px;box-shadow:0 24px 60px -40px rgba(60,40,20,.6)}
+.specimen{padding:22px 24px;max-width:640px}
 .specimen .cap{font-family:var(--font-mono);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
 .specimen .sent{font-family:var(--font-display);font-size:20px;line-height:1.55;min-height:2.6em}
 .specimen .caret{border-right:2px solid var(--accent);animation:blink 1s step-end infinite}
@@ -98,8 +126,9 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .spchips.show{opacity:1}
 .spchip{font-size:12px;font-family:var(--font-mono);padding:5px 10px;border-radius:20px;border:1px solid var(--green);color:var(--green);background:var(--green-soft);font-weight:600}
 .doors{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;margin:30px 0}
-.door{text-align:left;border:1px solid var(--line-2);background:var(--card);border-radius:8px;padding:18px 20px;transition:.15s var(--ease)}
-.door:hover{border-color:var(--accent);transform:translateY(-2px)}
+/* hover is a border state, not a lift — the lift is what reads as consumer SaaS */
+.door{text-align:left;border:1px solid var(--line-2);background:var(--card);border-radius:var(--r);padding:18px 20px;transition:border-color .15s var(--ease)}
+.door:hover{border-color:var(--ink)}
 .door .r{font-family:var(--font-mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:700}
 .door .n{font-family:var(--font-display);font-size:18px;font-weight:700;margin:6px 0 3px}
 .door .d{font-size:12.5px;color:var(--ink-faint)}
@@ -115,8 +144,8 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 @media(max-width:520px){.doors,.steps,.collegestrip{grid-template-columns:1fr}}
 /* library */
 .libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.casecard{background:var(--card);border:1px solid var(--line-2);border-radius:7px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;transition:.15s var(--ease);cursor:pointer}
-.casecard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.casecard{padding:18px 20px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s var(--ease);cursor:pointer}
+.casecard:hover{border-color:var(--ink)}
 .casecard .sys{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);font-weight:700}
 .casecard h3{font-family:var(--font-display);font-size:18px;margin:0}
 .casecard .ol{font-size:13px;color:var(--ink-soft);flex:1}
@@ -140,12 +169,13 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .railstep .lb{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono);font-size:10px;
   text-transform:uppercase;letter-spacing:.7px;font-weight:700}
 .railstep.done{color:var(--ink-soft)}
-.railstep.done .mk{background:var(--accent);border-color:var(--accent);color:#f4efe4}
+.railstep.done .mk{background:var(--accent);border-color:var(--accent);color:#fff}
 .railstep.on{color:var(--accent)}
 .railstep.on .mk{border-color:var(--accent);border-width:2px;color:var(--accent)}
 .railstep.disrupt .mk{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .railstep.revised{padding-left:16px}
-.railstep.superseded{opacity:.45}
+.railstep.superseded{opacity:1;color:var(--ink-faint)}
+.railstep.superseded .mk{background:var(--paper-2);border-color:var(--line-2);color:var(--ink-faint)}
 .spine-loop{position:absolute;left:0;width:12px;border:1.5px dashed var(--accent);border-right:none;border-radius:9px 0 0 9px;
   opacity:0;transition:opacity .45s var(--ease);pointer-events:none}
 .spine.looped .spine-loop{opacity:1}
@@ -159,18 +189,124 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
   .railstep.revised{padding-left:8px}
 }
 /* beat cards */
-.beat{background:var(--card);border:1px solid var(--line-2);border-radius:7px;padding:22px 24px;margin-bottom:16px}
+.beat{padding:22px 24px;margin-bottom:16px}
 .beat h2{font-size:20px;margin:4px 0 2px;font-family:var(--font-display)}
 .beat .stagetok{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--accent);font-weight:700}
-.beat.locked{opacity:.85;background:var(--paper-2)}
+.beat.locked{opacity:1;background:var(--paper-2);border-color:var(--line)}
 .locked-recap{border-left:2px solid var(--accent);padding:8px 0 8px 14px;margin-top:10px;white-space:pre-wrap;font-family:var(--font-display);font-size:15px}
 .locked-recap .lbl{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
-.dlg{margin:10px 0 4px;border-left:2px solid var(--line-2);padding-left:14px}
-.dl{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:3px 0;align-items:baseline}
-.dl .sp{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);white-space:nowrap}
-.dl .tx{color:var(--ink);font-family:var(--font-display);font-size:15.5px}
-.narr{font-family:var(--font-display);font-style:italic;color:var(--ink-soft);margin:10px 0}
-@media(max-width:520px){.dl{grid-template-columns:1fr;gap:1px}}
+/* ===== the playscript =====
+   Speech is serif, observation is sans. The speaker name hangs in a left gutter and
+   appears ONLY when the speaker changes, so a volley reads as a volley rather than as
+   a court reporter's transcript. Voices separate by indent and stem, never by colour —
+   colour-coding the speakers would spend the whole signal budget on decoration and the
+   scorecard's green/amber/red would stop reading as status. */
+.scene{position:relative;max-width:34rem;margin:16px 0}
+.ln{position:relative;padding:3px 0 3px 16px;border-left:2px solid transparent;--vind:0px;margin-left:var(--vind)}
+.ln .tx{display:block;font-family:var(--font-display);font-size:clamp(17px,calc(1rem + .5vw),20px);line-height:1.42;color:var(--ink)}
+.ln .sp{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:1px}
+.ln.cont .sp{display:none}
+.ln.cont{padding-top:0}
+.ln.vA{border-left-color:var(--line-3)}
+.ln.vB{border-left-color:var(--accent);--vind:26px}
+.ln.vC{border-left:2px dashed var(--ink-faint);--vind:13px}
+.ln.vC .sp{display:block}
+.ln.you{border-left-color:var(--accent)}
+.ln.you .sp{color:var(--accent)}
+.ln.ell{padding-top:0;margin-top:-2px;margin-left:calc(var(--vind) + 22px)}
+@media(min-width:760px){
+  .scene{padding-left:92px}
+  .ln .sp{position:absolute;left:-92px;top:.42em;width:80px;text-align:right;margin:0}
+  .ln.cont .sp{display:none}
+}
+/* a stage direction is the camera moving, not a whisper — so it flips typeface family */
+.dir{margin:18px 0 10px;font-family:var(--font-body);font-size:12px;font-weight:600;
+  letter-spacing:.14em;color:var(--ink-faint);max-width:46ch}
+.dir::before{content:'';display:block;width:26px;height:1px;background:var(--line-2);margin-bottom:8px}
+@media(min-width:760px){.dir{margin-left:-92px}}
+.slug{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-faint);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-wrap:anywhere}
+/* ===== landing lines: some sentences carry the whole case and cannot be the size of "No." ===== */
+.ln.land{margin:28px 0 28px -92px;padding:0;border-left:0;max-width:30ch;text-wrap:balance}
+.ln.land::before{content:'';display:block;width:26px;height:2px;background:var(--ink);margin-bottom:12px}
+.ln.land .tx{font-size:clamp(23px,5vw,31px);line-height:1.2;letter-spacing:-.012em}
+.ln.land .sp{position:static;display:block;width:auto;text-align:left;margin-top:10px;color:var(--ink-soft)}
+/* a hold is what silence looks like: half an empty screen under one sentence */
+.cue{position:relative}
+.cue.hold{min-height:44vh;display:flex;flex-direction:column;justify-content:center}
+.cue.hold.withq{min-height:30vh}
+.disruptband .ln.land::before{background:var(--band-accent)}
+/* the playscript, inverted. Every ink token has to be restated or the dialogue
+   renders dark-on-dark inside the two bands. */
+.disruptband .ln .tx,.disruptband .ln.land .tx{color:var(--band-ink)}
+.disruptband .ln .sp{color:var(--band-faint)}
+.disruptband .ln.land .sp{color:var(--band-soft)}
+.disruptband .ln.vA{border-left-color:var(--band-line)}
+.disruptband .ln.vB{border-left-color:var(--band-accent)}
+.disruptband .ln.vC{border-left-color:var(--band-faint)}
+.disruptband .ln.you{border-left-color:var(--band-accent)}
+.disruptband .ln.you .sp{color:var(--band-accent)}
+.disruptband .dir{color:var(--band-soft)}
+.disruptband .dir::before{background:var(--band-line)}
+.disruptband .slug{color:var(--band-soft);border-bottom-color:var(--band-line)}
+@media(max-width:760px){.ln.land{margin-left:0;max-width:none}.cue.hold{min-height:30vh}}
+/* ===== arrival, not dimming =====
+   Nothing already read is degraded. The backward glance to "Fatigue? / Oddly, no."
+   when the erythropoietin lands IS the deduction — dimming would obstruct it. */
+@keyframes arrive{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.cue.fresh .ln,.cue.fresh .dir,.cue.fresh .findingrow{animation:arrive .34s var(--ease) both;
+  animation-delay:calc(min(var(--st,0),7) * 70ms)}
+/* the read-head walks down the page as you advance. It sits in the far-left gutter,
+   OUTSIDE the speaker-name column, or it lands on top of the labels. */
+.cue.fresh::before{content:'';position:absolute;left:-8px;top:.62em;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)}
+@media(min-width:760px){.cue.fresh::before{left:-106px}}
+.disruptband .cue.fresh::before{background:var(--band-accent)}
+/* passed scenes stay fully legible and simply compress — a case file thickening behind you */
+.scene.past .ln{padding:1px 0 1px 14px}
+.scene.past .ln .tx{font-size:16px;line-height:1.4}
+.scene.past .dir{margin:12px 0 7px}
+.scene.past .ln.land{margin:14px 0}
+.scene.past .ln.land .tx{font-size:19px}
+.scene.past .ln.land::before{display:none}
+.scene.past .cue.hold{min-height:0}
+.scene.past .cue.fresh::before{display:none}
+.scene.live{cursor:pointer}
+/* ===== the one control ===== */
+.adv{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 2px;background:none;
+  border:0;border-top:1px solid var(--line-2);font-family:var(--font-mono);font-size:10.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);text-align:left;
+  touch-action:manipulation;user-select:none;transition:border-color .2s var(--ease),color .2s var(--ease)}
+.adv:hover,.adv:focus-visible{border-top-color:var(--accent);color:var(--accent)}
+.adv .adv-dots{margin-left:auto;display:flex;gap:5px}
+.adv .adv-dots i{width:5px;height:5px;border-radius:50%;border:1px solid currentColor}
+.adv .adv-dots i.on{background:currentColor}
+.adv .adv-c{transition:transform .2s var(--ease)}
+.adv:hover .adv-c{transform:translateY(2px)}
+.adv.act{border-top:0;min-height:0;width:auto;background:var(--accent);color:#fff;border-radius:var(--r);
+  padding:10px 18px;font-family:var(--font-body);font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none}
+.adv.act .adv-dots{display:none}
+.adv:disabled{opacity:.45;cursor:not-allowed}
+.disruptband .adv{border-top-color:var(--band-line);color:var(--band-soft)}
+.disruptband .adv.act{background:var(--band-ink);color:var(--band)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* a bordered box says "form field"; unbordered type on white says "scene" */
+.beat.scenebeat{background:none;border:0;padding:26px 0 4px}
+.modeswitch{display:flex;gap:6px;margin-bottom:14px}
+.modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:6px 11px;border-radius:var(--r);border:1px solid var(--line-2);
+  background:none;color:var(--ink-faint)}
+.modeswitch button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+@media(max-width:520px){
+  .beat{padding:18px 16px}
+  .beat.scenebeat{padding:20px 0 4px}
+  .scene{padding-left:0;max-width:none}
+  .ln{padding-left:12px}
+  .ln.vB{--vind:16px}
+  .ln.vC{--vind:8px}
+  .ln .tx{font-size:16.5px}
+}
 .labtable{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
 .labtable caption{text-align:left;font-family:var(--font-mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint);padding-bottom:6px;font-weight:700}
 .labtable th{text-align:left;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-faint);border-bottom:1px solid var(--line-2);padding:5px 8px 5px 0}
@@ -180,42 +316,42 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .findingrow .lb{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-faint);font-weight:700}
 @media(max-width:560px){.findingrow{grid-template-columns:1fr;gap:2px}}
 /* ================= the two inverted disruption bands ================= */
-.disruptband{margin:22px calc(-1 * var(--pad));padding:26px var(--pad);background:var(--ink);color:var(--paper);border-radius:0}
-.disruptband .eyebrow{color:var(--paper);opacity:.75}
-.disruptband .eyebrow:after{background:var(--paper);opacity:.5}
-.disruptband h2{color:var(--paper)}
-.disruptband .small{color:rgba(244,239,228,.65)}
-.disruptband .dlg{border-left-color:rgba(244,239,228,.28)}
-.disruptband .dl .sp{color:rgba(244,239,228,.6)}
+.disruptband{margin:22px calc(-1 * var(--pad));padding:38px var(--pad) 40px;background:var(--band);color:var(--band-ink);border-radius:0}
+.disruptband .eyebrow{color:var(--band-soft);opacity:1}
+.disruptband .eyebrow:after{background:var(--band-accent);opacity:1}
+.disruptband h2{color:var(--band-ink)}
+.disruptband .small{color:var(--band-soft)}
+.disruptband .dlg{border-left-color:var(--band-line)}
+.disruptband .dl .sp{color:var(--band-soft)}
 .disruptband .dl .tx{color:var(--paper)}
-.disruptband .narr{color:rgba(244,239,228,.7)}
-.disruptband .datum{font-family:var(--font-mono);font-size:clamp(19px,4.6vw,28px);font-weight:700;line-height:1.35;margin:12px 0}
-.disruptband .findingrow{border-bottom-color:rgba(244,239,228,.18)}
-.disruptband .findingrow .lb{color:rgba(244,239,228,.6)}
-.disruptband textarea,.disruptband input.line{background:rgba(244,239,228,.07);border-color:rgba(244,239,228,.3);color:var(--paper)}
-.disruptband .btn{border-color:rgba(244,239,228,.5);color:var(--paper)}
-.disruptband .btn:hover{background:rgba(244,239,228,.12)}
-.disruptband .btn.primary{background:var(--paper);color:var(--ink);border-color:var(--paper)}
-.disruptband blockquote.qt{border-left-color:rgba(244,239,228,.5);color:var(--paper)}
-.disruptband cite.src{color:rgba(244,239,228,.5)}
-.yourwords{border:1px dashed rgba(244,239,228,.4);border-radius:6px;padding:12px 14px;margin:12px 0;font-family:var(--font-display);font-size:15.5px}
+.disruptband .narr{color:var(--band-soft)}
+.disruptband .datum{font-family:var(--font-display);font-size:clamp(24px,6.6vw,42px);font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:14px 0}
+.disruptband .findingrow{border-bottom-color:var(--band-line)}
+.disruptband .findingrow .lb{color:var(--band-soft)}
+.disruptband textarea,.disruptband input.line{background:var(--band-field);border-color:var(--band-edge);color:var(--band-ink)}
+.disruptband .btn{border-color:var(--band-edge);color:var(--band-ink)}
+.disruptband .btn:hover{background:var(--band-field)}
+.disruptband .btn.primary{background:var(--band-ink);color:var(--band);border-color:var(--band-ink)}
+.disruptband blockquote.qt{border-left-color:var(--band-accent);color:var(--band-ink)}
+.disruptband cite.src{color:var(--band-faint)}
+.yourwords{border:1px dashed var(--band-edge);border-radius:6px;padding:12px 14px;margin:12px 0;font-family:var(--font-display);font-size:15.5px}
 .yourwords .lbl{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;opacity:.6;margin-bottom:5px}
 .verdictset{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.vopt{flex:1 1 150px;text-align:left;background:transparent;border:1px solid rgba(244,239,228,.35);border-radius:6px;padding:12px 14px;color:var(--paper)}
-.vopt:hover{background:rgba(244,239,228,.1)}
-.vopt.sel{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.vopt{flex:1 1 150px;text-align:left;background:transparent;border:1px solid var(--band-edge);border-radius:var(--r);padding:12px 14px;color:var(--band-ink)}
+.vopt:hover{background:var(--band-field)}
+.vopt.sel{background:var(--band-ink);color:var(--band);border-color:var(--band-ink)}
 .vopt .vt{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block}
 .vopt .vx{font-size:12px;opacity:.75;display:block;margin-top:3px}
 .chipset{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.echip{background:transparent;border:1px solid rgba(244,239,228,.35);border-radius:20px;padding:6px 13px;color:var(--paper);font-size:12.5px;font-family:var(--font-mono)}
-.echip.sel{background:var(--paper);color:var(--ink);border-color:var(--paper);font-weight:700}
+.echip{background:transparent;border:1px solid var(--band-edge);border-radius:20px;padding:6px 13px;color:var(--band-ink);font-size:12.5px;font-family:var(--font-mono)}
+.echip.sel{background:var(--band-ink);color:var(--band);border-color:var(--band-ink);font-weight:700}
 /* ================= differential elimination ledger ================= */
 .delim{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
 .delim .dx{position:relative;font-family:var(--font-display);font-size:16px;font-weight:700;display:inline-block}
 .delim .dx::after{content:'';position:absolute;left:0;top:52%;height:1.5px;width:0;background:var(--danger);
   transition:width .45s var(--ease);transition-delay:calc(var(--i) * 90ms)}
 .delim.struck.go .dx::after{width:100%}
-.delim.unlikely{opacity:.72}
+.delim.unlikely{color:var(--ink-soft)}
 .states{display:flex;gap:5px}
 .sbtn{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
   padding:5px 9px;border-radius:4px;border:1px solid var(--line-2);background:transparent;color:var(--ink-faint)}
@@ -233,7 +369,7 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .hcard{border:1px solid var(--line-2);border-radius:7px;padding:14px 16px;background:var(--card);position:relative;margin-bottom:10px}
 .hcard .hl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:700}
 .hcard .ht{font-family:var(--font-display);font-size:15px;margin-top:5px;white-space:pre-wrap}
-.hcard.retired{filter:grayscale(1);opacity:.72;transition:opacity .4s var(--ease),filter .4s var(--ease)}
+.hcard.retired{filter:none;opacity:1;background:var(--paper-2);border-color:var(--line-3);transition:background .4s var(--ease)}
 .hcard.retired .hl{color:var(--danger)}
 .hcard.retired::after{content:'RETIRED';position:absolute;top:12px;right:12px;transform:rotate(-7deg);font-family:var(--font-mono);
   font-size:10px;font-weight:700;letter-spacing:3px;color:var(--danger);border:1.5px solid var(--danger);padding:3px 8px;border-radius:2px}
@@ -260,7 +396,7 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .mech{display:flex;flex-wrap:wrap;gap:7px;align-items:stretch}
 .mech-box{flex:1 1 132px;min-width:0;border:1px solid var(--line-2);border-radius:6px;padding:9px 11px;background:var(--paper-2);
   font-family:var(--font-mono);font-size:11.5px;line-height:1.45}
-.mech-box.dashed{border-style:dashed;opacity:.72}
+.mech-box.dashed{border-style:dashed;color:var(--ink-soft);background:none}
 .mech-box b{display:block;font-family:var(--font-body);font-size:12.5px;font-weight:700;margin-bottom:2px}
 .mech-arrow{display:flex;align-items:center;color:var(--ink-faint);font-size:15px;flex:0 0 auto}
 .mech-arrow::before{content:'\2192'}
@@ -278,12 +414,13 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 
 <style>
 /* ================= SCORECARD ================= */
-.verdictband{border-radius:8px;padding:20px 24px;margin-bottom:16px;position:relative;border:1px solid}
+.verdictband{background:#fff;border:1px solid var(--line-2);border-left:4px solid var(--line-3);
+  border-radius:var(--r);padding:22px 26px;margin-bottom:16px;position:relative}
 .verdictband h2{margin:0;font-size:21px}
-.verdictband .sm{font-size:13px;opacity:.8;margin-top:2px}
-.vb-safe{background:var(--green-soft);border-color:var(--green)}
-.vb-risky{background:var(--amber-soft);border-color:var(--amber)}
-.vb-unsafe{background:var(--danger-soft);border-color:var(--danger)}
+.verdictband .sm{font-size:13px;color:var(--ink-faint);margin-top:2px}
+.vb-safe{border-left-color:var(--green)}
+.vb-risky{border-left-color:var(--amber)}
+.vb-unsafe{border-left-color:var(--danger)}
 .scorechip{position:absolute;right:22px;top:50%;transform:translateY(-50%);font-family:var(--font-mono);font-size:19px;font-weight:800}
 @media(max-width:560px){.scorechip{position:static;transform:none;display:block;margin-top:10px}}
 .sc-table{display:grid;gap:0}
@@ -292,16 +429,21 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .sc-q{font-weight:600;font-size:15px}
 .sc-ans{white-space:pre-wrap;font-family:var(--font-display);font-size:15px;border-left:2px solid var(--line-2);padding-left:12px}
 .sc-verdict{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
-.glyph{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;font-weight:700;
-  letter-spacing:.5px;padding:4px 10px;border-radius:20px;border:1px solid}
-.glyph .g{font-size:12px}
-.glyph.g-green{border-color:var(--green);color:var(--green);background:var(--green-soft)}
-.glyph.g-amber{border-color:var(--amber);color:var(--amber);background:var(--amber-soft)}
-.glyph.g-red{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
-.glyph.g-mute{border-color:var(--line-2);color:var(--ink-faint);border-style:dashed}
+/* On cream these tinted pills were quiet; on white the fills become the loudest thing
+   on the page and the scorecard reads as a traffic-light dashboard. Mark plus hairline
+   keeps two redundant channels — shape AND hue — so it survives greyscale and
+   colour-blindness, while reading as an editorial margin note. */
+.glyph{display:inline-flex;align-items:baseline;gap:8px;font-family:var(--font-mono);font-size:11px;
+  font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);
+  background:none;border:0;border-radius:0;border-left:2px solid var(--line-2);padding:2px 0 2px 10px}
+.glyph .g{font-size:13px;line-height:1}
+.glyph.g-green{border-left-color:var(--green)}   .glyph.g-green .g{color:var(--green)}
+.glyph.g-amber{border-left-color:var(--amber)}   .glyph.g-amber .g{color:var(--amber)}
+.glyph.g-red{border-left-color:var(--danger)}    .glyph.g-red .g{color:var(--danger)}
+.glyph.g-mute{border-left-style:dashed}          .glyph.g-mute .g{color:var(--ink-faint)}
 .sc-stars{font-size:17px;letter-spacing:2px}
 .sc-star{color:var(--line-2)}
-.sc-star.on{color:var(--accent)}
+.sc-star.on{color:var(--ink)}
 .conductchip{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;
   border-radius:3px;background:var(--amber-soft);color:var(--amber);font-weight:700}
 .sc-fb{color:var(--ink-soft);font-size:13.5px}
@@ -317,7 +459,7 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .chain{display:flex;flex-wrap:wrap;gap:6px;align-items:stretch;margin-top:8px}
 .link{flex:1 1 150px;min-width:0;border:1px solid var(--line-2);border-radius:6px;padding:8px 10px;font-size:12.5px;background:var(--paper-2)}
 .link.got{border-color:var(--accent);background:var(--accent-soft)}
-.link.miss{border-style:dashed;opacity:.75}
+.link.miss{border-style:dashed;color:var(--ink-soft)}
 .link .yours{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.6px;color:var(--accent);margin-top:4px}
 .probe{margin-top:10px;border:1px solid var(--amber);background:var(--amber-soft);border-radius:6px;padding:12px 14px}
 .probe .ph{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:5px}
@@ -391,25 +533,41 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
   display:flex;gap:14px;align-items:center;font-size:13px}
 .demobar .cap{flex:1;min-width:0}
 .demobar button{background:var(--paper);color:var(--ink);border:none;border-radius:5px;padding:7px 14px;font-size:12.5px;font-weight:700}
-.demobar button.gh{background:transparent;color:var(--paper);border:1px solid rgba(244,239,228,.5)}
+.demobar button.gh{background:transparent;color:var(--band-ink);border:1px solid var(--band-edge)}
 @media(max-width:560px){.demobar{flex-wrap:wrap;font-size:12px;padding:10px 12px}}
 /* ================= motion + print discipline ================= */
+/* zeroing DURATIONS alone left the ledger strike still waiting up to 900ms on its
+   transition-delay. Delays must be zeroed too, and the 44vh hold is page movement
+   a reduced-motion user has explicitly asked us not to do. */
 @media (prefers-reduced-motion:reduce){
-  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  *{animation-duration:.01ms !important;animation-delay:0ms !important;
+    transition-duration:.01ms !important;transition-delay:0ms !important}
+  .cue.fresh .ln,.cue.fresh .dir,.cue.fresh .findingrow{animation:none}
+  .cue.hold{min-height:0 !important}
   .delim.struck .dx::after{width:100%}
   .coda-q.wrong::after{width:100%}
   .spine.looped .spine-loop{opacity:1}
 }
+/* print = everything expanded. Flipping the TOKENS rather than listing band selectors
+   means new band children can never be forgotten here. */
+@page{margin:16mm}
 @media print{
-  .appbar,.mobtab,.demobar,.tabs,.btn,textarea,.states,.evpick,.mechtabs{display:none !important}
-  .disruptband{background:#fff !important;color:#000 !important;border:1px solid #000}
-  .disruptband .dl .tx,.disruptband h2,.disruptband .datum{color:#000 !important}
-  .disruptband .dl .sp,.disruptband .small{color:#444 !important}
+  :root{--band:#fff;--band-ink:#000;--band-soft:#444;--band-faint:#555;--band-line:#999;
+    --band-field:#fff;--band-edge:#000;--band-accent:#000;--paper-2:#fff;--line:#bbb;--line-2:#999}
+  body{background:#fff}
+  .appbar,.mobtab,.demobar,.tabs,.btn,.adv,.modeswitch,textarea,.states,.evpick,.mechtabs,.demorow{display:none !important}
+  .disruptband{background:#fff !important;color:#000 !important;border:0 !important;
+    border-top:2px solid #000 !important;border-bottom:2px solid #000 !important;padding:22px 0;margin:24px 0}
+  .cue,.ln,.dir,.beat,.card{opacity:1 !important;transform:none !important;animation:none !important}
+  .cue.hold{min-height:0 !important}
+  .cue.fresh::before{display:none}
+  .ln.land{break-after:avoid}
+  .cue,.card,.beat{break-inside:avoid}
   .spine-loop{border-style:solid}
   .mech .mech-out{display:flex !important}
   .hcard.retired{filter:none;opacity:1}
-  .card,.beat{break-inside:avoid;border-color:#999}
-  body{background:#fff}
+  .stat,.mech-box,.peerbox,.link,.cbox,.ped-node,.modelans,.beat.locked{background:#fff !important;border:1px solid #999 !important}
+  .card,.beat{border-color:#999}
 }
 </style>
 </head>
@@ -720,35 +878,43 @@ var VHL={
  oneLiner:"A software engineer, headaches and too many red cells, whose oxygen is perfectly normal.",
  competency:{code:"IM 5.12",text:"Reason from a contradiction to a molecular diagnosis"},
 
- /* ---- the document's own eight-beat spine, which rewinds ---- */
+ place:"St. Bartholomew's Hospital, London · Medical ward",
+
+ /* ---- the document's own eight-beat spine, which rewinds ----
+    c:1 starts a new cue (one press). w:"land" breaks the line out of the speech
+    column; w:"hold" additionally gives it half an empty screen. Six holds in the
+    whole case — used sixteen times it would be a scroll marathon. ---- */
  beats:[
-  {n:"1",kind:"stage",title:"Patient",
-   kicker:"St. Bartholomew's Hospital, London. Watson entered the medical ward carrying a fresh admission.",
+  {n:"1",kind:"stage",title:"Patient",move:"observe",
+   predict:{id:"p1",after:"Weight loss?",
+     ask:"He has heard three months of headaches, no fatigue, no breathlessness. What does he ask next?",
+     ph:"One question — his, not yours to justify."},
    reveal:{dialogue:[
+     {s:"",t:"Watson entered the medical ward carrying a fresh admission."},
      {s:"Watson",t:"Holmes, Internal Medicine requests your opinion."},
      {s:"Holmes",t:"The complaint?"},
      {s:"Watson",t:"A 34-year-old software engineer."},
      {s:"Holmes",t:"Go on."},
      {s:"Watson",t:"Three months of headaches."},
-     {s:"Holmes",t:"Fatigue?"},
+     {s:"Holmes",t:"Fatigue?",c:1},
      {s:"Watson",t:"Oddly, no."},
      {s:"Holmes",t:"Breathlessness?"},
      {s:"Watson",t:"None."},
-     {s:"Holmes",t:"Weight loss?"},
+     {s:"Holmes",t:"Weight loss?",c:1},
      {s:"Watson",t:"No."},
      {s:"Holmes",t:"Smoking?"},
      {s:"Watson",t:"Never."}]}},
 
-  {n:"2",kind:"stage",title:"Curiosity",kicker:"Routine blood tests show something remarkable.",
+  {n:"2",kind:"stage",title:"Curiosity",move:"hypothesise",
    reveal:{dialogue:[
      {s:"Watson",t:"Routine blood tests show something remarkable."},
      {s:"Holmes",t:"Proceed."},
-     {s:"Watson",t:"Haemoglobin: 20.4 g/dL."},
+     {s:"Watson",t:"Haemoglobin: 20.4 g/dL.",c:1},
      {s:"Watson",t:"Hematocrit: 62%."},
-     {s:"Holmes",t:"Polycythaemia."},
+     {s:"Holmes",t:"Polycythaemia.",c:1,w:"land"},
      {s:"Watson",t:"Exactly."},
-     {s:"Watson",t:"The physicians suspect chronic hypoxia."},
-     {s:"Holmes",t:"A reasonable hypothesis."}],
+     {s:"Watson",t:"The physicians suspect chronic hypoxia.",c:1},
+     {s:"Holmes",t:"A reasonable hypothesis.",w:"land"}],
     tables:[{title:"Full blood count",rows:[
      {test:"Haemoglobin",value:"20.4 g/dL",ref:"13–17",flag:"H"},
      {test:"Haematocrit",value:"62%",ref:"40–52",flag:"H"}]}]},
@@ -757,43 +923,47 @@ var VHL={
    placeholder:"My working diagnosis is … because …"},
 
   {n:"3",kind:"stage",title:"Contradiction (Diagnostic Disruption)",disruption:true,interlock:"d1",
-   kicker:"Watson opened another report."},
+   move:"contradiction"},
 
-  {n:"4",kind:"stage",title:"First Hypothesis",ledger:true,
+  {n:"4",kind:"stage",title:"First Hypothesis",ledger:true,move:"hypothesise",
    kicker:"Watson began listing possibilities. Take each one and dispose of it — but only on evidence you actually hold."},
 
-  {n:"5",kind:"stage",title:"Evidence Collection",kicker:"Further investigations followed.",
+  {n:"5",kind:"stage",title:"Evidence Collection",move:"test",kicker:"Further investigations followed.",
+   /* the deliberate anticlimax: three normals land together, then the silence */
    reveal:{findings:[
      {label:"Serum creatinine",text:"Normal."},
      {label:"Urinalysis",text:"Normal."},
      {label:"Liver function",text:"Normal."}],
     narrative:"The physicians remained puzzled."}},
 
-  {n:null,kind:"stage",title:"Diagnostic Disruption",disruption:true,interlock:"d2"},
+  {n:null,kind:"stage",title:"Diagnostic Disruption",disruption:true,interlock:"d2",move:"contradiction"},
 
-  {n:null,kind:"rewind",title:"The investigation returns to Stage 4"},
+  {n:null,kind:"rewind",title:"The investigation returns to Stage 4",move:"revise"},
 
-  {n:"4",revised:true,kind:"stage",title:"New Hypothesis",
+  {n:"4",revised:true,kind:"stage",title:"New Hypothesis",move:"hypothesise",
    reveal:{dialogue:[
+     {s:"",t:"Watson frowned."},
      {s:"Watson",t:"You mean the oxygen sensors?"},
      {s:"Holmes",t:"Exactly."},
-     {s:"Holmes",t:"The body behaves as though it were climbing Mount Everest…"},
-     {s:"Holmes",t:"…while comfortably seated in central London."},
-     {s:"Watson",t:"So the disease is not hypoxia…"},
-     {s:"Holmes",t:"It is false hypoxia."}]},
+     {s:"Holmes",t:"The body behaves as though it were climbing Mount Everest…",c:1},
+     {s:"Holmes",t:"…while comfortably seated in central London.",w:"land"},
+     {s:"Watson",t:"So the disease is not hypoxia…",c:1},
+     {s:"Holmes",t:"It is false hypoxia.",w:"hold"}]},
    capture:"hyp2",
    prompt:"Rewrite your working diagnosis. What is the fault, and what would you order next?",
    placeholder:"The fault is … so the next investigation is …"},
 
-  {n:"5",revised:true,kind:"stage",title:"New Evidence",askFamily:true,
+  {n:"5",revised:true,kind:"stage",title:"New Evidence",askFamily:true,move:"test",
    kicker:"Holmes requested further imaging.",
    reveal:{dialogue:[
      {s:"Holmes",t:"Contrast-enhanced CT abdomen."},
-     {s:"Radiologist",t:"There is a 2.8 cm hypervascular mass in the upper pole of the left kidney."},
+     {s:"",t:"The radiologist returned.",c:1},
+     {s:"Radiologist",t:"There is a 2.8 cm hypervascular mass in the upper pole of the left kidney.",w:"land"},
+     {s:"",t:"Watson looked surprised.",c:1},
      {s:"Watson",t:"A renal cell carcinoma?"},
-     {s:"Holmes",t:"Perhaps."}]}},
+     {s:"Holmes",t:"Perhaps.",w:"land"}]}},
 
-  {n:null,kind:"questions",title:"Questions for the Medical Detectives",
+  {n:null,kind:"questions",title:"Questions for the Medical Detectives",move:"explain",
    kicker:"Answer in your own words. Reasoning is weighted far above recall, and saying you have not met a concept costs you almost nothing."}
  ],
 
@@ -824,10 +994,10 @@ var VHL={
    resolve:{dialogue:[
      {s:"",t:"Watson looked puzzled."},
      {s:"Watson",t:"The patient has excessive red blood cells…"},
-     {s:"Watson",t:"…yet absolutely no evidence of oxygen deprivation."},
-     {s:"",t:"Holmes slowly closed the file."},
+     {s:"Watson",t:"…yet absolutely no evidence of oxygen deprivation.",w:"land"},
+     {s:"",t:"Holmes slowly closed the file.",c:1},
      {s:"Holmes",t:"Excellent."},
-     {s:"Holmes",t:"Our first hypothesis is dead."}],
+     {s:"Holmes",t:"Our first hypothesis is dead.",w:"hold"}],
     quote:["A detective who refuses to abandon a dead hypothesis soon becomes its next victim."]}},
 
   {id:"d2",kind:"locus",
@@ -853,11 +1023,11 @@ var VHL={
    whyPlaceholder:"because …",
    resolve:{dialogue:[
      {s:"",t:"Watson looked confused."},
-     {s:"Watson",t:"But oxygen levels are perfectly normal!"},
-     {s:"",t:"Holmes stood immediately."},
+     {s:"Watson",t:"But oxygen levels are perfectly normal!",w:"land"},
+     {s:"",t:"Holmes stood immediately.",c:1},
      {s:"Holmes",t:"No, Watson."},
-     {s:"Holmes",t:"The oxygen is normal."},
-     {s:"Holmes",t:"The cell merely refuses to believe it."}],
+     {s:"Holmes",t:"The oxygen is normal.",w:"land"},
+     {s:"Holmes",t:"The cell merely refuses to believe it.",c:1,w:"hold"}],
     quote:["The oxygen is normal.","The erythropoietin is high.",
       "Those two facts should never comfortably coexist.",
       "When physiology refuses to obey its own rules…",
@@ -911,9 +1081,9 @@ var VHL={
    {s:"",t:"The patient hesitated."},
    {s:"Patient",t:"My father died of kidney cancer at forty-three."},
    {s:"Patient",t:"My sister lost vision in one eye from a retinal tumour."},
-   {s:"",t:"Holmes smiled."},
+   {s:"",t:"Holmes smiled.",c:1},
    {s:"Holmes",t:"The family tree."},
-   {s:"Holmes",t:"There lies our diagnosis."}],
+   {s:"Holmes",t:"There lies our diagnosis.",w:"hold"}],
   pedigree:[
    {who:"Father",what:"Kidney cancer, died at 43",affected:true},
    {who:"Patient",what:"34, polycythaemia, 2.8 cm renal mass",proband:true},
@@ -1081,10 +1251,21 @@ VHL.questions=[
     "Their work transformed our understanding of physiology, anaemia, cancer biology, and the development of targeted therapies such as HIF stabilizers and HIF inhibitors."]}}
 ];
 
-/* ---- the frame the answer key opens with ---- */
+/* ---- the frame the answer key opens with. The thesis of the case in three lines:
+       a finding is not a diagnosis. ---- */
 VHL.answerFrame=["I believe I have the diagnosis, Holmes.","Do you?","The patient has polycythaemia.",
  "My dear Watson… polycythaemia is not the diagnosis.","It is merely the consequence.",
  "Then what is the disease?","That is precisely what we must discover."];
+VHL.answerFrameDlg=[
+ {s:"",t:"Watson placed the file upon Holmes' desk."},
+ {s:"Watson",t:"I believe I have the diagnosis, Holmes."},
+ {s:"Holmes",t:"Do you?"},
+ {s:"Watson",t:"The patient has polycythaemia."},
+ {s:"",t:"Holmes smiled.",c:1},
+ {s:"Holmes",t:"My dear Watson… polycythaemia is not the diagnosis."},
+ {s:"Holmes",t:"It is merely the consequence.",w:"land"},
+ {s:"Watson",t:"Then what is the disease?",c:1},
+ {s:"Holmes",t:"That is precisely what we must discover.",w:"hold"}];
 VHL.reviewFrame=["Detective Saba has not merely read the clues…","He has reasoned from them.",
  "He has solved most of it.","Let us examine his deductions."];
 VHL.verdictLines=["He did not memorise.","He reasoned.","And in medicine…",
@@ -1404,6 +1585,82 @@ function __selftest(){
      cs.ledger.rows[4].correct==="unlikely"&&cs.ledger.rows[4].killedBy.length===0);
   ok("every question carries a model answer",cs.questions.every(function(q){return q.model.lines.length>0;}));
 
+  /* ---- THE SCENE: pacing is a contract, so it is a test ---- */
+  if(typeof sceneOf==="function"){
+    /* walk every beat with all gates synthetically satisfied */
+    var save=JSON.stringify({b:S.beat,c:S.cue,h1:S.hyp1,h2:S.hyp2,il:S.interlock,lg:S.ledger,
+      lc:S.ledgerCommitted,af:S.askedFamily,pr:S.predict,ra:S.readAll});
+    S.hyp1="a committed working hypothesis of sufficient length";
+    S.hyp2="a revised working hypothesis of sufficient length";
+    S.interlock={d1:{verdict:"dead",evidence:["spo2","abg","cxr","pft","echo"],why:"the normals exclude it"},
+                 d2:{choice:"sensing",why:"the reader is wrong"}};
+    S.ledger=JSON.parse(JSON.stringify(LEDGER_RIGHT));
+    S.ledgerCommitted=true;S.askedFamily=true;S.predict={p1:"Whether he has lost weight."};S.readAll=false;
+    var total=0,perBeat=[],maxRun=0,run=0,allHaveContent=true,holdCues=0;
+    cs.beats.forEach(function(b,i){
+      var cues=sceneOf(cs,i);
+      perBeat.push(cues.length);
+      total+=cues.length;
+      /* a beat must never OPEN as an empty stage waiting for a press. A gate on cue 0
+         is fine — the ledger legitimately gates its own first cue — what matters is
+         that there is something to read. */
+      if(!cues.length||!cues[0].inner)allHaveContent=false;
+      cues.forEach(function(c){if(c.cls.indexOf("hold")>=0)holdCues++;});
+    });
+    /* Run length is measured against the shape a student actually MEETS — with the two
+       commits still pending. In the all-satisfied state above, the family commit has
+       already fired and its break has disappeared, which flatters nothing and measures
+       a path no student walks. */
+    S.ledgerCommitted=false;S.askedFamily=false;
+    cs.beats.forEach(function(b,i){
+      sceneOf(cs,i).forEach(function(c){
+        if(c.gate||c.commit){run=0;}else{run++;if(run>maxRun)maxRun=run;}});
+      run=0;
+    });
+    S.ledgerCommitted=true;S.askedFamily=true;
+    ok("SCENE total advances across the case === "+total+" (budget 35)",total<=35&&total>=25);
+    ok("SCENE no beat opens as an empty stage",allHaveContent);
+    ok("SCENE never more than 4 reveal-only presses in a row (got "+maxRun+")",maxRun<=4);
+    ok("SCENE exactly 6 held cues in the case (got "+holdCues+")",holdCues===6);
+    ok("SCENE per-beat cue counts "+perBeat.join(","),perBeat.every(function(n){return n>=1;}));
+
+    /* the non-emission contract: the resolve must not be Ctrl-F-able before the judgement */
+    S.beat=2;S.cue=1;
+    var d1html=sceneOf(cs,2).slice(0,S.cue+1).map(function(c){return c.inner;}).join("");
+    ok("SCENE d1 resolve is not emitted before the student has judged the evidence",
+       d1html.indexOf("Our first hypothesis is dead.")<0);
+    S.beat=5;S.cue=2;
+    var d2html=sceneOf(cs,5).slice(0,S.cue+1).map(function(c){return c.inner;}).join("");
+    ok("SCENE d2 resolve is not emitted before the student has chosen the locus",
+       d2html.indexOf("The cell merely refuses to believe it.")<0);
+
+    /* a volley must read as a volley: the negatives collapse to two speaker marks */
+    S.beat=0;S.cue=1;
+    var neg=sceneOf(cs,0)[1].inner;
+    var marks=(neg.match(/class="sp"/g)||[]).length-(neg.match(/class="ln [^"]*cont/g)||[]).length;
+    ok("SCENE the four-negative volley is one cue, not four presses",
+       neg.indexOf("Oddly, no.")>=0&&neg.indexOf("None.")>=0);
+
+    /* the prediction is ungraded and must be invisible to the grader */
+    var recProbe=JSON.stringify({answers:demoAnswers(cs,"saba"),state:{declared:{},
+      interlock:S.interlock,ledger:S.ledger}});
+    ok("SCENE the prediction never reaches the attempt record",recProbe.indexOf("predict")<0);
+
+    /* character names live in faculty content only, never in our renderer */
+    ok("SCENE voices are assigned by order of appearance, not by character name",
+       voiceCls([],"Anyone")==="vA"&&voiceCls(["X"],"Y")==="vB");
+
+    ok("SCENE sceneOf is deterministic",
+       JSON.stringify(sceneOf(cs,1))===JSON.stringify(sceneOf(cs,1)));
+
+    var st=JSON.parse(save);
+    S.beat=st.b;S.cue=st.c;S.hyp1=st.h1;S.hyp2=st.h2;S.interlock=st.il;S.ledger=st.lg;
+    S.ledgerCommitted=st.lc;S.askedFamily=st.af;S.predict=st.pr;S.readAll=st.ra;
+  }
+  ok("every beat names the reasoning move it performs",cs.beats.every(function(b){return !!b.move;}));
+  ok("the answer-key frame is staged, not dead data",!!cs.answerFrameDlg&&cs.answerFrameDlg.length===9);
+  ok("the scene carries a place",!!cs.place);
+
   return {pass:pass,total:A.length,fails:A.filter(function(a){return !a.ok;}).map(function(a){return a.name;}),all:A};
 }
 
@@ -1411,19 +1668,42 @@ function __selftest(){
 /* ============================================================
    STATE + SHELL
    ============================================================ */
-var S={role:null,caseId:null,beat:0,hyp1:"",hyp2:"",
+var K_PACE="ftt.pace.v1";
+var S={role:null,caseId:null,beat:0,cue:0,hyp1:"",hyp2:"",
   interlock:{d1:{verdict:null,evidence:[],why:""},d2:{choice:null,why:""}},
   ledger:{},ledgerCommitted:false,askedFamily:false,
   declared:{},qAnswers:{},probeAns:{},adjudication:{},codaText:"",codaRevealed:false,
+  predict:{},strikeSeen:false,readAll:!!lsGet(K_PACE),
   attemptIndex:null,facultyTab:"cohort",demoStep:-1,revealAll:false,seq:0,_submitted:false};
 var app=null,SELFTEST=null;
 var LOGO='<svg class="logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="13" cy="13" r="9" stroke="#0f5b56" stroke-width="2.2"/><path d="M20 20 L28 28" stroke="#0f5b56" stroke-width="2.6" stroke-linecap="round"/><path d="M8 13 h2.4 l1.6 -4 l2.4 8 l1.8 -5 l1.2 3 h3" stroke="#8a2d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
 
 function resetEncounter(){
-  S.beat=0;S.hyp1="";S.hyp2="";
+  S.beat=0;S.cue=0;S.hyp1="";S.hyp2="";
   S.interlock={d1:{verdict:null,evidence:[],why:""},d2:{choice:null,why:""}};
   S.ledger={};S.ledgerCommitted=false;S.askedFamily=false;
-  S.declared={};S.qAnswers={};S.probeAns={};S.adjudication={};S.codaText="";S.codaRevealed=false;S._submitted=false;
+  S.declared={};S.qAnswers={};S.probeAns={};S.adjudication={};S.codaText="";S.codaRevealed=false;
+  S.predict={};S.strikeSeen=false;S._submitted=false;
+}
+/* Re-render WITHOUT route()'s scrollTo(0,0): a cue advance must leave the eye where it
+   was, and must hand keyboard focus back to the control so Space repeats without the
+   hand moving. ~34 identical gestures in one screen position is the mechanism by which
+   the gesture goes automatic and the student stops seeing UI and sees only words. */
+var MQ_RM=window.matchMedia?window.matchMedia("(prefers-reduced-motion: reduce)"):{matches:false};
+function renderScene(){
+  var y=window.scrollY;
+  app.innerHTML=encounterView();
+  wire();
+  window.scrollTo(0,y);
+  var adv=document.getElementById("adv");
+  if(adv){
+    adv.focus({preventScroll:true});
+    var r=adv.getBoundingClientRect();
+    if(r.bottom>window.innerHeight-8||r.top<0)
+      adv.scrollIntoView({block:"nearest",behavior:MQ_RM.matches?"auto":"smooth"});
+  }
+  var live=document.getElementById("sceneLive");
+  if(live&&S._say)live.textContent=S._say;
 }
 function nav(h){if(location.hash===h)route();else location.hash=h;}
 function loadAttempts(){return lsGet(K_ATT)||[];}
@@ -1431,13 +1711,47 @@ function attemptsFor(id){return loadAttempts().filter(function(a){return a.caseI
 function lastAttemptIndex(id){var a=loadAttempts();for(var i=a.length-1;i>=0;i--)if(a[i].caseId===id)return i;return -1;}
 function words(s){return (String(s==null?"":s).trim().match(/\S+/g)||[]).length;}
 
-/* faculty-authored voice: dialogue, narration, quoted lines */
+/* ============================================================
+   THE PLAYSCRIPT
+   The source is staccato — median 3 words a line, 87 of 122 lines under 5 words.
+   Rendered as a two-column transcript, every 3-word line becomes a table row of
+   identical height and 13 lines of screenplay read as a 13-row spreadsheet.
+   So: the speaker name hangs in a left gutter and prints ONLY when the speaker
+   changes, voices separate by indent and stem, and observation flips typeface
+   away from speech. Speech is serif; the camera is sans.
+   ============================================================ */
+function cueGroups(lines){
+  var g=[],cur=null;
+  (lines||[]).forEach(function(d,i){if(i===0||d.c){cur=[];g.push(cur);}cur.push(d);});
+  return g;
+}
+/* voices are assigned by order of first appearance — never by character name,
+   so no character name ever has to exist in our renderer */
+function voiceCls(order,s){
+  if(!s)return "";
+  var i=order.indexOf(s);
+  if(i<0){order.push(s);i=order.length-1;}
+  return i===0?"vA":(i===1?"vB":"vC");
+}
+function lineHTML(d,prev,order,st){
+  var sa=' style="--st:'+st+'"';
+  if(!d.s)return '<div class="dir"'+sa+'>'+esc(d.t)+'</div>';
+  var cls="ln "+voiceCls(order,d.s);
+  if(prev&&prev.s===d.s)cls+=" cont";
+  if(/^\s*(…|\.\.\.)/.test(d.t))cls+=" ell";
+  if(d.w==="land"||d.w==="hold")cls+=" land";
+  if(d.you)cls+=" you";
+  return '<div class="'+cls+'"'+sa+'><span class="sp">'+esc(d.s)+'</span><span class="tx">'+esc(d.t)+'</span></div>';
+}
+function sayOf(lines){
+  return (lines||[]).map(function(d){return (d.s?d.s+": ":"")+d.t;}).join("  ");
+}
+/* legacy single-cue render, still used wherever pacing is not wanted */
 function dlgHTML(lines){
   if(!lines||!lines.length)return "";
-  return '<div class="dlg voice-case">'+lines.map(function(d){
-    if(!d.s)return '<div class="narr">'+esc(d.t)+'</div>';
-    return '<div class="dl"><span class="sp">'+esc(d.s)+'</span><span class="tx">'+esc(d.t)+'</span></div>';
-  }).join("")+'</div>';
+  var order=[],prev=null,h="";
+  (lines||[]).forEach(function(d,i){h+=lineHTML(d,prev,order,i);prev=d;});
+  return '<div class="scene voice-case"><div class="cue">'+h+'</div></div>';
 }
 function quoteHTML(lines,cite){
   if(!lines||!lines.length)return "";
@@ -1558,38 +1872,36 @@ function libraryView(){
 
 
 /* ============================================================
-   ENCOUNTER — the document's rewinding spine, revealed a beat at a time.
-   Nothing ahead of the student is in the DOM. That is what makes the
-   commitment real and the contradiction land.
+   ENCOUNTER — the document's rewinding spine, walked cue by cue.
+   Un-revealed cues are NOT EMITTED — not hidden — because the resolve
+   dialogue lives in the same beat as the ask, and `hidden` would leave
+   "Our first hypothesis is dead." findable by Ctrl-F before the student
+   has judged the evidence for themselves.
    ============================================================ */
-function beatLabel(b){
-  if(b.kind==="rewind")return "Rewind";
-  if(b.kind==="questions")return "Questions";
-  if(b.disruption)return "Disruption";
-  return "Stage "+b.n+(b.revised?" ′":"");
-}
-function beatReady(cs,i){
-  var b=cs.beats[i];
-  if(b.capture==="hyp1")return words(S.hyp1)>=5;
-  if(b.capture==="hyp2")return words(S.hyp2)>=5;
-  if(b.interlock==="d1")return !!S.interlock.d1.verdict&&S.interlock.d1.evidence.length>=1&&words(S.interlock.d1.why)>=2;
-  if(b.interlock==="d2")return !!S.interlock.d2.choice&&words(S.interlock.d2.why)>=2;
-  if(b.ledger)return S.ledgerCommitted;
-  if(b.askFamily)return S.askedFamily;
+var MOVE={observe:"Observe",hypothesise:"Hypothesise",contradiction:"Contradiction",
+  test:"Test",revise:"Revise",explain:"Explain"};
+function beatLabel(b){return MOVE[b.move]||b.title;}
+
+function gateReady(cs,gate){
+  if(!gate)return true;
+  if(gate==="hyp1")return words(S.hyp1)>=5;
+  if(gate==="hyp2")return words(S.hyp2)>=5;
+  if(gate==="d1")return !!S.interlock.d1.verdict&&S.interlock.d1.evidence.length>=1&&words(S.interlock.d1.why)>=2;
+  if(gate==="d2")return !!S.interlock.d2.choice&&words(S.interlock.d2.why)>=2;
+  if(gate==="ledger")return ledgerReady(cs);
+  if(gate==="pred1")return words(S.predict.p1)>=1;
   return true;
 }
 function spineHTML(cs){
   var looped=S.beat>=6;
   var h='<div class="spine'+(looped?" looped":"")+'">';
-  /* the loop bracket spans stage 4 and stage 5 back up from the rewind — pure index
-     arithmetic against a fixed row height, so nothing is measured at runtime */
   h+='<span class="spine-loop" style="top:calc(var(--rowh)*3);height:calc(var(--rowh)*4)"></span>';
   cs.beats.forEach(function(b,i){
     var cls=i<S.beat?"done":(i===S.beat?"on":"");
     if(b.disruption)cls+=" disrupt";
     if(b.revised)cls+=" revised";
     if(looped&&(i===3||i===4))cls+=" superseded";
-    var mk=b.disruption?"!":(b.kind==="rewind"?"↺":(b.kind==="questions"?"?":b.n));
+    var mk=b.disruption?"!":(b.kind==="rewind"?"↺":(b.kind==="questions"?"?":b.n+(b.revised?"′":"")));
     h+='<div class="railstep '+cls+'"><span class="mk">'+esc(mk)+'</span>'
       +'<span class="lb">'+esc(beatLabel(b))+'</span></div>';});
   return h+'</div>';
@@ -1607,48 +1919,9 @@ function hypBoardHTML(cs){
     +'<details class="hboard-m"><summary>Hypothesis board'+(retired?" · 1 retired":"")+'</summary>'
     +'<div class="inner">'+inner+'</div></details>';
 }
-/* ---- the two interlocks ---- */
-function interlockHTML(cs,id,locked){
-  var d=cs.disruptions[id==="d1"?0:1],st=S.interlock[id];
-  var h='<div class="disruptband"><div class="eyebrow">Diagnostic Disruption</div>';
-  h+=dlgHTML(d.open||[]);
-  if(d.datum)h+='<div class="datum voice-case">'+esc(d.datum)+'</div>';
-  if(d.data)h+=d.data.map(function(f){
-    return '<div class="findingrow"><span class="lb">'+esc(f.label)+'</span><span>'+esc(f.text)+'</span></div>';}).join("");
-  if(!locked){
-    if(id==="d1"&&S.hyp1)h+='<div class="yourwords"><span class="lbl">You wrote, one step ago</span>'+esc(S.hyp1)+'</div>';
-    h+='<h2 style="margin:16px 0 4px;font-size:18px">'+esc(d.ask)+'</h2>';
-    h+='<div class="verdictset">'+d.options.map(function(o){
-      return '<button class="vopt'+(st.verdict===o.id||st.choice===o.id?" sel":"")+'" data-'+id+'opt="'+esc(o.id)+'">'
-        +'<span class="vt">'+esc(o.t)+'</span><span class="vx">'+esc(o.x)+'</span></button>';}).join("")+'</div>';
-    if(id==="d1"){
-      h+='<div class="small" style="color:rgba(244,239,228,.75);margin-top:6px">Which findings did it? Name them — saying a hypothesis is dead without naming the evidence is an outcome, not a method.</div>';
-      h+='<div class="chipset">'+d.chips.map(function(c){
-        return '<button class="echip'+(st.evidence.indexOf(c.id)>=0?" sel":"")+'" data-d1chip="'+esc(c.id)+'">'
-          +esc(c.label)+'</button>';}).join("")+'</div>';
-    }
-    h+='<div style="margin-top:12px"><div class="small" style="color:rgba(244,239,228,.75);margin-bottom:5px">'
-      +esc(d.whyPrompt)+'</div>'
-      +'<input class="line" id="'+id+'why" data-'+id+'why="1" placeholder="'+esc(d.whyPlaceholder)+'" value="'+esc(st.why)+'"/></div>';
-    h+='<div class="row"><button class="btn primary" data-adv="1"'+(beatReady(cs,S.beat)?"":" disabled")+'>Commit and see what happened →</button></div>';
-  }else{
-    var mine=id==="d1"?st.verdict:st.choice;
-    var opt=d.options.filter(function(o){return o.id===mine;})[0];
-    if(opt)h+='<div class="yourwords"><span class="lbl">Your call</span>'+esc(opt.t)+' — '+esc(st.why)+'</div>';
-    if(id==="d1"&&st.evidence.indexOf(d.decoy)>=0)
-      h+='<div class="small" style="color:rgba(244,239,228,.8);margin:8px 0">'+esc(d.decoyNote)+'</div>';
-    if(id==="d2"&&d.defensible.indexOf(mine)>=0)
-      h+='<div class="small" style="color:rgba(244,239,228,.8);margin:8px 0">'+esc(d.defensibleNote)+'</div>';
-    h+=dlgHTML(d.resolve.dialogue);
-    h+=quoteHTML(d.resolve.quote,"From the case");
-    h+='<div class="row"><button class="btn primary" data-adv="1">Continue →</button></div>';
-  }
-  return h+'</div>';
-}
-/* ---- differential elimination ledger ---- */
-function ledgerHTML(cs){
-  var L=cs.ledger,committed=S.ledgerCommitted;
-  var h='<div class="delimwrap">';
+/* ---- differential ledger, split so the commit press yields visible content ---- */
+function ledgerRowsHTML(cs){
+  var L=cs.ledger,committed=S.ledgerCommitted,h="";
   L.rows.forEach(function(r,i){
     var st=S.ledger[r.id]||{state:null,evidence:[]};
     var cls="delim";
@@ -1664,26 +1937,27 @@ function ledgerHTML(cs){
     if(committed){
       if(st.evidence&&st.evidence.length)h+='<div class="small" style="margin-top:5px">Killed by: '
         +esc(st.evidence.map(function(e){var f=L.evidence.filter(function(x){return x.id===e;})[0];return f?f.label:e;}).join(", "))+'</div>';
-      if(r.id===L.trap&&st.state==="dead")h+='<div class="warnline">'+esc(L.trapNote)+'</div>';
-      h+='<div class="verdictline voice-case">Holmes: “'+esc(r.holmes)+'”</div>';}
+      h+='<div class="verdictline voice-case">“'+esc(r.holmes)+'”</div>';}
     h+='</div>';
     if(!committed)h+='<div class="states">'
       +['alive','unlikely','dead'].map(function(s){
         return '<button class="sbtn'+(st.state===s?" on":"")+'" data-st="'+s+'" data-lset="'+esc(r.id)+'|'+s+'">'+s+'</button>';}).join("")
       +'</div>';
     h+='</div>';});
-  h+='</div>';
-  if(committed)h+=quoteHTML(L.close,"From the case answer key");
   return h;
 }
+function ledgerCloseHTML(cs){
+  var L=cs.ledger,st=S.ledger[L.trap];
+  return ((st&&st.state==="dead")?'<div class="warnline">'+esc(L.trapNote)+'</div>':"")
+    +quoteHTML(L.close,"From the case answer key");
+}
 function ledgerReady(cs){
-  var rows=cs.ledger.rows,ok=true;
-  rows.forEach(function(r){var st=S.ledger[r.id];
+  var ok=true;
+  cs.ledger.rows.forEach(function(r){var st=S.ledger[r.id];
     if(!st||!st.state)ok=false;
     else if(st.state==="dead"&&(!st.evidence||!st.evidence.length))ok=false;});
   return ok;
 }
-/* ---- pedigree ---- */
 function pedigreeHTML(cs){
   var f=cs.family;
   return '<div class="ped">'+f.pedigree.map(function(p){
@@ -1692,7 +1966,6 @@ function pedigreeHTML(cs){
       +(p.proband?'<span class="tag">Proband</span>':"")+'</div>';}).join("")+'</div>'
     +'<div class="ped-note">'+esc(f.note)+'</div>';
 }
-/* ---- HIF / VHL mechanism, two states ---- */
 function mechHTML(cs,hits){
   var m=cs.mechanism;
   function boxes(list,extra){
@@ -1712,7 +1985,6 @@ function mechHTML(cs,hits){
   if(hits)h+='<div class="mechlegend">'+esc(m.legend)+'</div>';
   return h+'</div>';
 }
-/* ---- the eight questions ---- */
 function questionsHTML(cs){
   var h='<div class="small" style="margin-bottom:14px">'+esc(cs.beats[9].kicker)+'</div>';
   (cs.questions||[]).forEach(function(it,n){
@@ -1721,7 +1993,7 @@ function questionsHTML(cs){
       +'<div class="sc-qn">Question '+(n+1)+' · '+(it.recall?"recall":"reasoning")+' · '+it.w+' marks</div>'
       +'<div class="prompt voice-case" style="margin:4px 0 8px">'+esc(it.qtext)+'</div>';
     if(dec){
-      h+='<div class="glyph g-amber"><span class="g">◑</span>Gap declared</div>'
+      h+='<span class="glyph g-amber"><span class="g">◑</span>Gap declared</span>'
         +'<div class="modelans">'+quoteHTML(cs.strangerLines,"From the case")
         +'<p>'+esc(it.feedbackGap)+'</p></div>'
         +'<div class="row"><button class="btn ghost sm" data-undeclare="'+esc(it.id)+'">Actually, let me try</button></div>';
@@ -1732,66 +2004,223 @@ function questionsHTML(cs){
     h+='</div>';});
   return h;
 }
+
+/* ============================================================
+   sceneOf(case, beatIndex) -> ordered cue list.
+   A cue is an authored VOLLEY, never a single line. The eight-line negatives
+   run arrives as ONE drumbeat, because four negatives in a row is the joke
+   and the clue, and splitting them across four clicks kills the metronome.
+   ============================================================ */
+function sceneOf(cs,i){
+  var b=cs.beats[i],cues=[],order=[],prev=null;
+  function push(inner,say,o){o=o||{};
+    cues.push({inner:inner,say:say||"",cls:o.cls||"",gate:o.gate||null,commit:o.commit||null,
+      advLabel:o.advLabel||"Continue"});}
+  function dlg(lines,opts){
+    opts=opts||{};
+    var gs=cueGroups(lines);
+    gs.forEach(function(g,gi){
+      var hold=g.some(function(d){return d.w==="hold";});
+      var h="";
+      g.forEach(function(d,n){h+=lineHTML(d,prev,order,n);prev=d;});
+      var last=(gi===gs.length-1);
+      var mark=(opts.gateAt===gi)||(last&&opts.gateLast);
+      if(mark&&opts.tail)h+=opts.tail;
+      push(h,sayOf(g),{cls:hold?"hold":"",gate:mark?opts.gate:null,
+        advLabel:mark?(opts.gateLabel||"Continue"):"Continue"});
+    });
+  }
+  function findings(list){
+    cueGroups(list).forEach(function(g){
+      push(g.map(function(f){
+        return '<div class="findingrow"><span class="lb">'+esc(f.label)+'</span><span>'+esc(f.text)+'</span></div>';
+      }).join(""),g.map(function(f){return f.label+": "+f.text;}).join("  "));
+    });
+  }
+  function tables(list){
+    return (list||[]).map(function(t){
+      return '<div style="overflow-x:auto"><table class="labtable"><caption>'+esc(t.title)+'</caption>'
+        +'<thead><tr><th>Test</th><th>Value</th><th>Reference</th><th></th></tr></thead><tbody>'
+        +t.rows.map(function(r){return '<tr><td>'+esc(r.test)+'</td><td>'+esc(r.value)+'</td><td>'+esc(r.ref)+'</td>'
+          +'<td>'+(r.flag?'<span class="flagpill">'+esc(r.flag)+'</span>':"")+'</td></tr>';}).join("")
+        +'</tbody></table></div>';}).join("");
+  }
+
+  /* ---------- Stage 1: the negatives volley, and the one prediction stop ---------- */
+  if(b.predict){
+    var answered=words(S.predict.p1)>=1;
+    var lines=(b.reveal.dialogue||[]).slice();
+    if(answered){
+      /* the student's own sentence is typeset into the ASKING slot, in the same face as
+         everyone else — no tick, no cross. The juxtaposition is the whole feedback, and
+         the next line is itself a QUESTION, so adjacency can never read as endorsement. */
+      var at=-1;
+      lines.forEach(function(d,n){if(d.t===b.predict.after)at=n;});
+      if(at>=0)lines.splice(at,0,{s:"You",t:S.predict.p1,you:true,c:1});
+    }
+    var tailHTML=answered?"":('<div style="margin-top:16px"><div class="prompt">'+esc(b.predict.ask)+'</div>'
+      +'<input class="line" data-pred="p1" placeholder="'+esc(b.predict.ph)+'" value="'+esc(S.predict.p1||"")+'"/>'
+      +'<div class="small" style="margin-top:6px">Ungraded, and never scored. Guess freely — that is the point.</div></div>');
+    dlg(lines,{gateAt:answered?-1:1,gate:"pred1",gateLabel:"Ask it →",tail:tailHTML});
+  }
+  /* ---------- commit a hypothesis before the contradiction exists ---------- */
+  else if(b.capture){
+    var cap='<div style="margin-top:16px"><div class="prompt">'+esc(b.prompt)+'</div>'
+      +'<textarea data-cap="'+esc(b.capture)+'" placeholder="'+esc(b.placeholder||"")+'">'
+      +esc(b.capture==="hyp1"?S.hyp1:S.hyp2)+'</textarea>'
+      +'<div class="small" style="margin-top:6px">This locks when you commit. Nothing further down the case exists yet.</div></div>';
+    dlg(b.reveal.dialogue||[],{gateLast:true,gate:b.capture,gateLabel:"Commit →",tail:cap});
+    if(b.reveal.tables&&cues.length>1)cues[1].inner+=tables(b.reveal.tables);
+  }
+  /* ---------- the two disruptions ---------- */
+  else if(b.interlock){
+    var d=cs.disruptions[b.interlock==="d1"?0:1],st=S.interlock[b.interlock],id=b.interlock;
+    dlg(d.open||[]);
+    if(d.datum)push('<div class="datum voice-case">'+esc(d.datum)+'</div>',d.datum,{cls:"hold"});
+    var ask="";
+    if(d.data)ask+=d.data.map(function(f){
+      return '<div class="findingrow"><span class="lb">'+esc(f.label)+'</span><span>'+esc(f.text)+'</span></div>';}).join("");
+    if(id==="d1"&&S.hyp1)ask+='<div class="yourwords"><span class="lbl">You wrote, one step ago</span>'+esc(S.hyp1)+'</div>';
+    ask+='<h2 style="margin:16px 0 4px;font-size:18px">'+esc(d.ask)+'</h2>';
+    ask+='<div class="verdictset">'+d.options.map(function(o){
+      return '<button class="vopt'+((st.verdict===o.id||st.choice===o.id)?" sel":"")+'" data-'+id+'opt="'+esc(o.id)+'">'
+        +'<span class="vt">'+esc(o.t)+'</span><span class="vx">'+esc(o.x)+'</span></button>';}).join("")+'</div>';
+    if(id==="d1"){
+      ask+='<div class="small" style="color:var(--band-soft);margin-top:6px">Which findings did it? Name them — calling a hypothesis dead without naming the evidence is an outcome, not a method.</div>';
+      ask+='<div class="chipset">'+d.chips.map(function(c){
+        return '<button class="echip'+(st.evidence.indexOf(c.id)>=0?" sel":"")+'" data-d1chip="'+esc(c.id)+'">'
+          +esc(c.label)+'</button>';}).join("")+'</div>';}
+    ask+='<div style="margin-top:12px"><div class="small" style="color:var(--band-soft);margin-bottom:5px">'+esc(d.whyPrompt)+'</div>'
+      +'<input class="line" data-'+id+'why="1" placeholder="'+esc(d.whyPlaceholder)+'" value="'+esc(st.why)+'"/></div>';
+    push(ask,d.ask,{gate:id,advLabel:"Commit and see what happened →"});
+    var mine=(id==="d1")?st.verdict:st.choice,note="";
+    if(id==="d1"&&st.evidence.indexOf(d.decoy)>=0)
+      note='<div class="small" style="color:var(--band-soft)">'+esc(d.decoyNote)+'</div>';
+    if(id==="d2"&&d.defensible.indexOf(mine)>=0)
+      note='<div class="small" style="color:var(--band-soft)">'+esc(d.defensibleNote)+'</div>';
+    dlg(d.resolve.dialogue);
+    /* the aphorism rides with the held line rather than costing its own press */
+    var tailCue=cues[cues.length-1];
+    tailCue.inner+=note+quoteHTML(d.resolve.quote,"From the case");
+    if(tailCue.cls==="hold")tailCue.cls="hold withq";
+  }
+  /* ---------- the differential ledger ---------- */
+  else if(b.ledger){
+    push(ledgerRowsHTML(cs),"Five differentials to dispose of.",
+      {gate:"ledger",commit:"ledger",advLabel:"Commit the differential →"});
+    if(S.ledgerCommitted)push(ledgerCloseHTML(cs),cs.ledger.close.join(" "));
+  }
+  /* ---------- the family-history gate: the only click-to-reveal in the product ---------- */
+  else if(b.askFamily){
+    dlg(b.reveal.dialogue||[]);
+    if(!S.askedFamily){
+      cues[cues.length-1].advLabel="Ask the patient about family history →";
+      cues[cues.length-1].commit="family";
+    }else{
+      dlg(cs.family.dialogue);
+      cues[cues.length-1].inner+=pedigreeHTML(cs);
+      if(cues[cues.length-1].cls==="hold")cues[cues.length-1].cls="hold withq";
+    }
+  }
+  /* ---------- the rewind interstitial ---------- */
+  else if(b.kind==="rewind"){
+    push('<div class="small" style="max-width:46ch">The evidence changed, so the hypothesis step reopens. '
+      +'This is the method working, not failing — nothing here is a correction of you.</div>',
+      "The investigation returns to Stage 4.",{advLabel:"Return to Stage 4 →"});
+  }
+  /* ---------- the questions ---------- */
+  else if(b.kind==="questions"){
+    dlg(cs.answerFrameDlg||[]);
+    push(questionsHTML(cs),"Eight questions.");
+  }
+  /* ---------- plain evidence beats ---------- */
+  else{
+    if(b.reveal&&b.reveal.dialogue)dlg(b.reveal.dialogue);
+    if(b.reveal&&b.reveal.findings)findings(b.reveal.findings);
+    if(b.reveal&&b.reveal.narrative)push('<div class="dir">'+esc(b.reveal.narrative)+'</div>',b.reveal.narrative);
+  }
+  if(!cues.length)push("","");
+  return cues;
+}
+
 function encounterView(){
   var cs=caseById(S.caseId);
   if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
   var body='<div class="crumbs"><a data-nav="#/cases">Case</a> › '+esc(cs.title)+'</div>';
   body+='<div class="enc"><div class="railwrap">'+spineHTML(cs)+hypBoardHTML(cs)+'</div><div>';
-  body+='<div class="card"><div class="kicker">Narrative case · reasoning examined</div>'
-    +'<h1 class="pagetitle voice-case" style="margin:6px 0 4px">'+esc(cs.title)+'</h1>'
-    +'<div class="small">'+esc(cs.oneLiner)+'</div></div>';
+  body+='<div class="modeswitch" role="group" aria-label="Reading pace">'
+    +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene">Scene</button>'
+    +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full">Straight through</button></div>';
+  body+='<div class="slug">'+esc(cs.place)+'</div>';
+  body+='<p aria-live="polite" class="vh" id="sceneLive"></p>';
 
   var upto=S.revealAll?cs.beats.length-1:S.beat;
   for(var i=0;i<=upto&&i<cs.beats.length;i++){
-    var b=cs.beats[i],current=(i===S.beat)&&!S.revealAll,locked=i<S.beat||S.revealAll;
-    if(b.interlock){body+=interlockHTML(cs,b.interlock,locked);continue;}
-    if(b.kind==="rewind"){
-      body+='<div class="beat"><div class="stagetok">Rewind</div><h2 class="voice-case">'+esc(b.title)+'</h2>'
-        +'<div class="small" style="margin-top:6px">The evidence changed, so the hypothesis step reopens. '
-        +'This is the method working, not failing — nothing here is a correction of you.</div>'
-        +(current?'<div class="row"><button class="btn primary" data-adv="1">Return to Stage 4 →</button></div>':"")+'</div>';
-      continue;}
-    if(b.kind==="questions"){
-      body+='<div class="beat" id="qblock"><div class="stagetok">Understanding</div>'
-        +'<h2 class="voice-case">'+esc(b.title)+'</h2>'+questionsHTML(cs)
-        +'<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button>'
-        +'<button class="btn ghost" data-nav="#/cases">Back</button></div></div>';
-      continue;}
-    body+='<div class="beat'+(locked?" locked":"")+'">'
-      +'<div class="stagetok">'+esc(b.n?("Stage "+b.n+(b.revised?" · Revised":"")):"Interlude")+'</div>'
-      +'<h2 class="voice-case">'+esc(b.title)+'</h2>';
-    if(b.kicker)body+='<div class="small" style="margin:4px 0 8px">'+esc(b.kicker)+'</div>';
-    body+=revealHTML(b.reveal);
-    if(b.ledger){
-      body+=ledgerHTML(cs);
-      if(current&&!S.ledgerCommitted)body+='<div class="row"><button class="btn primary" id="ledgerCommit"'
-        +(ledgerReady(cs)?"":" disabled")+'>Commit the differential →</button></div>';
-      else if(current)body+='<div class="row"><button class="btn primary" data-adv="1">Continue →</button></div>';}
-    else if(b.askFamily){
-      if(!S.askedFamily){
-        if(current)body+='<div class="row"><button class="btn primary" id="askFamily" aria-expanded="false">Ask the patient about family history</button></div>';
-      }else{
-        body+=dlgHTML(cs.family.dialogue)+pedigreeHTML(cs);
-        if(current)body+='<div class="row"><button class="btn primary" data-adv="1">Continue to the questions →</button></div>';}}
-    else if(b.capture){
-      if(locked){body+='<div class="locked-recap voice-case"><span class="lbl">You committed</span>'
-        +esc(b.capture==="hyp1"?S.hyp1:S.hyp2)+'</div>';}
-      else{
-        body+='<div class="prompt" style="margin-top:12px">'+esc(b.prompt)+'</div>'
-          +'<textarea data-cap="'+esc(b.capture)+'" placeholder="'+esc(b.placeholder||"")+'">'
-          +esc(b.capture==="hyp1"?S.hyp1:S.hyp2)+'</textarea>'
-          +'<div class="row"><button class="btn primary" data-adv="1"'+(beatReady(cs,i)?"":" disabled")+'>Commit →</button>'
-          +'<span class="small">Committed answers lock. The case will not show you what comes next until you have written this one.</span></div>';}}
-    else if(current){
-      body+='<div class="row"><button class="btn primary" data-adv="1">Continue →</button></div>';}
-    body+='</div>';
+    var b=cs.beats[i];
+    var live=(i===S.beat)&&!S.revealAll&&!S.readAll;
+    var cues=sceneOf(cs,i);
+    var lastIdx=live?Math.min(S.cue,cues.length-1):cues.length-1;
+    var isForm=!!(b.ledger||b.capture||b.kind==="questions");
+    var inner="";
+    for(var k=0;k<=lastIdx;k++){
+      var c=cues[k];
+      if(!c.inner)continue;
+      inner+='<div class="cue '+esc(c.cls)+((live&&k===lastIdx&&k>0)?" fresh":"")+'">'+c.inner+'</div>';
+    }
+    var sceneCls="scene voice-case"+(live?" live":" past");
+    var head='<div class="stagetok">'
+      +esc(b.n?("Stage "+b.n+(b.revised?" · Revised":"")):(b.kind==="rewind"?"Rewind":"Understanding"))+'</div>'
+      +'<h2 class="voice-case">'+esc(b.title)+'</h2>'
+      +(b.kicker?'<div class="small" style="margin:4px 0 8px">'+esc(b.kicker)+'</div>':"");
+
+    if(b.interlock){
+      body+='<div class="disruptband"><div class="eyebrow">Diagnostic Disruption</div>'
+        +'<div class="'+sceneCls+'">'+inner+'</div>'
+        +(live?advHTML(cs,i,cues,lastIdx):"")+'</div>';
+    }else{
+      body+='<div class="beat'+(isForm?"":" scenebeat")+(live?"":" locked")+'">'+head
+        +'<div class="'+sceneCls+'">'+inner+'</div>'
+        +(live?advHTML(cs,i,cues,lastIdx):"")+'</div>';
+    }
   }
+  if(S.readAll||S.revealAll)
+    body+='<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button></div>';
   body+='<div class="demorow row"><span class="small">Load a worked attempt:</span>'
     +'<button class="btn ghost sm" data-fx="strong">Model</button>'
     +'<button class="btn ghost sm" data-fx="saba">Real student</button>'
     +'<button class="btn ghost sm" data-fx="gamed">Keyword-stuffed</button></div>';
   body+='</div></div>';
   return shell("cases",body);
+}
+
+/* The ONE control. A quiet strip that morphs IN PLACE into the beat's terminal verb.
+   Same DOM node throughout, so keyboard focus survives the handover and assistive
+   technology announces the changed accessible name at exactly the moment it matters.
+   Never position:fixed — a fixed bar covers the last revealed line, which is the one
+   they are meant to be reading, and it fights the on-screen keyboard. */
+function advHTML(cs,i,cues,lastIdx){
+  var b=cs.beats[i];
+  var atEnd=(lastIdx>=cues.length-1);
+  if(b.kind==="questions"&&atEnd)
+    return '<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button>'
+      +'<button class="btn ghost" data-nav="#/cases">Back</button></div>';
+  var c=cues[Math.min(lastIdx,cues.length-1)];
+  var label,act;
+  if(!atEnd||c.gate||c.commit){label=c.advLabel||"Continue";act=!!(c.gate||c.commit);}
+  else{
+    var nxt=cs.beats[i+1];
+    label=nxt&&nxt.kind==="questions"?"Continue to the questions →":"Continue →";
+    act=true;
+  }
+  if(atEnd&&i>=cs.beats.length-1)return "";
+  var ready=gateReady(cs,c.gate);
+  var remaining=Math.max(0,cues.length-1-lastIdx);
+  var dots="";
+  for(var k=0;k<Math.min(remaining,6);k++)dots+='<i></i>';
+  return '<button class="adv'+(act?" act":"")+'" id="adv" data-adv="1"'+(ready?"":" disabled")+'>'
+    +'<span class="adv-l">'+esc(label)+'</span>'
+    +(act?"":'<span class="adv-c">↓</span><span class="adv-dots" aria-hidden="true">'+dots+'</span>')
+    +'</button>';
 }
 
 
@@ -2109,14 +2538,17 @@ function forgeTab(cs){
    GUIDED DEMO
    ============================================================ */
 var DEMO=[
- {cap:"The case opens one stage at a time. Nothing further down the page exists yet — so the first hypothesis has to be committed blind.",
-  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.beat=1;nav("#/case/VHL-003");}},
- {cap:"Stage 3. The oxygen studies arrive, and the student is asked to judge their own hypothesis before anyone interprets it for them — and to name which findings killed it.",
-  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.hyp1=VHL.demo.saba.hyp1;S.beat=2;nav("#/case/VHL-003");}},
+ {cap:"The case is a playscript the student walks. One control, in one place, reveals the next volley — so the conversation is experienced rather than scrolled past.",
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;S.beat=0;S.cue=0;nav("#/case/VHL-003");}},
+ {cap:"A prediction stop: before Holmes asks his next question, the student commits one of their own. It is ungraded and never scored — their sentence is simply typeset into the scene beside his.",
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;S.beat=0;S.cue=1;nav("#/case/VHL-003");}},
+ {cap:"Stage 3, and the only inverted surface in the product. The student judges their own hypothesis before anyone interprets it — and must name which findings killed it.",
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;
+    S.hyp1=VHL.demo.saba.hyp1;S.predict.p1="Whether he has lost weight.";S.beat=2;S.cue=1;nav("#/case/VHL-003");}},
  {cap:"The spine rewinds. Stages 4 and 5 run a second time against the revised hypothesis — the document's own structure, and the case's argument about how diagnosis works.",
-  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();
+  run:function(){S.role="student";S.caseId="VHL-003";resetEncounter();S.readAll=false;
     S.hyp1=VHL.demo.saba.hyp1;S.interlock=VHL.demo.saba.interlock;S.ledger=VHL.demo.saba.ledger;
-    S.ledgerCommitted=true;S.beat=6;nav("#/case/VHL-003");}},
+    S.ledgerCommitted=true;S.beat=6;S.cue=0;nav("#/case/VHL-003");}},
  {cap:"The real student's answers, graded. Eight-point-five out of ten — the examiner's own mark, reproduced. She forgot a drug and met a new concept, and said so both times.",
   run:function(){loadDemoAttempt("saba");}},
  {cap:"A keyword-stuffed attempt scores 4.2 and is flagged for faculty review. The concepts are all present; nothing links them.",
@@ -2188,39 +2620,67 @@ function wire(){
   all("[data-ftab]",function(el){el.onclick=function(){S.facultyTab=el.getAttribute("data-ftab");S.reviewSel=null;
     nav("#/faculty?tab="+S.facultyTab);};});
   all("[data-rev]",function(el){el.onclick=function(){S.reviewSel=el.getAttribute("data-rev");route();};});
-  /* encounter */
+  /* ---- encounter: ONE advance rule covering reveal, both commits and both gates ---- */
+  function liveCue(){
+    var cs=caseById(S.caseId);if(!cs)return null;
+    var cues=sceneOf(cs,S.beat);
+    return {cs:cs,cues:cues,c:cues[Math.min(S.cue,cues.length-1)]};
+  }
+  function syncAdv(){
+    var L=liveCue();if(!L)return;
+    var btn=document.getElementById("adv");
+    if(btn)btn.disabled=!gateReady(L.cs,L.c.gate);
+  }
+  function advance(){
+    var L=liveCue();if(!L)return;
+    var cs=L.cs,cues=L.cues,c=L.c;
+    if(!gateReady(cs,c.gate))return;
+    if(c.commit==="ledger"&&!S.ledgerCommitted){S.ledgerCommitted=true;S._say="Differential committed.";renderScene();return;}
+    if(c.commit==="family"&&!S.askedFamily){S.askedFamily=true;S._say="You asked about the family.";renderScene();return;}
+    if(S.cue<cues.length-1){S.cue++;S._say=sceneOf(cs,S.beat)[S.cue].say;renderScene();return;}
+    if(S.beat<cs.beats.length-1){S.beat++;S.cue=0;S._say=sceneOf(cs,S.beat)[0].say;renderScene();}
+  }
   all("[data-cap]",function(el){el.oninput=function(){
-    var k=el.getAttribute("data-cap");if(k==="hyp1")S.hyp1=el.value;else S.hyp2=el.value;
-    var btn=el.parentNode.querySelector("[data-adv]");
-    if(btn)btn.disabled=!beatReady(caseById(S.caseId),S.beat);};});
-  all("[data-adv]",function(el){el.onclick=function(){
-    var cs=caseById(S.caseId);
-    if(!beatReady(cs,S.beat))return;
-    if(S.beat<cs.beats.length-1)S.beat++;
-    route();};});
-  all("[data-d1opt]",function(el){el.onclick=function(){S.interlock.d1.verdict=el.getAttribute("data-d1opt");route();};});
-  all("[data-d2opt]",function(el){el.onclick=function(){S.interlock.d2.choice=el.getAttribute("data-d2opt");route();};});
+    var k=el.getAttribute("data-cap");if(k==="hyp1")S.hyp1=el.value;else S.hyp2=el.value;syncAdv();};});
+  all("[data-pred]",function(el){el.oninput=function(){S.predict[el.getAttribute("data-pred")]=el.value;syncAdv();};});
+  all("[data-adv]",function(el){el.onclick=advance;});
+  all("[data-pace]",function(el){el.onclick=function(){
+    S.readAll=(el.getAttribute("data-pace")==="full");lsSet(K_PACE,S.readAll);route();};});
+  /* clicking the live scene also advances — guarded so it never fights text selection,
+     which would be fatal in a case students are meant to quote back */
+  all(".scene.live",function(el){el.onclick=function(e){
+    if(e.target.closest("button,a,input,textarea,select,label,summary,[tabindex]"))return;
+    var sel=window.getSelection();
+    if(sel&&!sel.isCollapsed)return;
+    advance();};});
+  if(!window.__advKey){
+    window.__advKey=true;
+    document.addEventListener("keydown",function(e){
+      if(e.key!=="ArrowRight"&&e.key!=="ArrowDown")return;
+      var t=e.target,tag=t&&t.tagName;
+      if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable))return;
+      var btn=document.getElementById("adv");
+      if(!btn||btn.disabled)return;
+      e.preventDefault();btn.click();
+    });
+  }
+  all("[data-d1opt]",function(el){el.onclick=function(){S.interlock.d1.verdict=el.getAttribute("data-d1opt");renderScene();};});
+  all("[data-d2opt]",function(el){el.onclick=function(){S.interlock.d2.choice=el.getAttribute("data-d2opt");renderScene();};});
   all("[data-d1chip]",function(el){el.onclick=function(){
     var id=el.getAttribute("data-d1chip"),a=S.interlock.d1.evidence,i=a.indexOf(id);
-    if(i>=0)a.splice(i,1);else a.push(id);route();};});
-  all("[data-d1why]",function(el){el.oninput=function(){S.interlock.d1.why=el.value;
-    var b=document.querySelector("[data-adv]");if(b)b.disabled=!beatReady(caseById(S.caseId),S.beat);};});
-  all("[data-d2why]",function(el){el.oninput=function(){S.interlock.d2.why=el.value;
-    var b=document.querySelector("[data-adv]");if(b)b.disabled=!beatReady(caseById(S.caseId),S.beat);};});
+    if(i>=0)a.splice(i,1);else a.push(id);renderScene();};});
+  all("[data-d1why]",function(el){el.oninput=function(){S.interlock.d1.why=el.value;syncAdv();};});
+  all("[data-d2why]",function(el){el.oninput=function(){S.interlock.d2.why=el.value;syncAdv();};});
   all("[data-lset]",function(el){el.onclick=function(){
     var p=el.getAttribute("data-lset").split("|");
     if(!S.ledger[p[0]])S.ledger[p[0]]={state:null,evidence:[]};
     S.ledger[p[0]].state=p[1];
     if(p[1]!=="dead")S.ledger[p[0]].evidence=[];
-    route();};});
+    renderScene();};});
   all("[data-lev]",function(el){el.onclick=function(){
     var p=el.getAttribute("data-lev").split("|"),st=S.ledger[p[0]];
     if(!st)return;var i=st.evidence.indexOf(p[1]);
-    if(i>=0)st.evidence.splice(i,1);else st.evidence.push(p[1]);route();};});
-  var lc=document.getElementById("ledgerCommit");
-  if(lc)lc.onclick=function(){if(ledgerReady(caseById(S.caseId))){S.ledgerCommitted=true;route();}};
-  var af=document.getElementById("askFamily");
-  if(af)af.onclick=function(){S.askedFamily=true;route();};
+    if(i>=0)st.evidence.splice(i,1);else st.evidence.push(p[1]);renderScene();};});
   /* questions */
   all("[data-q]",function(el){el.oninput=function(){S.qAnswers[el.getAttribute("data-q")]=el.value;};});
   all("[data-idk]",function(el){el.onclick=function(){var id=el.getAttribute("data-idk");
@@ -2231,7 +2691,9 @@ function wire(){
     var cs=caseById(S.caseId),k=el.getAttribute("data-fx"),d=cs.demo[k];
     S.hyp1=d.hyp1;S.hyp2=d.hyp2;S.interlock=JSON.parse(JSON.stringify(d.interlock));
     S.ledger=JSON.parse(JSON.stringify(d.ledger));S.ledgerCommitted=true;S.askedFamily=true;
-    S.qAnswers=demoAnswers(cs,k);S.declared={};S.beat=cs.beats.length-1;route();};});
+    S.predict.p1=d.predict||"Whether he has lost weight.";
+    S.qAnswers=demoAnswers(cs,k);S.declared={};
+    S.beat=cs.beats.length-1;S.cue=sceneOf(cs,S.beat).length-1;route();};});
   /* report */
   all("[data-mech]",function(el){el.onclick=function(){
     var p=document.getElementById("mechPanel");if(!p)return;
@@ -2248,10 +2710,17 @@ function wire(){
   var cg=document.getElementById("codaGo");if(cg)cg.onclick=function(){S.codaRevealed=true;route();};
   var fr=document.getElementById("forgeRun");
   if(fr)fr.onclick=function(){var t=document.getElementById("forgeRaw");S.forgeRaw=t?t.value:"";route();};
-  /* deterministic strike + loop animation: one class flip on the next frame */
-  requestAnimationFrame(function(){
+  /* deterministic strike + loop animation. The rAF path runs ONCE per encounter —
+     otherwise the strike replays on every cue press inside the ledger beat. */
+  if(!S.strikeSeen){
+    requestAnimationFrame(function(){
+      all(".delim.struck",function(el){el.classList.add("go");});
+      var cw=document.getElementById("codaWrong");if(cw)cw.classList.add("go");});
+    if(document.querySelector(".delim.struck"))S.strikeSeen=true;
+  }else{
     all(".delim.struck",function(el){el.classList.add("go");});
-    var cw=document.getElementById("codaWrong");if(cw)cw.classList.add("go");});
+    var cw2=document.getElementById("codaWrong");if(cw2)cw2.classList.add("go");
+  }
 }
 
 /* ============================================================
