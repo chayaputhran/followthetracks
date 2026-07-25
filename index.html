@@ -34,8 +34,20 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{color:var(--ink);font-family:var(--font-body);line-height:1.55;font-size:15px;background:var(--paper);
-  background-image:none;overflow-x:hidden}
+/* overflow-x lives on html, and is CLIP not HIDDEN: `hidden` on body forces
+   overflow-y:auto, which makes body a second scroll container on top of html's.
+   `clip` guards against stray horizontal overflow without creating a scroller. */
+html{background:var(--paper);overflow-x:clip}
+body{color:var(--ink);font-family:var(--font-body);line-height:1.55;font-size:15px;
+  background:var(--paper);background-image:none}
+/* When the page does scroll, the scrollbar must not read as a grey slab down the
+   edge of a white page — that is what makes the white look broken. */
+html{scrollbar-width:thin;scrollbar-color:var(--line-3) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px;
+  border:3px solid var(--paper)}
+::-webkit-scrollbar-thumb:hover{background:var(--line-3)}
 /* one radius everywhere; the two exceptions stay circular because they are MARKS, not containers */
 .card,.beat,.casecard,.hcard,.qcard,.specimen,.stat,.mech-box,.peerbox,.link,.cbox,.ped-node,
 .modelans,.extendbox,.probe,.provnote,.verdictband,.btn,textarea,input.line,.vbadge,.spchip,
@@ -81,7 +93,11 @@ blockquote.qt p{margin:2px 0}
 @media(max-width:560px){.appbar{padding:0 12px;gap:10px}.brandmark{gap:8px}.userchip{gap:7px}.userchip .small{display:none}}
 @media(max-width:400px){.userchip .rolebadge{display:none}.wordmark small{display:none}}
 /* layout */
-.wrap{max-width:1120px;margin:0 auto;padding:26px var(--pad) 110px}
+/* the deep bottom padding exists ONLY to clear the fixed mobile tab bar. Above the
+   breakpoint where that bar exists it is dead space — and 110px of dead space is
+   enough on its own to put a scrollbar on a page that otherwise fits the screen. */
+.wrap{max-width:1120px;margin:0 auto;padding:26px var(--pad) 40px}
+@media(max-width:700px){.wrap{padding-bottom:110px}}
 .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
 .eyebrow{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);font-weight:700;position:relative;padding-bottom:8px;margin-bottom:12px;display:inline-block}
@@ -531,6 +547,8 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 }
 .demobar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);padding:12px 18px;z-index:60;
   display:flex;gap:14px;align-items:center;font-size:13px}
+/* the guided-demo bar is the other fixed element that needs bottom clearance */
+body:has(.demobar) .wrap{padding-bottom:110px}
 .demobar .cap{flex:1;min-width:0}
 .demobar button{background:var(--paper);color:var(--ink);border:none;border-radius:5px;padding:7px 14px;font-size:12.5px;font-weight:700}
 .demobar button.gh{background:transparent;color:var(--band-ink);border:1px solid var(--band-edge)}
