@@ -546,6 +546,12 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .pagesub,.hero p.lede{max-width:62ch}
 .card p,.beat p,blockquote.qt,.coda-close,.coda-row > div{max-width:70ch}
 .sc-ans,.locked-recap,.peerans{max-width:66ch}
+/* per-question depth, folded away by default */
+.qmore{margin-top:10px;border-top:1px solid var(--line)}
+.qmore summary{padding:9px 0;cursor:pointer;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+.qmore summary:hover{color:var(--accent)}
+.qmore-in{padding-bottom:6px}
 .modelans{margin-top:10px;background:var(--paper-2);border-radius:6px;padding:12px 14px;border-left:2px solid var(--accent)}
 .modelans p{margin:2px 0;font-family:var(--font-display);font-size:14.5px;line-height:1.55}
 .extendbox{margin-top:10px;border:1px dashed var(--accent);border-radius:6px;padding:11px 13px;background:var(--accent-soft)}
@@ -2650,8 +2656,15 @@ function scorecardView(cs,rec,gidx){
   body+='<div class="verdictband '+vcls+'"><h2>'+esc(vt)+'</h2>'
     +'<div class="sm">'+esc(cs.title)+'</div><span class="scorechip">'+esc(overall)+' / 10</span></div>';
 
-  /* --- 1. how the answers were read --- */
-  body+='<div class="card"><h2>Question by question</h2>'
+  /* Sections are built first and ORDERED afterwards. A reader wants the short
+     human read before four screens of per-question detail. */
+  var secQ="",secUnatt="",secHonesty="",secNotebook="",secRead="",secStrength="",
+      secMech="",secNumber="",secCoda="";
+
+  /* --- how the answers were read --- */
+  secQ+='<div class="card"><h2>Question by question</h2>'
+    +'<div class="small" style="margin-bottom:10px">Each answer, how it was read, and — if you '
+    +'want it — the model answer and where your reasoning chain broke.</div>'
     +quoteHTML(cs.reviewFrame,"From the case")
     +'<div class="sc-table">';
   var attempted=[],unattempted=[];
@@ -2660,7 +2673,7 @@ function scorecardView(cs,rec,gidx){
     if(r.status==="unattempted"){unattempted.push({it:it,n:n});return;}
     attempted.push(it.id);
     var a=ans[it.id]||"";
-    body+='<div class="sc-row"><div class="sc-qn">Question '+(n+1)+' · '+it.w+' marks</div>'
+    secQ+='<div class="sc-row"><div class="sc-qn">Question '+(n+1)+' · '+it.w+' marks</div>'
       +'<div class="sc-q voice-case">'+esc(it.qtext)+'</div>'
       +'<div class="sc-ans voice-case">'+esc(a)+'</div>'
       +'<div class="sc-verdict">'+glyphHTML(r)+starGlyphs(r.stars)
@@ -2669,88 +2682,95 @@ function scorecardView(cs,rec,gidx){
       +'</div>'
       +'<div class="sc-fb">'+esc(r.feedback)+'</div>'
       +'<div class="sc-extra">';
-    if(r.extendText)body+='<div class="extendbox"><div class="eh">Adding to your answer</div>'+esc(r.extendText)+'</div>';
-    if(r.refineChain)body+='<div class="extendbox"><div class="eh">The sequence, link by link</div>'
+    /* the teaching depth is kept, but folded away: inline it turned this table into
+       four screens of wall, which nobody reads */
+    var more="";
+    if(r.extendText)more+='<div class="extendbox"><div class="eh">Adding to your answer</div>'+esc(r.extendText)+'</div>';
+    if(r.refineChain)more+='<div class="extendbox"><div class="eh">The sequence, link by link</div>'
       +r.refineChain.map(function(l){return '<div class="voice-case">'+esc(l)+'</div>';}).join("")+'</div>';
-    body+=chainHTML(it,r);
-    if(it.aside)body+=quoteHTML([it.aside],"From the case answer key");
-    body+=modelHTML(it);
-    body+=peerHTML(it);
-    body+='</div></div>';});
-  body+='</div></div>';
+    more+=chainHTML(it,r);
+    if(it.aside)more+=quoteHTML([it.aside],"From the case answer key");
+    more+=modelHTML(it);
+    more+=peerHTML(it);
+    secQ+='<details class="qmore"><summary>Model answer'
+      +(it.chain?", and where your chain broke":"")+(it.peer?", and a second opinion":"")
+      +'</summary><div class="qmore-in">'+more+'</div></details>';
+    secQ+='</div></div>';});
+  secQ+='</div></div>';
 
-  /* --- 2. what was never attempted — taught anyway --- */
+  /* --- what was never attempted — taught anyway --- */
   unattempted.forEach(function(u){
-    body+='<div class="card"><h2>Not attempted — worth knowing anyway</h2>'
+    secUnatt+='<div class="card"><h2>Not attempted — worth knowing anyway</h2>'
       +'<div class="sc-q voice-case" style="margin-bottom:8px">'+esc(u.it.qtext)+'</div>'
       +modelHTML(u.it)
       +'<div class="small" style="margin-top:10px">Not graded as an answer. It still counts as 0 of '
       +u.it.w+' marks toward the total.</div></div>';});
 
-  /* --- 3. the honesty ledger: make the incentive visible or it changes nothing --- */
+  /* --- the honesty ledger: make the incentive visible or it changes nothing --- */
   if(Q.honestGapCount>0){
-    body+='<div class="card ledgercard"><h2>What your honesty was worth</h2>'
+    secHonesty+='<div class="card ledgercard"><h2>What your honesty was worth</h2>'
       +'<div class="ledgernum">+'+Q.honestGapMarks.toFixed(1)+'</div>'
       +'<div>You marked '+Q.honestGapCount+' answer'+(Q.honestGapCount>1?"s":"")+' as unknown rather than guessing. '
       +'Each earned '+Math.round(GAP_CREDIT*100)+'% of its marks. A confident wrong answer would have earned nothing — '
       +'guessing would have cost you '+Q.honestGapMarks.toFixed(1)+' marks out of 10.</div>'
       +quoteHTML([cs.trustLine],"From the case")+'</div>';
-    body+='<div class="card"><h2>New to your notebook</h2>'
+    secNotebook+='<div class="card"><h2>New to your notebook</h2>'
+      +'<div class="small" style="margin-bottom:8px">The concepts you met for the first time, with the answer to each.</div>'
       +quoteHTML([cs.notebookLine],"From the case");
     (cs.questions||[]).forEach(function(it){
       var r=Q.q[it.id];
       if(r.status!=="newConcept"&&r.status!=="factGap")return;
-      body+='<div class="nbitem"><div class="nq voice-case">'+esc(it.qtext)+'</div>'+modelHTML(it)+'</div>';});
-    body+='</div>';}
+      secNotebook+='<div class="nbitem"><div class="nq voice-case">'+esc(it.qtext)+'</div>'+modelHTML(it)+'</div>';});
+    secNotebook+='</div>';}
 
-  /* --- 4. the read --- */
+  /* --- the read --- */
   var readLine=Q.reasoningPct>=Q.recallPct+15?"You reasoned rather than recalled."
     :(Q.recallPct>Q.reasoningPct+15?"You recalled more reliably than you reasoned."
       :"Reasoning and recall came out level.");
-  body+='<div class="card"><h2>The read</h2><div style="font-family:var(--font-display);font-size:17px;margin-bottom:10px">'
+  secRead+='<div class="card"><h2>The read</h2><div style="font-family:var(--font-display);font-size:17px;margin-bottom:10px">'
     +esc(readLine)+'</div>';
   function bar(lbl,v){return '<div class="metric"><div class="top"><b>'+esc(lbl)+'</b><span>'+v+'%</span></div>'
     +'<div class="bar"><i style="width:'+Math.max(0,Math.min(100,v))+'%;background:'
     +(v>=70?"var(--green)":v>=40?"var(--amber)":"var(--danger)")+'"></i></div></div>';}
-  body+=bar("Reasoning · Q1–Q6 · 90 marks",Q.reasoningPct)+bar("Recall · Q7–Q8 · 10 marks",Q.recallPct)
+  secRead+=bar("Reasoning · Q1–Q6 · 90 marks",Q.reasoningPct)+bar("Recall · Q7–Q8 · 10 marks",Q.recallPct)
     +'<div class="small">Reasoning carries nine times the weight of recall. That ratio is the product\'s whole argument.</div>'
     +quoteHTML(cs.verdictLines,"From the case")+'</div>';
 
-  /* --- 5. greatest strength --- */
+  /* --- greatest strength --- */
   if(Q.strength){
-    body+='<div class="card"><h2>Your strongest move</h2>'
+    secStrength+='<div class="card"><h2>Your strongest move</h2>'
       +'<div class="sc-q voice-case">'+esc(Q.strength.q)+'</div>'
       +(Q.strength.note?'<div class="small" style="margin-top:6px">'+esc(Q.strength.note)+'</div>':"")
       +quoteHTML(cs.strengthLines,"From the case")+'</div>';}
 
-  /* --- 6. the mechanism, marked against what the student produced --- */
+  /* --- the mechanism, marked against what the student produced --- */
   var hits={};(cs.questions||[]).forEach(function(it){
     var r=Q.q[it.id];Object.keys(r.hits||{}).forEach(function(k){hits[k]=true;});});
-  body+='<div class="card"><h2>The pathway this case turns on</h2>'
+  secMech+='<div class="card"><h2>The pathway this case turns on</h2>'
     +'<div class="small">Questions 4, 5 and 6 all live on one mechanism. Here it is in both states.</div>'
     +mechHTML(cs,hits)+'</div>';
 
-  /* --- 7. the number, last --- */
-  body+='<div class="card sc-overall"><div class="sc-big">'+esc(overall)+' <span>/ 10</span></div>'
+  /* --- the number --- */
+  secNumber+='<div class="card sc-overall"><div class="sc-big">'+esc(overall)+' <span>/ 10</span></div>'
     +'<div class="small">Across '+Q.attemptedCount+' of '+cs.questions.length+' questions answered. '
     +'The case is scored out of all eight — an unanswered question is not a penalty, it is simply unearned.</div>'
     +quoteHTML([cs.closingLine],"From the case")+'</div>';
 
-  /* --- 8. the coda, generated before it is given --- */
+  /* --- the coda, generated before it is given --- */
   var c=cs.coda;
-  body+='<div class="card sc-coda"><h2 class="voice-case">'+esc(c.title)+'</h2>'
+  secCoda+='<div class="card sc-coda"><h2 class="voice-case">'+esc(c.title)+'</h2>'
     +quoteHTML(c.frame,"From the case answer key");
   c.specialists.forEach(function(sp){
-    body+='<div class="coda-row"><span class="ic ok">✓</span><div><span class="who">'+esc(sp.who)+'</span> '
+    secCoda+='<div class="coda-row"><span class="ic ok">✓</span><div><span class="who">'+esc(sp.who)+'</span> '
       +esc(sp.concluded)+'.</div></div>';});
   if(!S.codaRevealed&&!rec.codaText){
-    body+='<div class="prompt" style="margin-top:14px">'+esc(c.ask)+'</div>'
+    secCoda+='<div class="prompt" style="margin-top:14px">'+esc(c.ask)+'</div>'
       +'<textarea id="codaText" placeholder="'+esc(c.placeholder)+'">'+esc(S.codaText)+'</textarea>'
       +'<div class="row"><button class="btn primary" id="codaGo">Commit, then read the answer</button></div>';
   }else{
     var mine=rec.codaText||S.codaText;
-    if(mine)body+='<div class="locked-recap voice-case" style="margin-top:14px"><span class="lbl">You wrote</span>'+esc(mine)+'</div>';
-    body+='<div style="margin-top:16px"><div class="small">Everyone asked the same question:</div>'
+    if(mine)secCoda+='<div class="locked-recap voice-case" style="margin-top:14px"><span class="lbl">You wrote</span>'+esc(mine)+'</div>';
+    secCoda+='<div style="margin-top:16px"><div class="small">Everyone asked the same question:</div>'
       +'<div class="coda-q wrong voice-case" id="codaWrong">“'+esc(c.wrongQ)+'”</div>'
       +'<div class="small" style="margin-top:8px">The correct question was different:</div>'
       +'<div class="coda-q right voice-case">“'+esc(c.rightQ)+'”</div></div>'
@@ -2758,13 +2778,18 @@ function scorecardView(cs,rec,gidx){
       +quoteHTML(c.notHidden.concat([c.violin]).concat(c.hidden),"From the case answer key")
       +'<blockquote class="coda-close voice-case">'+esc(c.close)+'</blockquote>'
       +'<cite class="src">From the case narrative</cite>';}
-  body+='</div>';
+  secCoda+='</div>';
+
+  /* ORDER: the short human read first, the exhaustive detail after. Previously a
+     student finishing a 20-minute case met four screens of per-question breakdown
+     before anything told them how they had done. */
+  body+=secRead+secStrength+secHonesty+secQ+secUnatt+secNotebook+secMech+secNumber+secCoda;
 
   body+='<div class="card"><div class="disclaimer">Graded by a deterministic concept-and-negation engine standing in for the production language examiner. '
     +'A deployed system uses a language model behind this same rubric, with faculty review of every grade. '
     +'Answers flagged for review are surfaced to faculty and never silently rescored.</div></div>';
   body+='<div class="row"><button class="btn primary" data-retry="'+esc(cs.id)+'">Attempt the case again</button>'
-    +'<button class="btn ghost" data-nav="#/cases">Back</button></div>';
+    +'<button class="btn ghost" data-nav="#/">Finish</button></div>';
   return shell("report",body);
 }
 function reportView(id,gidx){
