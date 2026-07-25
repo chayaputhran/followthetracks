@@ -608,6 +608,81 @@ body:has(.demobar) .wrap{padding-bottom:110px}
 .demobar button{background:var(--paper);color:var(--ink);border:none;border-radius:5px;padding:7px 14px;font-size:12.5px;font-weight:700}
 .demobar button.gh{background:transparent;color:var(--band-ink);border:1px solid var(--band-edge)}
 @media(max-width:560px){.demobar{flex-wrap:wrap;font-size:12px;padding:10px 12px}}
+/* ============================================================
+   PLAIN WHITE — no surface is tinted.
+   Every panel, field, chip and card paints white; state is carried by BORDER
+   and TYPE COLOUR alone. Declared last so it wins over the component rules
+   above, and so a future component cannot reintroduce a grey fill by accident.
+   The only two exceptions are deliberate and named at the bottom.
+   ============================================================ */
+#app .beat,#app .beat.locked,#app .card,#app .casecard,#app .hcard,#app .hcard.retired,
+#app .qcard,#app .qcard.sel,#app .specimen,#app .stat,#app .mech-box,#app .peerbox,
+#app .link,#app .link.got,#app .cbox,#app .ped-node,#app .modelans,#app .extendbox,
+#app .probe,#app .provnote,#app .cfile,#app .belzbadge,#app .spchip,#app .comp,
+#app .delta,#app .conductchip,#app .tag,#app .flagpill,#app .dchip,
+#app textarea,#app input.line,#app .modeswitch button,#app .evb,#app .sbtn,
+#app .adjset button,#app .echip,#app .vopt,#app .metric .bar,#app .missbar,
+#app .railstep .mk,#app .hboard-m{background:#fff}
+
+/* state now reads from the edge and the ink, not from a fill */
+#app .beat.locked{border-color:var(--line)}
+#app .beat.locked h2,#app .beat.locked .stagetok{color:var(--ink-faint)}
+#app .hcard.retired{border-color:var(--danger);border-style:dashed}
+#app .qcard.sel{border-color:var(--accent);border-width:1.5px}
+#app .link.got{border-color:var(--accent);border-width:1.5px}
+#app .modeswitch button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:700}
+#app .evb.on{border-color:var(--accent);color:var(--accent);border-style:solid}
+#app .sbtn.on{border-width:1.5px}
+#app .adjset button.sel{border-color:var(--accent);color:var(--accent);border-width:1.5px}
+#app .spchip{border-color:var(--green);color:var(--green)}
+#app .comp{border:1px solid var(--accent);color:var(--accent)}
+#app .belzbadge{border-color:var(--accent);color:var(--accent)}
+#app .extendbox{border-color:var(--accent)}
+#app .probe,#app .provnote{border-color:var(--amber)}
+#app .conductchip{border:1px solid var(--amber);color:var(--amber)}
+#app .flagpill{border:1px solid var(--danger);color:var(--danger)}
+#app .delta.match{border:1px solid var(--green);color:var(--green)}
+#app .delta.off{border:1px solid var(--amber);color:var(--amber)}
+#app .tag{border:1px solid var(--accent);color:var(--accent)}
+#app .ped-node{border-color:var(--line-2)}
+#app .modelans{border:1px solid var(--line);border-left:2px solid var(--accent)}
+#app .stat,#app .mech-box,#app .peerbox,#app .cbox,#app .link{border:1px solid var(--line-2)}
+#app .metric .bar,#app .missbar{border:1px solid var(--line-2)}
+#app .railstep .mk{border-color:var(--line-2)}
+#app .mechtabs button,#app .tabs button{background:#fff}
+#app .mechtabs button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);border-width:1.5px}
+/* the active nav item: an underline, not a tinted pill */
+#app .nav a,#app .nav a.on,#app .nav a:hover{background:#fff}
+#app .nav a.on{color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent);border-radius:0}
+#app .nav a:hover{color:var(--ink)}
+#app .railstep.superseded .mk{background:#fff;color:var(--ink-faint)}
+/* fields: a white field with a real edge, not a grey trough */
+#app textarea,#app input.line{border:1px solid var(--line-3)}
+#app textarea:hover,#app input.line:hover{border-color:var(--ink-faint)}
+
+/* THE TWO DELIBERATE EXCEPTIONS — both are marks or the drama, not background:
+   1. the inverted disruption bands, which are the whole point of the case's two
+      turning moments and are scoped under .disruptband
+   2. small solid marks that must read as filled: the avatar, the spine's
+      done/current/disruption discs, and primary buttons */
+#app .railstep.done .mk{background:var(--accent);border-color:var(--accent);color:#fff}
+#app .railstep.disrupt .mk{background:var(--ink);border-color:var(--ink);color:#fff}
+#app .avatar{background:var(--accent);color:#fff}
+#app .btn.primary{background:var(--accent);color:#fff}
+#app .adv.act{background:var(--accent);color:#fff}
+#app .ic.ok{background:#fff;border:1px solid var(--green);color:var(--green)}
+
+/* The blanket white above would otherwise bleach the controls that live INSIDE
+   the inverted band. Restore them, scoped to the band only. */
+#app .disruptband textarea,#app .disruptband input.line{background:var(--band-field);
+  border-color:var(--band-edge);color:var(--band-ink)}
+#app .disruptband .vopt,#app .disruptband .echip{background:transparent;color:var(--band-ink);
+  border-color:var(--band-edge)}
+#app .disruptband .vopt.sel,#app .disruptband .echip.sel{background:var(--band-ink);
+  color:var(--band);border-color:var(--band-ink)}
+#app .disruptband .adv.act{background:var(--band-ink);color:var(--band)}
+#app .disruptband .btn.primary{background:var(--band-ink);color:var(--band);border-color:var(--band-ink)}
+
 /* ================= motion + print discipline ================= */
 /* zeroing DURATIONS alone left the ledger strike still waiting up to 900ms on its
    transition-delay. Delays must be zeroed too, and the 44vh hold is page movement
