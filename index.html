@@ -96,7 +96,9 @@ blockquote.qt p{margin:2px 0}
 /* the deep bottom padding exists ONLY to clear the fixed mobile tab bar. Above the
    breakpoint where that bar exists it is dead space — and 110px of dead space is
    enough on its own to put a scrollbar on a page that otherwise fits the screen. */
-.wrap{max-width:1120px;margin:0 auto;padding:26px var(--pad) 40px}
+.wrap{max-width:1280px;margin:0 auto;padding:26px var(--pad) 40px}
+/* the encounter is a three-column desk and wants the room */
+.wrap.wide{max-width:1500px}
 @media(max-width:700px){.wrap{padding-bottom:110px}}
 .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
@@ -173,11 +175,26 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 
 <style>
 /* ================= ENCOUNTER: the rewinding spine ================= */
-.enc{display:grid;grid-template-columns:210px 1fr;gap:24px;align-items:start}
+/* The desk: where you are | the scene | what you have learned.
+   The scene column stays measure-bound (~45–70 characters) because widening the
+   dialogue to fill a monitor would use the space and make the case harder to read.
+   The width is spent on structure instead. */
+.enc{display:grid;grid-template-columns:198px minmax(0,1fr) 340px;gap:32px;align-items:start}
 /* grid children default to min-width:auto and will not shrink below their
    content — which lets the spine push the whole page sideways on a phone */
 .enc>*{min-width:0}
 .railwrap{position:sticky;top:78px;min-width:0}
+.filewrap{position:sticky;top:78px;min-width:0}
+@media(max-width:1240px){
+  /* Drop the case file under the spine before touching the scene. Explicit
+     placement is required: with auto-placement the file lands in row 2 of
+     column 1, and row 1 is as tall as the entire scene — which buries the
+     file thousands of pixels down the page. */
+  .enc{grid-template-columns:198px minmax(0,1fr);grid-template-rows:auto 1fr;gap:26px}
+  .railwrap{grid-column:1;grid-row:1;position:static}
+  .enc > .scenecol{grid-column:2;grid-row:1 / span 2}
+  .filewrap{grid-column:1;grid-row:2;position:sticky;top:78px}
+}
 .spine{position:relative;padding-left:14px}
 .railstep{display:flex;align-items:center;gap:11px;height:var(--rowh);font-size:13px;color:var(--ink-faint)}
 .railstep .mk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line-2);display:flex;align-items:center;justify-content:center;
@@ -195,9 +212,36 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .spine-loop{position:absolute;left:0;width:12px;border:1.5px dashed var(--accent);border-right:none;border-radius:9px 0 0 9px;
   opacity:0;transition:opacity .45s var(--ease);pointer-events:none}
 .spine.looped .spine-loop{opacity:1}
+/* ===== the case file: evidence pinned as it accumulates =====
+   Q2 asks the student which normal investigations killed the hypothesis. Those
+   findings currently scroll away up the page; here they stay in reach. */
+.cfile{border:1px solid var(--line-2);border-radius:var(--r);background:var(--card);padding:14px 16px;margin-bottom:14px}
+.cfile > .h{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.cf-sec{margin-bottom:14px}
+.cf-sec:last-child{margin-bottom:0}
+.cf-sec > .t{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;margin-bottom:6px}
+.cf-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px;align-items:baseline}
+.cf-row .k{color:var(--ink-soft);min-width:0}
+.cf-row .v{font-family:var(--font-mono);font-size:11.5px;color:var(--ink);text-align:right;white-space:nowrap}
+.cf-row.hi .v{color:var(--danger);font-weight:700}
+.cf-row.norm .v{color:var(--ink-faint)}
+.cf-dead{font-size:12px;color:var(--ink-faint);padding:2px 0;text-decoration:line-through}
+.cf-empty{font-size:12px;color:var(--ink-faint);font-style:italic}
+.cfile .hcard{margin-bottom:0;padding:11px 13px}
+.cfile .hcard .ht{font-size:13.5px}
+@media(max-width:1240px){
+  .cfile{margin-bottom:0}
+  .filewrap{margin-top:14px}
+}
 @media(max-width:880px){
-  .enc{grid-template-columns:1fr}
+  /* one column: spine, scene, then the file last — reset the explicit
+     placement from the two-column rule above or the file jumps ahead of the scene */
+  .enc{grid-template-columns:1fr;grid-template-rows:none}
+  .railwrap,.enc > .scenecol,.filewrap{grid-column:auto;grid-row:auto}
   .railwrap{position:static}
+  .filewrap{position:static}
   .spine{display:flex;overflow-x:auto;padding:0 0 6px;gap:4px}
   .spine-loop{display:none}
   .railstep{height:auto;padding:6px 8px;flex:0 0 auto}
@@ -217,7 +261,10 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
    a court reporter's transcript. Voices separate by indent and stem, never by colour —
    colour-coding the speakers would spend the whole signal budget on decoration and the
    scorecard's green/amber/red would stop reading as status. */
-.scene{position:relative;max-width:34rem;margin:16px 0}
+/* max-width must carry the speaker gutter as well as the measure, or border-box
+   sizing quietly steals 92px from the text and the dialogue drops to ~43 characters */
+.scene{position:relative;max-width:38rem;margin:16px 0}
+@media(min-width:760px){.scene{max-width:calc(38rem + 92px)}}
 .ln{position:relative;padding:3px 0 3px 16px;border-left:2px solid transparent;--vind:0px;margin-left:var(--vind)}
 .ln .tx{display:block;font-family:var(--font-display);font-size:clamp(17px,calc(1rem + .5vw),20px);line-height:1.42;color:var(--ink)}
 .ln .sp{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
@@ -463,6 +510,14 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .conductchip{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.8px;text-transform:uppercase;padding:2px 7px;
   border-radius:3px;background:var(--amber-soft);color:var(--amber);font-weight:700}
 .sc-fb{color:var(--ink-soft);font-size:13.5px}
+/* A wider page must not become a wider LINE. Structure gets the extra width;
+   prose stays inside a readable measure wherever it runs full-bleed in a card. */
+.sc-fb,.disclaimer,.mechlegend,.ped-note,.cf-empty,.sc-overall .small,
+.card > .small,.probe .pq,.extendbox,.nbitem .nq{max-width:74ch}
+.modelans,.peerbox,.qcard .small{max-width:72ch}
+.pagesub,.hero p.lede{max-width:62ch}
+.card p,.beat p,blockquote.qt,.coda-close,.coda-row > div{max-width:70ch}
+.sc-ans,.locked-recap,.peerans{max-width:66ch}
 .modelans{margin-top:10px;background:var(--paper-2);border-radius:6px;padding:12px 14px;border-left:2px solid var(--accent)}
 .modelans p{margin:2px 0;font-family:var(--font-display);font-size:14.5px;line-height:1.55}
 .extendbox{margin-top:10px;border:1px dashed var(--accent);border-radius:6px;padding:11px 13px;background:var(--accent-soft)}
@@ -1819,7 +1874,9 @@ function footer(){
   return '<div class="footer">Read the case, follow the tracks.<br>'
     +'Grading runs entirely in this page — deterministic, offline, and standing in for the production language examiner. No data leaves the browser.<br>'+badge+'</div>';
 }
-function shell(active,inner){return header(active)+'<div class="wrap">'+inner+footer()+'</div>'+mobtab(active);}
+function shell(active,inner,mod){
+  return header(active)+'<div class="wrap'+(mod?" "+mod:"")+'">'+inner+footer()+'</div>'+mobtab(active);
+}
 
 /* ============ LANDING ============ */
 function landingView(){
@@ -1924,19 +1981,85 @@ function spineHTML(cs){
       +'<span class="lb">'+esc(beatLabel(b))+'</span></div>';});
   return h+'</div>';
 }
-function hypBoardHTML(cs){
-  var retired=S.beat>=3&&S.hyp1;
-  var live=S.beat>=7&&S.hyp2?S.hyp2:(retired?null:S.hyp1);
-  var inner="";
-  if(live)inner+='<div class="hcard"><div class="hl">Live working hypothesis</div><div class="ht">'+esc(live)+'</div></div>';
-  else if(!retired)inner+='<div class="hcard" style="border-style:dashed"><div class="hl">Live working hypothesis</div>'
-    +'<div class="ht small">Nothing committed yet.</div></div>';
-  if(retired)inner+='<div class="hcard retired"><div class="hl">Retired</div><div class="ht">'+esc(S.hyp1)+'</div>'
-    +'<div class="epitaph">'+esc(cs.epitaph)+'</div></div>';
-  return '<div class="hboard">'+inner+'</div>'
-    +'<details class="hboard-m"><summary>Hypothesis board'+(retired?" · 1 retired":"")+'</summary>'
-    +'<div class="inner">'+inner+'</div></details>';
+/* the hypothesis board moved into the case file — it is the thing all that
+   evidence is being weighed against, so it belongs beside it, not under the spine */
+/* ============================================================
+   THE CASE FILE — evidence pinned as it accumulates.
+   Gated by the same rule as the scene, so it can never show a finding the
+   student has not reached. It lags the scene by at most one press; it never
+   leads it.
+   ============================================================ */
+function beatReached(i){
+  if(S.revealAll||S.readAll)return true;
+  if(i<S.beat)return true;
+  return i===S.beat&&S.cue>=1;
 }
+function cfRow(k,v,cls){
+  return '<div class="cf-row '+(cls||"")+'"><span class="k">'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>';
+}
+function cfSection(title,rows){
+  if(!rows)return "";
+  return '<div class="cf-sec"><div class="t">'+esc(title)+'</div>'+rows+'</div>';
+}
+function caseFileHTML(cs){
+  var body="",any=false;
+
+  /* the working hypothesis lives here now — it is the thing the evidence is against */
+  var retired=S.beat>=3&&S.hyp1;
+  var live=(S.beat>=7&&S.hyp2)?S.hyp2:(retired?null:S.hyp1);
+  var hyp="";
+  if(live)hyp+='<div class="hcard"><div class="hl">Working hypothesis</div><div class="ht">'+esc(live)+'</div></div>';
+  if(retired)hyp+='<div class="hcard retired" style="margin-top:10px"><div class="hl">Retired</div>'
+    +'<div class="ht">'+esc(S.hyp1)+'</div><div class="epitaph">'+esc(cs.epitaph)+'</div></div>';
+  if(!hyp)hyp='<div class="cf-empty">Nothing committed yet.</div>';
+
+  /* bloods — beat 1's table */
+  if(beatReached(1)){
+    var t=cs.beats[1].reveal.tables[0],rows="";
+    t.rows.forEach(function(r){rows+=cfRow(r.test,r.value,r.flag?"hi":"");});
+    body+=cfSection("Bloods",rows);any=true;
+  }
+  /* the five normals that killed the first hypothesis — the ones Q2 asks about */
+  if(beatReached(2)){
+    var rows2="";
+    cs.disruptions[0].data.forEach(function(f){rows2+=cfRow(f.label,f.text,"norm");});
+    body+=cfSection("Oxygenation",rows2);any=true;
+  }
+  /* the quiet pass */
+  if(beatReached(4)){
+    var rows4="";
+    cs.beats[4].reveal.findings.forEach(function(f){rows4+=cfRow(f.label,f.text,"norm");});
+    body+=cfSection("Renal · hepatic",rows4);any=true;
+  }
+  /* the result that broke it open */
+  if(beatReached(5)){
+    body+=cfSection("Key result",cfRow("Serum erythropoietin",cs.disruptions[1].datum,"hi"));any=true;
+  }
+  /* imaging */
+  if(beatReached(8)){
+    body+=cfSection("Imaging",cfRow("CT abdomen","2.8 cm renal mass","hi"));any=true;
+  }
+  /* the family tree — only once the student has chosen to ask */
+  if(S.askedFamily){
+    var rowsF="";
+    cs.family.pedigree.forEach(function(p){if(!p.proband)rowsF+=cfRow(p.who,p.what.split(",")[0],"hi");});
+    body+=cfSection("Family",rowsF);any=true;
+  }
+  /* differentials disposed of */
+  if(S.ledgerCommitted){
+    var dead="";
+    cs.ledger.rows.forEach(function(r){
+      var st=S.ledger[r.id];
+      if(st&&st.state==="dead")dead+='<div class="cf-dead">'+esc(r.dx)+'</div>';
+      else if(st&&st.state==="unlikely")dead+='<div class="cf-row norm"><span class="k">'+esc(r.dx)+'</span><span class="v">unlikely</span></div>';
+    });
+    body+=cfSection("Excluded",dead);any=true;
+  }
+  return '<div class="cfile"><div class="h">Working hypothesis</div>'+hyp+'</div>'
+    +'<div class="cfile"><div class="h">The case file</div>'
+    +(any?body:'<div class="cf-empty">Evidence will collect here as it arrives.</div>')+'</div>';
+}
+
 /* ---- differential ledger, split so the commit press yields visible content ---- */
 function ledgerRowsHTML(cs){
   var L=cs.ledger,committed=S.ledgerCommitted,h="";
@@ -2165,7 +2288,7 @@ function encounterView(){
   var cs=caseById(S.caseId);
   if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
   var body='<div class="crumbs"><a data-nav="#/cases">Case</a> › '+esc(cs.title)+'</div>';
-  body+='<div class="enc"><div class="railwrap">'+spineHTML(cs)+hypBoardHTML(cs)+'</div><div>';
+  body+='<div class="enc"><div class="railwrap">'+spineHTML(cs)+'</div><div class="scenecol">';
   body+='<div class="modeswitch" role="group" aria-label="Reading pace">'
     +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene">Scene</button>'
     +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full">Straight through</button></div>';
@@ -2207,8 +2330,8 @@ function encounterView(){
     +'<button class="btn ghost sm" data-fx="strong">Model</button>'
     +'<button class="btn ghost sm" data-fx="saba">Real student</button>'
     +'<button class="btn ghost sm" data-fx="gamed">Keyword-stuffed</button></div>';
-  body+='</div></div>';
-  return shell("cases",body);
+  body+='</div><div class="filewrap">'+caseFileHTML(cs)+'</div></div>';
+  return shell("cases",body,"wide");
 }
 
 /* The ONE control. A quiet strip that morphs IN PLACE into the beat's terminal verb.
