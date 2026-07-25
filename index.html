@@ -382,7 +382,9 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .shortcut summary:hover{color:var(--accent)}
 .shortcut-in{padding:0 16px 14px}
 .shortcut-in p{margin:0 0 10px;max-width:62ch}
-.modeswitch{display:flex;gap:6px;margin-bottom:14px}
+.modeswitch{display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.mslabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:700;margin-right:2px}
 .modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;padding:6px 11px;border-radius:var(--r);border:1px solid var(--line-2);
   background:none;color:var(--ink-faint)}
@@ -1839,6 +1841,43 @@ function __selftest(){
     S.beat=st.b;S.cue=st.c;S.hyp1=st.h1;S.hyp2=st.h2;S.interlock=st.il;S.ledger=st.lg;
     S.ledgerCommitted=st.lc;S.askedFamily=st.af;S.predict=st.pr;S.readAll=st.ra;
   }
+  /* ---- NO DEAD ENDS: from any beat, in either pacing mode, there is always a way
+         forward. "Show the whole stage" once rendered one beat with no control and
+         only a Submit button, and the preference persisted across sessions. ---- */
+  if(typeof ctrlCueIdx==="function"){
+    var sv=JSON.stringify({b:S.beat,c:S.cue,ra:S.readAll,lc:S.ledgerCommitted,af:S.askedFamily,
+      h1:S.hyp1,h2:S.hyp2,il:S.interlock,lg:S.ledger,pr:S.predict});
+    var stuck=[];
+    [false,true].forEach(function(mode){
+      S.readAll=mode;
+      cs.beats.forEach(function(b,i){
+        /* fresh student: nothing committed anywhere */
+        S.beat=i;S.cue=0;S.ledgerCommitted=false;S.askedFamily=false;
+        S.hyp1="";S.hyp2="";S.predict={};
+        S.interlock={d1:{verdict:null,evidence:[],why:""},d2:{choice:null,why:""}};
+        S.ledger={};
+        var cues=sceneOf(cs,i);
+        var lastIdx=mode?cues.length-1:0;
+        var k=ctrlCueIdx(cs,cues,lastIdx);
+        var c=cues[k];
+        /* a way forward exists if the controlling cue is reachable: either it is
+           ungated, or it carries a gate the student can satisfy by writing something */
+        var hasControl=!!c;
+        var gated=c&&c.gate;
+        if(!hasControl)stuck.push((mode?"all":"step")+" beat "+i+": no control");
+        else if(!gated&&k>=cues.length-1&&i===cs.beats.length-1&&b.kind!=="questions")
+          stuck.push((mode?"all":"step")+" beat "+i+": terminal with no exit");
+      });
+    });
+    ok("NO DEAD END: every beat offers a control in both pacing modes ("+stuck.join("; ")+")",stuck.length===0);
+    /* and the last beat must be the questions beat, which offers Submit */
+    S.readAll=true;S.beat=cs.beats.length-1;S.cue=0;
+    ok("NO DEAD END: the final beat is the questions beat and can submit",
+       cs.beats[cs.beats.length-1].kind==="questions");
+    var r=JSON.parse(sv);
+    S.beat=r.b;S.cue=r.c;S.readAll=r.ra;S.ledgerCommitted=r.lc;S.askedFamily=r.af;
+    S.hyp1=r.h1;S.hyp2=r.h2;S.interlock=r.il;S.ledger=r.lg;S.predict=r.pr;
+  }
   ok("every beat names the reasoning move it performs",cs.beats.every(function(b){return !!b.move;}));
   ok("the answer-key frame is staged, not dead data",!!cs.answerFrameDlg&&cs.answerFrameDlg.length===9);
   ok("the scene carries a place",!!cs.place);
@@ -2249,6 +2288,19 @@ function mechHTML(cs,hits){
   if(hits)h+='<div class="mechlegend">'+esc(m.legend)+'</div>';
   return h+'</div>';
 }
+function answeredCount(cs){
+  var n=0;
+  (cs.questions||[]).forEach(function(it){
+    if((S.qAnswers[it.id]||"").trim()||S.declared[it.id])n++;});
+  return n;
+}
+function answerHint(cs,n){
+  var total=(cs.questions||[]).length;
+  if(!n)return "Answer at least one question — or mark one as a gap — before submitting.";
+  if(n<total)return n+" of "+total+" answered. Unanswered questions score zero, so it is worth "
+    +"marking the ones you have not met.";
+  return "All "+total+" answered.";
+}
 function questionsHTML(cs){
   var h='<div class="small" style="margin-bottom:14px">'+esc(cs.beats[9].kicker)+'</div>';
   (cs.questions||[]).forEach(function(it,n){
@@ -2412,9 +2464,10 @@ function encounterView(){
   if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
   var body='<div class="crumbs"><a data-nav="#/cases">Case</a> › '+esc(cs.title)+'</div>';
   body+='<div class="enc"><div class="railwrap">'+spineHTML(cs)+'</div><div class="scenecol">';
-  body+='<div class="modeswitch" role="group" aria-label="Reading pace">'
-    +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene">Scene</button>'
-    +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full">Straight through</button></div>';
+  body+='<div class="modeswitch" role="group" aria-label="How much of the conversation to show at once">'
+    +'<span class="mslabel">Show me</span>'
+    +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene" title="Reveal the conversation a few lines at a time">a few lines at a time</button>'
+    +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full" title="Show the whole conversation for this stage at once">the whole stage at once</button></div>';
   /* orientation on first arrival: what this is and what is being asked of you.
      Dismissed for the session once read. */
   if(S.beat===0&&S.cue===0&&!S.oriented){
@@ -2436,9 +2489,12 @@ function encounterView(){
   var upto=S.revealAll?cs.beats.length-1:S.beat;
   for(var i=0;i<=upto&&i<cs.beats.length;i++){
     var b=cs.beats[i];
-    var live=(i===S.beat)&&!S.revealAll&&!S.readAll;
+    /* readAll ungates CUES, never BEATS. Suppressing the advance control here was
+       a hard dead end: one beat rendered, nothing to press, and the only offered
+       action was to submit an empty attempt. */
+    var live=(i===S.beat)&&!S.revealAll;
     var cues=sceneOf(cs,i);
-    var lastIdx=live?Math.min(S.cue,cues.length-1):cues.length-1;
+    var lastIdx=(live&&!S.readAll)?Math.min(S.cue,cues.length-1):cues.length-1;
     var isForm=!!(b.ledger||b.capture||b.kind==="questions");
     var inner="";
     for(var k=0;k<=lastIdx;k++){
@@ -2462,8 +2518,8 @@ function encounterView(){
         +(live?advHTML(cs,i,cues,lastIdx):"")+'</div>';
     }
   }
-  if(S.readAll||S.revealAll)
-    body+='<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button></div>';
+  /* no separate submit here — the questions beat now offers it, and the student
+     can always reach that beat in either pacing mode */
   /* These used to read "Load a worked attempt: Model / Real student / Keyword-stuffed"
      with no explanation, and silently jumped you to the end with someone else's
      answers in the boxes. Now they say what they do before you press them. */
@@ -2485,13 +2541,31 @@ function encounterView(){
    technology announces the changed accessible name at exactly the moment it matters.
    Never position:fixed — a fixed bar covers the last revealed line, which is the one
    they are meant to be reading, and it fights the on-screen keyboard. */
+/* Which cue owns the control right now. When every cue is on screen at once we
+   must still honour the FIRST unsatisfied gate or commit, not simply the last
+   cue — otherwise "show it all" would let a student walk past the ledger. */
+function ctrlCueIdx(cs,cues,lastIdx){
+  for(var k=0;k<=lastIdx&&k<cues.length;k++){
+    var c=cues[k];
+    if(c.commit==="ledger"&&!S.ledgerCommitted)return k;
+    if(c.commit==="family"&&!S.askedFamily)return k;
+    if(c.gate&&!gateReady(cs,c.gate))return k;
+  }
+  return Math.min(lastIdx,cues.length-1);
+}
 function advHTML(cs,i,cues,lastIdx){
   var b=cs.beats[i];
-  var atEnd=(lastIdx>=cues.length-1);
-  if(b.kind==="questions"&&atEnd)
-    return '<div class="row"><button class="btn primary" id="submitAll">Submit for grading →</button>'
-      +'<button class="btn ghost" data-nav="#/cases">Back</button></div>';
-  var c=cues[Math.min(lastIdx,cues.length-1)];
+  var ctrl=ctrlCueIdx(cs,cues,lastIdx);
+  var atEnd=(lastIdx>=cues.length-1)&&(ctrl>=cues.length-1);
+  if(b.kind==="questions"&&atEnd){
+    /* you could previously submit eight blank answers and be handed 0.0/10 with
+       no warning. Say where you are, and refuse an entirely empty attempt. */
+    var answered=answeredCount(cs);
+    return '<div class="row"><button class="btn primary" id="submitAll"'+(answered?"":" disabled")+'>'
+      +'Submit for grading →</button>'
+      +'<span class="small" id="ansCount">'+answerHint(cs,answered)+'</span></div>';
+  }
+  var c=cues[ctrl];
   var label,act;
   if(!atEnd||c.gate||c.commit){label=c.advLabel||"Continue";act=!!(c.gate||c.commit);}
   else{
@@ -2950,7 +3024,9 @@ function wire(){
   function liveCue(){
     var cs=caseById(S.caseId);if(!cs)return null;
     var cues=sceneOf(cs,S.beat);
-    return {cs:cs,cues:cues,c:cues[Math.min(S.cue,cues.length-1)]};
+    var lastIdx=S.readAll?cues.length-1:Math.min(S.cue,cues.length-1);
+    var k=ctrlCueIdx(cs,cues,lastIdx);
+    return {cs:cs,cues:cues,c:cues[k],k:k,lastIdx:lastIdx};
   }
   function syncAdv(){
     var L=liveCue();if(!L)return;
@@ -2963,7 +3039,8 @@ function wire(){
     if(!gateReady(cs,c.gate))return;
     if(c.commit==="ledger"&&!S.ledgerCommitted){S.ledgerCommitted=true;S._say="Differential committed.";renderScene();return;}
     if(c.commit==="family"&&!S.askedFamily){S.askedFamily=true;S._say="You asked about the family.";renderScene();return;}
-    if(S.cue<cues.length-1){S.cue++;S._say=sceneOf(cs,S.beat)[S.cue].say;renderScene();return;}
+    /* in show-it-all mode the cues are already on screen, so a press moves the beat */
+    if(!S.readAll&&S.cue<cues.length-1){S.cue++;S._say=sceneOf(cs,S.beat)[S.cue].say;renderScene();return;}
     if(S.beat<cs.beats.length-1){S.beat++;S.cue=0;S._say=sceneOf(cs,S.beat)[0].say;renderScene();}
   }
   all("[data-cap]",function(el){el.oninput=function(){
@@ -3012,7 +3089,15 @@ function wire(){
     if(!st)return;var i=st.evidence.indexOf(p[1]);
     if(i>=0)st.evidence.splice(i,1);else st.evidence.push(p[1]);renderScene();};});
   /* questions */
-  all("[data-q]",function(el){el.oninput=function(){S.qAnswers[el.getAttribute("data-q")]=el.value;};});
+  /* keep the answered counter live without re-rendering on every keystroke */
+  function refreshCount(){
+    var cs=caseById(S.caseId);if(!cs)return;
+    var n=answeredCount(cs),lbl=document.getElementById("ansCount"),btn=document.getElementById("submitAll");
+    if(lbl)lbl.textContent=answerHint(cs,n);
+    if(btn)btn.disabled=!n;
+  }
+  all("[data-q]",function(el){el.oninput=function(){
+    S.qAnswers[el.getAttribute("data-q")]=el.value;refreshCount();};});
   all("[data-idk]",function(el){el.onclick=function(){var id=el.getAttribute("data-idk");
     S.declared[id]=true;S.qAnswers[id]="";route();};});
   all("[data-undeclare]",function(el){el.onclick=function(){delete S.declared[el.getAttribute("data-undeclare")];route();};});
