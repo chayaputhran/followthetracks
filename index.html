@@ -262,8 +262,11 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .cf-sec > .t{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--accent);font-weight:700;margin-bottom:6px}
 .cf-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px;align-items:baseline}
-.cf-row .k{color:var(--ink-soft);min-width:0}
-.cf-row .v{font-family:var(--font-mono);font-size:11.5px;color:var(--ink);text-align:right;white-space:nowrap}
+.cf-row .k{color:var(--ink-soft);min-width:0;overflow-wrap:anywhere}
+/* NOT nowrap: a long value could not wrap and ran straight off the card edge.
+   It now wraps as a last resort rather than being cut. */
+.cf-row .v{font-family:var(--font-mono);font-size:11.5px;color:var(--ink);text-align:right;
+  min-width:0;overflow-wrap:anywhere;flex:0 1 auto}
 .cf-row.hi .v{color:var(--danger);font-weight:700}
 .cf-row.norm .v{color:var(--ink-faint)}
 .cf-dead{font-size:12px;color:var(--ink-faint);padding:2px 0;text-decoration:line-through}
@@ -512,8 +515,12 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .hcard .ht{font-family:var(--font-display);font-size:15px;margin-top:5px;white-space:pre-wrap}
 .hcard.retired{filter:none;opacity:1;background:var(--paper-2);border-color:var(--line-3);transition:background .4s var(--ease)}
 .hcard.retired .hl{color:var(--danger)}
-.hcard.retired::after{content:'RETIRED';position:absolute;top:12px;right:12px;transform:rotate(-7deg);font-family:var(--font-mono);
-  font-size:10px;font-weight:700;letter-spacing:3px;color:var(--danger);border:1.5px solid var(--danger);padding:3px 8px;border-radius:2px}
+/* the stamp used to be absolutely positioned OVER the hypothesis text, landing on
+   top of the words. It now sits in the flow beside the label. */
+.hcard.retired .hl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hcard.retired .hl::after{content:'RETIRED';transform:rotate(-4deg);font-family:var(--font-mono);
+  font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--danger);
+  border:1.5px solid var(--danger);padding:2px 7px;border-radius:2px;flex:0 0 auto}
 .hcard .epitaph{font-family:var(--font-display);font-size:13px;font-style:italic;color:var(--ink-soft);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .hboard-m{border:1px solid var(--line-2);border-radius:7px;background:var(--card);padding:0;margin-bottom:14px}
 .hboard-m summary{padding:11px 14px;cursor:pointer;font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
@@ -1171,9 +1178,9 @@ var VHL={
   {n:"5",kind:"stage",title:"Evidence Collection",move:"test",kicker:"Further investigations followed.",
    /* the deliberate anticlimax: three normals land together, then the silence */
    reveal:{findings:[
-     {label:"Serum creatinine",text:"Normal."},
-     {label:"Urinalysis",text:"Normal."},
-     {label:"Liver function",text:"Normal."}],
+     {label:"Serum creatinine",text:"Normal.",short:"Normal"},
+     {label:"Urinalysis",text:"Normal.",short:"Normal"},
+     {label:"Liver function",text:"Normal.",short:"Normal"}],
     narrative:"The physicians remained puzzled."}},
 
   {n:null,kind:"stage",title:"Diagnostic Disruption",disruption:true,interlock:"d2",move:"contradiction"},
@@ -1211,12 +1218,15 @@ var VHL={
  disruptions:[
   {id:"d1",kind:"verdict",
    open:[{s:"Watson",t:"But then came the surprise."},{s:"Holmes",t:"I was waiting for it."}],
+   /* `short` is what the case-file summary shows. The full sentence is nowrap in a
+      330px column and ran past the card edge — the summary needs a scannable value,
+      and the sentence itself still reads in full in the scene. */
    data:[
-    {label:"Pulse oximetry",text:"99%."},
-    {label:"Arterial blood gas",text:"Normal."},
-    {label:"Chest X-ray",text:"Clear."},
-    {label:"Pulmonary function tests",text:"Normal."},
-    {label:"Echocardiography",text:"No right-to-left shunt."}],
+    {label:"Pulse oximetry",text:"99%.",short:"99%"},
+    {label:"Arterial blood gas",text:"Normal.",short:"Normal"},
+    {label:"Chest X-ray",text:"Clear.",short:"Clear"},
+    {label:"Pulmonary function tests",text:"Normal.",short:"Normal"},
+    {label:"Echocardiography",text:"No right-to-left shunt.",short:"No shunt"}],
    ask:"Your hypothesis is on the table and this is the new evidence. Before anyone interprets it for you — does it still stand?",
    options:[
     {id:"still",t:"Still stands",x:"The evidence is compatible with what I wrote."},
@@ -2259,18 +2269,18 @@ function caseFileHTML(cs){
   /* the five normals that killed the first hypothesis — the ones Q2 asks about */
   if(beatReached(2)){
     var rows2="";
-    cs.disruptions[0].data.forEach(function(f){rows2+=cfRow(f.label,f.text,"norm");});
+    cs.disruptions[0].data.forEach(function(f){rows2+=cfRow(f.label,f.short||f.text,"norm");});
     body+=cfSection("Oxygenation",rows2);any=true;
   }
   /* the quiet pass */
   if(beatReached(4)){
     var rows4="";
-    cs.beats[4].reveal.findings.forEach(function(f){rows4+=cfRow(f.label,f.text,"norm");});
+    cs.beats[4].reveal.findings.forEach(function(f){rows4+=cfRow(f.label,f.short||f.text,"norm");});
     body+=cfSection("Renal · hepatic",rows4);any=true;
   }
   /* the result that broke it open */
   if(beatReached(5)){
-    body+=cfSection("Key result",cfRow("Serum erythropoietin",cs.disruptions[1].datum,"hi"));any=true;
+    body+=cfSection("Key result",cfRow("Serum erythropoietin","Markedly elevated","hi"));any=true;
   }
   /* imaging */
   if(beatReached(8)){
