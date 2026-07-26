@@ -99,9 +99,12 @@ blockquote.qt p{margin:2px 0}
 /* the deep bottom padding exists ONLY to clear the fixed mobile tab bar. Above the
    breakpoint where that bar exists it is dead space — and 110px of dead space is
    enough on its own to put a scrollbar on a page that otherwise fits the screen. */
-.wrap{max-width:1280px;margin:0 auto;padding:20px var(--pad) 22px}
+/* FLUID, not a fixed cap. A hard max-width in pixels means the larger the
+   monitor the more dead margin you get — at 1920 the old 1280 cap used 67% of
+   the screen and left 640px empty. Percentage-first with a generous ceiling. */
+.wrap{width:min(95vw,1900px);margin:0 auto;padding:20px var(--pad) 22px}
 /* the encounter is a three-column desk and wants the room */
-.wrap.wide{max-width:1500px}
+.wrap.wide{width:min(96vw,2200px)}
 @media(max-width:700px){.wrap{padding-bottom:110px}}
 .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
@@ -146,7 +149,10 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .hero p.lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:52ch;margin:0 0 16px;font-family:var(--font-display)}
 .hero p.lede2{font-size:15px;color:var(--ink-soft);max-width:60ch;margin:0 0 8px;line-height:1.65}
 /* hero as two columns: what it is, and the proof of it */
-.herogrid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start;margin-bottom:36px}
+/* the left column's text is measure-capped, so giving it the larger share just
+   opened a 300px gutter mid-hero — the proof card takes the surplus instead */
+.herogrid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);
+  gap:clamp(32px,3vw,60px);align-items:start;margin-bottom:36px}
 @media(max-width:960px){.herogrid{grid-template-columns:1fr;gap:28px}}
 .specimen{padding:22px 24px;position:sticky;top:78px}
 @media(max-width:960px){.specimen{position:static}}
@@ -209,7 +215,10 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
    The scene column stays measure-bound (~45–70 characters) because widening the
    dialogue to fill a monitor would use the space and make the case harder to read.
    The width is spent on structure instead. */
-.enc{display:grid;grid-template-columns:198px minmax(0,1fr) 340px;gap:32px;align-items:start}
+/* the side columns take a SHARE of the width rather than a fixed pixel size, so
+   a bigger monitor gives you a bigger case file instead of bigger empty margins */
+.enc{display:grid;grid-template-columns:minmax(198px,13%) minmax(0,1fr) minmax(330px,25%);
+  gap:clamp(28px,3vw,52px);align-items:start}
 /* grid children default to min-width:auto and will not shrink below their
    content — which lets the spine push the whole page sideways on a phone */
 .enc>*{min-width:0}
@@ -295,6 +304,9 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
    sizing quietly steals 92px from the text and the dialogue drops to ~43 characters */
 .scene{position:relative;max-width:38rem;margin:16px 0}
 @media(min-width:760px){.scene{max-width:calc(38rem + 92px)}}
+/* on a large monitor let the dialogue take a little more, up to ~68 characters,
+   rather than leaving the centre column half empty */
+@media(min-width:1500px){.scene{max-width:calc(44rem + 92px)}}
 .ln{position:relative;padding:3px 0 3px 16px;border-left:2px solid transparent;--vind:0px;margin-left:var(--vind)}
 .ln .tx{display:block;font-family:var(--font-display);font-size:clamp(17px,calc(1rem + .5vw),20px);line-height:1.42;color:var(--ink)}
 .ln .sp{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
