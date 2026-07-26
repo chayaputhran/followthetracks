@@ -612,6 +612,14 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .hcard{border:1px solid var(--line-2);border-radius:7px;padding:14px 16px;background:var(--card);position:relative;margin-bottom:10px}
 .hcard .hl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:700}
 .hcard .ht{font-family:var(--font-display);font-size:15px;margin-top:5px;white-space:pre-wrap}
+/* EVERY place the student's own words are echoed back verbatim. white-space:
+   pre-wrap breaks at spaces only, so with overflow-wrap:normal a single long
+   token overruns its box, and an ancestor's overflow-x:hidden then clips it
+   away silently — the text just disappears behind the right edge.
+   The first three are this file's pre-wrap rules. .yourwords is the fourth and
+   does NOT use pre-wrap, which is why grepping for pre-wrap missed it — the
+   CLIPPED self-test found it. Any new echo of the student belongs here too. */
+.hcard .ht,.locked-recap,.sc-ans,.yourwords{overflow-wrap:anywhere}
 .hcard.retired{filter:none;opacity:1;background:var(--paper-2);border-color:var(--line-3);transition:background .4s var(--ease)}
 /* The stamp used to be absolutely positioned OVER the hypothesis text, landing
    on top of the words, so it was moved into the flow. But it was added as an
@@ -2098,6 +2106,33 @@ function __selftest(){
       ok("CASE FILE: a pinned case file never exceeds the window height",
          _fwt.getBoundingClientRect().height<=window.innerHeight+1);
     }
+    /* ---- CLIPPED CONTENT. The RIGHT EDGE tests above compare element
+       RECTANGLES, so they are structurally blind to text that overruns INSIDE
+       its own box and is then clipped by an ancestor's overflow:hidden — the
+       box stays in bounds while the words vanish. That is exactly how a long
+       unbroken hypothesis disappeared behind the right edge. Catch it by
+       comparing scrollWidth to clientWidth, ignoring deliberate scrollers. ---- */
+    /* The disruption band deliberately bleeds past its column with negative
+       margins, which makes its ANCESTORS report scrollWidth > clientWidth. That
+       is design, not clipping, so skip any box whose overflow is explained by a
+       bled descendant. */
+    var _bled=function(el){
+      var k=el.querySelectorAll("*"),i,m;
+      for(i=0;i<k.length;i++){
+        m=getComputedStyle(k[i]);
+        if(parseFloat(m.marginLeft)<0||parseFloat(m.marginRight)<0)return true;
+      }
+      return false;
+    };
+    var _clipped=[];
+    Array.prototype.forEach.call(document.querySelectorAll(".enc *"),function(el){
+      var ox=getComputedStyle(el).overflowX;
+      if(ox==="auto"||ox==="scroll")return;           /* meant to scroll */
+      if(el.scrollWidth>el.clientWidth+1&&el.clientWidth>0&&!_bled(el))
+        _clipped.push((el.className||el.tagName)+" "+el.scrollWidth+">"+el.clientWidth);
+    });
+    ok("CLIPPED: no text overruns its own box and gets cut ("+_clipped.slice(0,2).join("; ")+")",
+       _clipped.length===0);
     /* the retired stamp is rendered by the markup; a CSS ::after that also
        carries the word made the card read "RETIRED RETIRED" */
     var _ret=document.querySelector(".hcard.retired .hl");
