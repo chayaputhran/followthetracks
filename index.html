@@ -103,8 +103,11 @@ blockquote.qt p{margin:2px 0}
    monitor the more dead margin you get — at 1920 the old 1280 cap used 67% of
    the screen and left 640px empty. Percentage-first with a generous ceiling. */
 .wrap{width:min(95vw,1900px);margin:0 auto;padding:20px var(--pad) 22px}
-/* the encounter is a three-column desk and wants the room */
-.wrap.wide{width:min(96vw,2200px)}
+/* The encounter is a three-column desk and wants the room — but 2200px was too
+   greedy. It put the case file ~2,300px from the rail (a lot of eye travel for
+   the panel you consult most), and it left almost no slack, so any environment
+   that resolved vw slightly wide pushed the file straight off the screen. */
+.wrap.wide{width:min(96vw,1760px)}
 @media(max-width:700px){.wrap{padding-bottom:110px}}
 .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
@@ -224,26 +227,28 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .enc>*{min-width:0}
 .railwrap{position:sticky;top:78px;min-width:0}
 .filewrap{position:sticky;top:78px;min-width:0}
+/* TWO-COLUMN FALLBACK. Shared by the width query and the measured .narrow
+   guard, so there is one definition of "not enough room" and it cannot drift.
+   The case file goes ABOVE the rail, not below it: the rail is ~660px tall, so
+   putting the file after it pushes the single most-consulted panel off the
+   bottom of the screen — which reads as "the case file has vanished". The file
+   is reference, the rail is navigation; reference wins the top slot. */
 @media(max-width:1240px){
-  /* Drop the case file under the spine before touching the scene. Explicit
-     placement is required: with auto-placement the file lands in row 2 of
-     column 1, and row 1 is as tall as the entire scene — which buries the
-     file thousands of pixels down the page. */
-  .enc{grid-template-columns:198px minmax(0,1fr);grid-template-rows:auto 1fr;gap:26px}
-  .railwrap{grid-column:1;grid-row:1;position:static}
-  .enc > .scenecol{grid-column:2;grid-row:1 / span 2}
-  .filewrap{grid-column:1;grid-row:2;position:sticky;top:78px}
+  .enc{grid-template-columns:minmax(240px,300px) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:26px}
+  .enc > .filewrap{grid-column:1;grid-row:1;position:static}
+  .enc > .railwrap{grid-column:1;grid-row:2;position:static}
+  .enc > .scenecol{grid-column:2;grid-row:1 / span 3}
 }
-/* A media query predicts the fit from viewport width alone. That prediction is
-   wrong as soon as OS display scaling, browser zoom or a substituted font
-   changes the real geometry — and with overflow-x:clip the case file then
-   disappears off the right edge with no scrollbar to reach it. fitDesk()
-   measures the actual right edge instead and sets .narrow, which is the same
-   two-column fallback the 1240 query uses. Measured beats predicted. */
-.enc.narrow{grid-template-columns:198px minmax(0,1fr);grid-template-rows:auto 1fr;gap:26px}
-.enc.narrow .railwrap{grid-column:1;grid-row:1;position:static}
-.enc.narrow > .scenecol{grid-column:2;grid-row:1 / span 2}
-.enc.narrow .filewrap{grid-column:1;grid-row:2;position:sticky;top:78px}
+.enc.narrow{grid-template-columns:minmax(240px,300px) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:26px}
+.enc.narrow > .filewrap{grid-column:1;grid-row:1;position:static}
+.enc.narrow > .railwrap{grid-column:1;grid-row:2;position:static}
+.enc.narrow > .scenecol{grid-column:2;grid-row:1 / span 3}
+/* single-column last resort, set by fitDesk when even two columns overrun */
+.enc.stack{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:22px}
+.enc.stack > .filewrap,.enc.stack > .railwrap,.enc.stack > .scenecol{grid-column:1;position:static}
+.enc.stack > .filewrap{grid-row:1}
+.enc.stack > .railwrap{grid-row:2}
+.enc.stack > .scenecol{grid-row:3}
 .spine{position:relative;padding-left:14px}
 .railstep{display:flex;align-items:center;gap:11px;height:var(--rowh);font-size:13px;color:var(--ink-faint)}
 .railstep .mk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line-2);display:flex;align-items:center;justify-content:center;
@@ -288,12 +293,15 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
   .filewrap{margin-top:14px}
 }
 @media(max-width:880px){
-  /* one column: spine, scene, then the file last — reset the explicit
-     placement from the two-column rule above or the file jumps ahead of the scene */
-  .enc{grid-template-columns:1fr;grid-template-rows:none}
-  .railwrap,.enc > .scenecol,.filewrap{grid-column:auto;grid-row:auto}
-  .railwrap{position:static}
-  .filewrap{position:static}
+  /* One column. The placement must be restated explicitly, not reset to auto:
+     the two-column rules above are `.enc > .filewrap` (0,2,0) and would outrank
+     a bare `.filewrap` (0,1,0) reset, leaving some children explicitly placed
+     and others auto — which lands them on top of each other. Same order as the
+     wider fallbacks: file, spine, scene. */
+  .enc,.enc.narrow,.enc.stack{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:20px}
+  .enc > .filewrap,.enc.narrow > .filewrap,.enc.stack > .filewrap{grid-column:1;grid-row:1;position:static}
+  .enc > .railwrap,.enc.narrow > .railwrap,.enc.stack > .railwrap{grid-column:1;grid-row:2;position:static}
+  .enc > .scenecol,.enc.narrow > .scenecol,.enc.stack > .scenecol{grid-column:1;grid-row:3}
   .spine{display:flex;overflow-x:auto;padding:0 0 6px;gap:4px}
   .spine-loop{display:none}
   .railstep{height:auto;padding:6px 8px;flex:0 0 auto}
@@ -1960,9 +1968,19 @@ function __selftest(){
      while the case file was being cut off. Measure real edges instead. ---- */
   if(typeof document!=="undefined"&&document.querySelector(".enc")){
     var _vw=document.documentElement.clientWidth,_off=[];
+    /* Content inside a horizontal scroller (the phone spine strip) is REACHABLE
+       even when it sits past the window, so it is not a defect. Only content
+       with no scrollable ancestor is genuinely lost. */
+    var _scrollable=function(el){
+      for(var p=el.parentElement;p&&p!==document.body;p=p.parentElement){
+        var ox=getComputedStyle(p).overflowX;
+        if(ox==="auto"||ox==="scroll")return true;
+      }
+      return false;
+    };
     Array.prototype.forEach.call(document.querySelectorAll(".enc *"),function(el){
       var r=el.getBoundingClientRect();
-      if(r.width>0&&r.right>_vw+1)_off.push(el.className||el.tagName);
+      if(r.width>0&&r.right>_vw+1&&!_scrollable(el))_off.push(el.className||el.tagName);
     });
     ok("RIGHT EDGE: nothing in the desk extends past the window ("+_off.slice(0,3).join(", ")+")",_off.length===0);
     var _fw=document.querySelector(".filewrap");
@@ -3143,18 +3161,46 @@ function draw(){
   else h=shell("cases",'<div class="card">Page not found.</div>');
   app.innerHTML=h;wire();demoBar();fitDesk();
 }
-/* Collapse the three-column desk the moment it does not actually fit. The
-   media query cannot see zoom or OS scaling; getBoundingClientRect can. Two
-   passes: measure clean (no .narrow), and only re-add it if a column really
-   overruns, so the desk restores itself when the window grows back. */
+/* Keep the page inside the window, measured in real pixels.
+
+   Two independent things can go wrong, and the first one caused the second:
+
+   1. THE CONTAINER ITSELF IS TOO WIDE. .wrap is sized in vw, and vw is not
+      trustworthy under OS display scaling or an unusual zoom — it can resolve
+      wider than the window actually is. Everything inside then overruns no
+      matter how the grid is configured, so collapsing columns cannot help.
+      Fix it in measured px before touching the grid.
+
+   2. THREE COLUMNS DO NOT FIT. Only then is collapsing the right answer.
+
+   Both checks measure after a clean reset so the layout restores itself when
+   the room comes back, rather than latching into the fallback forever. */
 function fitDesk(){
+  var vw=document.documentElement.clientWidth;
+  var wrap=document.querySelector(".wrap");
+  if(wrap){
+    wrap.style.width="";                       /* measure unclamped */
+    var wr=wrap.getBoundingClientRect();
+    /* -4px so a sub-pixel rounding difference cannot leave a 1px overhang */
+    if(wr.width>vw-4||wr.right>vw+1){
+      wrap.style.width=Math.max(300,vw-16)+"px";
+      wrap.style.marginLeft="auto";wrap.style.marginRight="auto";
+    }
+  }
   var enc=document.querySelector(".enc");if(!enc)return;
   enc.classList.remove("narrow");
-  var vw=document.documentElement.clientWidth,kids=enc.children,i,over=false;
+  var kids=enc.children,i,over=false;
   for(i=0;i<kids.length;i++){
     if(kids[i].getBoundingClientRect().right>vw-2){over=true;break;}
   }
   if(over)enc.classList.add("narrow");
+  /* Last resort: if even two columns overrun, drop to one. Better a single
+     stacked column than a case file the student cannot reach. */
+  if(over){
+    for(i=0;i<kids.length;i++){
+      if(kids[i].getBoundingClientRect().right>vw-2){enc.classList.add("stack");break;}
+    }
+  }else enc.classList.remove("stack");
 }
 var fitPending=false;
 function fitDeskSoon(){
