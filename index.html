@@ -42,11 +42,14 @@ body{color:var(--ink);font-family:var(--font-body);line-height:1.55;font-size:15
   background:var(--paper);background-image:none}
 /* When the page does scroll, the scrollbar must not read as a grey slab down the
    edge of a white page — that is what makes the white look broken. */
-html{scrollbar-width:thin;scrollbar-color:var(--line-3) transparent}
-::-webkit-scrollbar{width:10px;height:10px}
+/* Windows Chrome always paints the bar, so the thumb is kept close to the page
+   tone and only darkens under the pointer — visible when you reach for it,
+   almost absent when you are reading. */
+html{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+html:hover{scrollbar-color:var(--line-2) transparent}
+::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px;
-  border:3px solid var(--paper)}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px;border:2px solid var(--paper)}
 ::-webkit-scrollbar-thumb:hover{background:var(--line-3)}
 /* one radius everywhere; the two exceptions stay circular because they are MARKS, not containers */
 .card,.beat,.casecard,.hcard,.qcard,.specimen,.stat,.mech-box,.peerbox,.link,.cbox,.ped-node,
@@ -96,11 +99,11 @@ blockquote.qt p{margin:2px 0}
 /* the deep bottom padding exists ONLY to clear the fixed mobile tab bar. Above the
    breakpoint where that bar exists it is dead space — and 110px of dead space is
    enough on its own to put a scrollbar on a page that otherwise fits the screen. */
-.wrap{max-width:1280px;margin:0 auto;padding:26px var(--pad) 40px}
+.wrap{max-width:1280px;margin:0 auto;padding:20px var(--pad) 22px}
 /* the encounter is a three-column desk and wants the room */
 .wrap.wide{max-width:1500px}
 @media(max-width:700px){.wrap{padding-bottom:110px}}
-.crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+.crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
 .eyebrow{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);font-weight:700;position:relative;padding-bottom:8px;margin-bottom:12px;display:inline-block}
 .eyebrow:after{content:"";position:absolute;left:0;bottom:0;width:24px;height:2px;background:var(--accent)}
@@ -129,8 +132,11 @@ textarea:focus,input:focus,button:focus-visible,a:focus-visible{outline:2px soli
 .disruptband *:focus-visible{outline-color:var(--band-accent)}
 input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-radius:6px;background:var(--paper);font-family:var(--font-body);font-size:14px;color:var(--ink)}
 .prompt{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:8px}
-.footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-faint);line-height:1.7}
-.vbadge{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-faint);margin-top:8px}
+.footer{margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;
+  color:var(--ink-faint);line-height:1.5;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.footer .fnote{max-width:74ch}
+.vbadge{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10.5px;
+  padding:4px 10px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-faint);flex:0 0 auto}
 .vbadge .d{width:7px;height:7px;border-radius:50%;background:var(--green)}
 .vbadge.bad{border-color:var(--danger);color:var(--danger)}.vbadge.bad .d{background:var(--danger)}
 .disclaimer{font-size:11.5px;color:var(--ink-faint);line-height:1.6;font-style:italic}
@@ -305,7 +311,7 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .dir::before{content:'';display:block;width:26px;height:1px;background:var(--line-2);margin-bottom:8px}
 @media(min-width:760px){.dir{margin-left:-92px}}
 .slug{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--ink-faint);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:20px;overflow-wrap:anywhere}
+  color:var(--ink-faint);padding-bottom:7px;border-bottom:1px solid var(--line);margin-bottom:12px;overflow-wrap:anywhere}
 /* ===== landing lines: some sentences carry the whole case and cannot be the size of "No." ===== */
 .ln.land{margin:28px 0 28px -92px;padding:0;border-left:0;max-width:30ch;text-wrap:balance}
 .ln.land::before{content:'';display:block;width:26px;height:2px;background:var(--ink);margin-bottom:12px}
@@ -385,12 +391,12 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .orient p{margin:0 0 10px;font-size:14.5px;line-height:1.6;color:var(--ink-soft)}
 .orient p b{color:var(--ink)}
 /* the skip-ahead shortcut, which used to be three unexplained buttons */
-.shortcut{border:1px solid var(--line-2);border-radius:var(--r);margin-top:24px}
+.shortcut{border:1px solid var(--line-2);border-radius:var(--r);margin-top:18px}
 .shortcut summary{padding:12px 16px;cursor:pointer;font-size:13px;color:var(--ink-soft);font-weight:600}
 .shortcut summary:hover{color:var(--accent)}
 .shortcut-in{padding:0 16px 14px}
 .shortcut-in p{margin:0 0 10px;max-width:62ch}
-.modeswitch{display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.modeswitch{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
 .mslabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-faint);font-weight:700;margin-right:2px}
 .modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
@@ -2036,8 +2042,10 @@ function footer(){
   var badge=SELFTEST&&SELFTEST.pass===SELFTEST.total
     ?'<span class="vbadge"><span class="d"></span>engine verified · '+SELFTEST.pass+'/'+SELFTEST.total+' self-tests</span>'
     :'<span class="vbadge bad"><span class="d"></span>engine check failed</span>';
-  return '<div class="footer">Read the case, follow the tracks.<br>'
-    +'Grading runs entirely in this page — deterministic, offline, and standing in for the production language examiner. No data leaves the browser.<br>'+badge+'</div>';
+  /* was three lines of small print plus a badge — 138px of every single page */
+  return '<div class="footer">'+badge
+    +'<span class="fnote">Grading runs in this page — offline, deterministic, and standing in for the '
+    +'production language examiner. Nothing leaves your browser.</span></div>';
 }
 function shell(active,inner,mod){
   return header(active)+'<div class="wrap'+(mod?" "+mod:"")+'">'+inner+footer()+'</div>'+mobtab(active);
