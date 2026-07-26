@@ -275,16 +275,19 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .enc>*{min-width:0}
 .railwrap{position:sticky;top:78px;min-width:0}
 .filewrap{position:sticky;top:78px;min-width:0}
-/* A pinned column taller than the window is a column with an unreachable
-   bottom. Populated, .filewrap measures ~1058px, so on any window under about
-   1150px tall the EXCLUDED section — the one Q2 asks the student about — sits
-   below the fold for the entire encounter, with no way to scroll to it.
-   overflow-x is declared explicitly: overflow-y:auto alone would make
-   overflow-x compute to auto, and the RIGHT EDGE self-test would then treat
-   everything inside the case file as "reachable by scrolling" and stop
-   catching real overflow there. No overscroll-behavior — `contain` would turn
-   a full-height column into a wheel dead-zone over most of the page. */
-.railwrap,.filewrap{max-height:calc(100vh - 92px);overflow-x:clip;overflow-y:auto}
+/* A pinned column taller than the window has an unreachable bottom: it sticks
+   at the top and you can never scroll to its end.
+
+   The previous fix — max-height plus overflow-y:auto — was WORSE. It turned the
+   case file into a scroll container 400px wide, so on a 630px-tall window the
+   wheel scrolled the panel instead of the page across 31% of the screen. The
+   page felt like it would not scroll at all.
+
+   Sticky only when it FITS. When the panel is taller than the band available to
+   it, .tall drops it back into normal flow: it scrolls with the page, every row
+   is reachable, and the wheel behaves everywhere. Set by fitDesk, which
+   measures — a media query cannot know a panel's rendered height. */
+.railwrap.tall,.filewrap.tall{position:static;max-height:none}
 /* The right column holds two panels — the working hypothesis and the case file.
    Stacked, a wide screen leaves each one mostly empty. auto-fit puts them side
    by side exactly when there is room for both and stacks them when there is
@@ -2106,6 +2109,19 @@ function __selftest(){
       ok("CASE FILE: a pinned case file never exceeds the window height",
          _fwt.getBoundingClientRect().height<=window.innerHeight+1);
     }
+    /* ---- NO WHEEL DEAD ZONE. Giving a full-height side column its own
+       scrollbar makes the wheel scroll that panel instead of the page across a
+       third of the screen, which reads as "the page will not scroll". No desk
+       column may be a vertical scroll container. ---- */
+    var _dead=[];
+    ["railwrap","filewrap"].forEach(function(cls){
+      var el=document.querySelector("."+cls);if(!el)return;
+      var oy=getComputedStyle(el).overflowY;
+      if((oy==="auto"||oy==="scroll")&&el.scrollHeight>el.clientHeight+1)
+        _dead.push(cls+" "+Math.round(el.getBoundingClientRect().width)+"px wide");
+    });
+    ok("SCROLL: no desk column captures the wheel from the page ("+_dead.join("; ")+")",
+       _dead.length===0);
     /* ---- CLIPPED CONTENT. The RIGHT EDGE tests above compare element
        RECTANGLES, so they are structurally blind to text that overruns INSIDE
        its own box and is then clipped by an ancestor's overflow:hidden — the
@@ -3355,6 +3371,14 @@ function fitDesk(){
     if(kids[i].getBoundingClientRect().right>vw-2){over=true;break;}
   }
   if(over)enc.classList.add("narrow");
+  /* A sticky column taller than the window can never show its bottom. Rather
+     than give it its own scrollbar — which steals the wheel from the page over
+     a third of the screen — drop it into normal flow so the page carries it. */
+  ["railwrap","filewrap"].forEach(function(cls){
+    var el=document.querySelector("."+cls);if(!el)return;
+    el.classList.remove("tall");
+    if(el.getBoundingClientRect().height>window.innerHeight-92)el.classList.add("tall");
+  });
   /* Last resort: if even two columns overrun, drop to one. Better a single
      stacked column than a case file the student cannot reach. */
   if(over){
