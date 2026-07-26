@@ -36,10 +36,19 @@
      units (62–74ch), so the extra width is spent on structure — the rail and
      the case file — and never on line length. */
   --shell:min(95vw,1960px);
+  /* ONE source of truth for the dialogue measure (including the 92px speaker
+     gutter). Both .scene's cap and the scene grid track read it, so a
+     breakpoint can never move one without the other — which is how 290px of
+     dead air opened up down the middle of the desk on a wide monitor. */
+  --measure:38rem;
+  --beatpad:24px;
   --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --font-body:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
   --font-mono:"SF Mono","Cascadia Mono",Consolas,"IBM Plex Mono",monospace;
 }
+/* the same three values .scene used to carry inline — relocated, not retuned */
+@media(min-width:760px){:root{--measure:calc(38rem + 92px)}}
+@media(min-width:1500px){:root{--measure:calc(44rem + 92px)}}
 *{box-sizing:border-box}
 html,body{margin:0}
 /* overflow-x lives on html, and is CLIP not HIDDEN: `hidden` on body forces
@@ -91,9 +100,13 @@ blockquote.qt p{margin:2px 0}
 .appbar{position:sticky;top:0;z-index:30;background:var(--card);border-bottom:1px solid var(--line-2)}
 .barinner{display:flex;align-items:center;gap:16px;height:58px;
   width:var(--shell);margin:0 auto;padding:0 var(--pad)}
-.brandmark{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
+/* flex items default to min-width:auto, which pinned .barinner at a ~278px
+   min-content width and made the bar the narrowest thing on the page */
+.brandmark{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);min-width:0}
 .logo{width:32px;height:32px;flex:0 0 auto}
-.wordmark{font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:.2px;white-space:nowrap}
+/* the wordmark must be allowed to ellipsis, or it sets a floor the bar cannot go under */
+.wordmark{font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:.2px;white-space:nowrap;
+  min-width:0;overflow:hidden;text-overflow:ellipsis}
 .wordmark small{display:block;font-family:var(--font-mono);font-weight:600;font-size:8px;letter-spacing:2px;color:var(--ink-faint);text-transform:uppercase;margin-top:-1px}
 .nav{display:flex;gap:2px;margin-left:6px}
 .nav a{font-size:13px;color:var(--ink-soft);text-decoration:none;padding:7px 12px;border-radius:5px;font-weight:600;cursor:pointer}
@@ -156,8 +169,12 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .footer{margin-top:20px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;
   color:var(--ink-faint);line-height:1.5;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .footer .fnote{max-width:74ch}
+/* shrinkable pill, unsquashable dot — once the bar can shrink, this footer
+   badge is the next thing that refuses to and pushes past the right edge */
 .vbadge{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10.5px;
-  padding:4px 10px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-faint);flex:0 0 auto}
+  padding:4px 10px;border-radius:20px;border:1px solid var(--line-2);color:var(--ink-faint);
+  flex:0 1 auto;min-width:0;max-width:100%}
+.vbadge>*{flex:0 0 auto}
 .vbadge .d{width:7px;height:7px;border-radius:50%;background:var(--green)}
 .vbadge.bad{border-color:var(--danger);color:var(--danger)}.vbadge.bad .d{background:var(--danger)}
 .disclaimer{font-size:11.5px;color:var(--ink-faint);line-height:1.6;font-style:italic}
@@ -235,24 +252,47 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
    The width is spent on structure instead. */
 /* the side columns take a SHARE of the width rather than a fixed pixel size, so
    a bigger monitor gives you a bigger case file instead of bigger empty margins */
-.enc{display:grid;grid-template-columns:minmax(198px,13%) minmax(0,1fr) minmax(330px,25%);
+/* The scene track is capped at EXACTLY the prose cap plus the beat's own
+   padding, so it can never absorb surplus width; the case file is the residual
+   (1fr) and takes all of it. Before this, 1fr sat on the scene — the one column
+   that has agreed not to grow — so at 3390px the tracks were 249/1086/480 with
+   .scene only 796px wide, and 290px went blank down the middle of the desk.
+   Cap with a maximum, never by raising a minimum: the minimums must stay
+   198/0/330 or the narrow end of the three-column band overflows. */
+.enc{display:grid;
+  grid-template-columns:minmax(198px,13%)
+                        minmax(0,calc(var(--measure) + 2 * var(--beatpad)))
+                        minmax(330px,1fr);
   gap:clamp(28px,3vw,52px);align-items:start}
 /* grid children default to min-width:auto and will not shrink below their
    content — which lets the spine push the whole page sideways on a phone */
 .enc>*{min-width:0}
 .railwrap{position:sticky;top:78px;min-width:0}
 .filewrap{position:sticky;top:78px;min-width:0}
+/* A pinned column taller than the window is a column with an unreachable
+   bottom. Populated, .filewrap measures ~1058px, so on any window under about
+   1150px tall the EXCLUDED section — the one Q2 asks the student about — sits
+   below the fold for the entire encounter, with no way to scroll to it.
+   overflow-x is declared explicitly: overflow-y:auto alone would make
+   overflow-x compute to auto, and the RIGHT EDGE self-test would then treat
+   everything inside the case file as "reachable by scrolling" and stop
+   catching real overflow there. No overscroll-behavior — `contain` would turn
+   a full-height column into a wheel dead-zone over most of the page. */
+.railwrap,.filewrap{max-height:calc(100vh - 92px);overflow-x:clip;overflow-y:auto}
 /* TWO-COLUMN FALLBACK. Shared by the width query and the measured .narrow
    guard, so there is one definition of "not enough room" and it cannot drift.
    The case file goes ABOVE the rail, not below it: the rail is ~660px tall, so
    putting the file after it pushes the single most-consulted panel off the
    bottom of the screen — which reads as "the case file has vanished". The file
    is reference, the rail is navigation; reference wins the top slot. */
-@media(max-width:1240px){
+@media(max-width:1272px){
   .enc{grid-template-columns:minmax(240px,300px) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:26px}
   .enc > .filewrap{grid-column:1;grid-row:1;position:static}
   .enc > .railwrap{grid-column:1;grid-row:2;position:static}
   .enc > .scenecol{grid-column:2;grid-row:1 / span 3}
+  /* wherever the columns go static they must also be un-capped, or they keep a
+     scrollbar and a height limit while sitting in normal flow */
+  .railwrap,.filewrap{max-height:none;overflow-x:visible;overflow-y:visible}
 }
 .enc.narrow{grid-template-columns:minmax(240px,300px) minmax(0,1fr);grid-template-rows:auto auto 1fr;gap:26px}
 .enc.narrow > .filewrap{grid-column:1;grid-row:1;position:static}
@@ -264,6 +304,10 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .enc.stack > .filewrap{grid-row:1}
 .enc.stack > .railwrap{grid-row:2}
 .enc.stack > .scenecol{grid-row:3}
+/* the measured fallbacks need the same un-capping, and by specificity as well
+   as source order so they beat the base .railwrap,.filewrap rule */
+.enc.narrow>.railwrap,.enc.narrow>.filewrap,
+.enc.stack>.railwrap,.enc.stack>.filewrap{max-height:none;overflow-x:visible;overflow-y:visible}
 .spine{position:relative;padding-left:14px}
 .railstep{display:flex;align-items:center;gap:11px;height:var(--rowh);font-size:13px;color:var(--ink-faint)}
 .railstep .mk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line-2);display:flex;align-items:center;justify-content:center;
@@ -303,11 +347,11 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .cf-empty{font-size:12px;color:var(--ink-faint);font-style:italic}
 .cfile .hcard{margin-bottom:0;padding:11px 13px}
 .cfile .hcard .ht{font-size:13.5px}
-@media(max-width:1240px){
+@media(max-width:1272px){
   .cfile{margin-bottom:0}
   .filewrap{margin-top:14px}
 }
-@media(max-width:880px){
+@media(max-width:980px){
   /* One column. The placement must be restated explicitly, not reset to auto:
      the two-column rules above are `.enc > .filewrap` (0,2,0) and would outrank
      a bare `.filewrap` (0,1,0) reset, leaving some children explicitly placed
@@ -324,7 +368,8 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
   .railstep.revised{padding-left:8px}
 }
 /* beat cards */
-.beat{padding:22px 24px;margin-bottom:16px}
+/* the grid track is sized as measure + 2*this; drift here narrows the dialogue */
+.beat{padding:22px var(--beatpad);margin-bottom:16px}
 .beat h2{font-size:20px;margin:4px 0 2px;font-family:var(--font-display)}
 .beat .stagetok{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--accent);font-weight:700}
 .beat.locked{opacity:1;background:var(--paper-2);border-color:var(--line)}
@@ -338,11 +383,7 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
    scorecard's green/amber/red would stop reading as status. */
 /* max-width must carry the speaker gutter as well as the measure, or border-box
    sizing quietly steals 92px from the text and the dialogue drops to ~43 characters */
-.scene{position:relative;max-width:38rem;margin:16px 0}
-@media(min-width:760px){.scene{max-width:calc(38rem + 92px)}}
-/* on a large monitor let the dialogue take a little more, up to ~68 characters,
-   rather than leaving the centre column half empty */
-@media(min-width:1500px){.scene{max-width:calc(44rem + 92px)}}
+.scene{position:relative;max-width:var(--measure);margin:16px 0}
 .ln{position:relative;padding:3px 0 3px 16px;border-left:2px solid transparent;--vind:0px;margin-left:var(--vind)}
 .ln .tx{display:block;font-family:var(--font-display);font-size:clamp(17px,calc(1rem + .5vw),20px);line-height:1.42;color:var(--ink)}
 .ln .sp{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
@@ -470,7 +511,7 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
   color:var(--ink-faint);font-weight:700;padding-bottom:10px;margin-bottom:6px;border-bottom:1px solid var(--line)}
 .railhead span{display:block;font-family:var(--font-body);font-size:11px;letter-spacing:0;
   text-transform:none;font-weight:400;color:var(--ink-faint);margin-top:5px;line-height:1.45}
-@media(max-width:880px){.railhead{display:none}}
+@media(max-width:980px){.railhead{display:none}}
 .modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;padding:6px 11px;border-radius:var(--r);border:1px solid var(--line-2);
   background:none;color:var(--ink-faint)}
@@ -2006,6 +2047,28 @@ function __selftest(){
     /* and the guard itself must be reachable, or the two above are luck */
     ok("RIGHT EDGE: fitDesk exists to collapse the desk when it will not fit",
        typeof fitDesk==="function");
+    /* ---- DEAD AIR. The scene column is measure-capped, so if 1fr ever moves
+       back onto it the surplus width pools in a hole down the middle of the
+       desk instead of reaching the case file. 290px of it did exactly that. ---- */
+    var _enc=document.querySelector(".enc"),_sc=document.querySelector(".scene");
+    var _tracks=getComputedStyle(_enc).gridTemplateColumns.trim().split(/\s+/);
+    if(_tracks.length===3&&_sc){
+      var _gap=parseFloat(getComputedStyle(_enc).columnGap)||0,
+          _pad=2*(parseFloat(getComputedStyle(document.documentElement)
+                 .getPropertyValue("--beatpad"))||24),
+          _slack=parseFloat(_tracks[1])-_sc.getBoundingClientRect().width-_pad;
+      /* <=0 means the track is fully spent; >0 means width is pooling unused */
+      ok("DEAD AIR: the scene track holds no unused width (got "+Math.round(_slack)+"px)",_slack<=1);
+      ok("DEAD AIR: the case file, not the scene, is the residual track",
+         /fr|px/.test(_tracks[2])&&parseFloat(_tracks[2])>=330);
+      if(_gap<0)ok("gap sane",false);
+    }
+    /* ---- A PINNED COLUMN TALLER THAN THE WINDOW HAS AN UNREACHABLE BOTTOM ---- */
+    var _fwt=document.querySelector(".filewrap");
+    if(_fwt&&getComputedStyle(_fwt).position==="sticky"){
+      ok("CASE FILE: a pinned case file never exceeds the window height",
+         _fwt.getBoundingClientRect().height<=window.innerHeight+1);
+    }
   }
   ok("every beat names the reasoning move it performs",cs.beats.every(function(b){return !!b.move;}));
   ok("the answer-key frame is staged, not dead data",!!cs.answerFrameDlg&&cs.answerFrameDlg.length===9);
@@ -3206,7 +3269,11 @@ function fitDesk(){
     var br=box.getBoundingClientRect();
     /* -4px so a sub-pixel rounding difference cannot leave a 1px overhang */
     if(br.width>vw-4||br.right>vw+1){
-      box.style.width=Math.max(300,vw-16)+"px";
+      /* no floor: below a clientWidth of 316 a 300px floor assigns a box WIDER
+         than the viewport, auto margins then resolve to zero, and the excess is
+         unreachable — the guard would be causing the very overflow it exists
+         to prevent */
+      box.style.width=Math.max(0,vw-16)+"px";
       box.style.marginLeft="auto";box.style.marginRight="auto";
     }
   }
