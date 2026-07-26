@@ -145,7 +145,15 @@ input.line{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-rad
 .hero h1{font-size:clamp(30px,6vw,52px);line-height:1.02;margin:8px 0 14px;letter-spacing:-.5px}
 .hero p.lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:52ch;margin:0 0 16px;font-family:var(--font-display)}
 .hero p.lede2{font-size:15px;color:var(--ink-soft);max-width:60ch;margin:0 0 8px;line-height:1.65}
-.specimen{padding:22px 24px;max-width:640px}
+/* hero as two columns: what it is, and the proof of it */
+.herogrid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:start;margin-bottom:36px}
+@media(max-width:960px){.herogrid{grid-template-columns:1fr;gap:28px}}
+.specimen{padding:22px 24px;position:sticky;top:78px}
+@media(max-width:960px){.specimen{position:static}}
+.speclab{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:700;margin-bottom:8px}
+.specnote{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--line)}
 .specimen .cap{font-family:var(--font-mono);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
 .specimen .sent{font-family:var(--font-display);font-size:20px;line-height:1.55;min-height:2.6em}
 .specimen .caret{border-right:2px solid var(--accent);animation:blink 1s step-end infinite}
@@ -359,12 +367,17 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .scene.past .cue.fresh::before{display:none}
 .scene.live{cursor:pointer}
 /* ===== the one control ===== */
-.adv{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 2px;background:none;
-  border:0;border-top:1px solid var(--line-2);font-family:var(--font-mono);font-size:10.5px;
-  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);text-align:left;
+/* This is the primary action of the whole product. As faint text on a hairline it
+   read as a divider label rather than something you press, so it now has a real
+   edge — still quiet, but unmistakably a control. */
+.adv{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 16px;background:#fff;
+  border:1px solid var(--line-2);border-radius:var(--r);font-family:var(--font-body);font-size:13.5px;
+  letter-spacing:0;text-transform:none;font-weight:600;color:var(--ink-soft);text-align:left;
   touch-action:manipulation;user-select:none;transition:border-color .2s var(--ease),color .2s var(--ease)}
-.adv:hover,.adv:focus-visible{border-top-color:var(--accent);color:var(--accent)}
-.adv .adv-dots{margin-left:auto;display:flex;gap:5px}
+.adv:hover,.adv:focus-visible{border-color:var(--accent);color:var(--accent)}
+.adv .adv-left{margin-left:auto;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+.adv .adv-dots{margin-left:10px;display:flex;gap:5px}
 .adv .adv-dots i{width:5px;height:5px;border-radius:50%;border:1px solid currentColor}
 .adv .adv-dots i.on{background:currentColor}
 .adv .adv-c{transition:transform .2s var(--ease)}
@@ -396,9 +409,20 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .shortcut summary:hover{color:var(--accent)}
 .shortcut-in{padding:0 16px 14px}
 .shortcut-in p{margin:0 0 10px;max-width:62ch}
-.modeswitch{display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
-.mslabel{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+/* a settings control, so it sits quietly beside the scene slug rather than
+   occupying the most prominent position on the page */
+.modeswitch{display:flex;gap:5px;margin:0;align-items:center;flex-wrap:wrap}
+.modeswitch button{font-size:9px;padding:4px 8px}
+.mslabel{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-faint);font-weight:700;margin-right:2px}
+.slugrow{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;
+  padding-bottom:7px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.slugrow .slug{border:0;padding:0;margin:0}
+.railhead{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:700;padding-bottom:10px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.railhead span{display:block;font-family:var(--font-body);font-size:11px;letter-spacing:0;
+  text-transform:none;font-weight:400;color:var(--ink-faint);margin-top:5px;line-height:1.45}
+@media(max-width:880px){.railhead{display:none}}
 .modeswitch button{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;padding:6px 11px;border-radius:var(--r);border:1px solid var(--line-2);
   background:none;color:var(--ink-faint)}
@@ -2056,32 +2080,41 @@ function landingView(){
   var h='<div class="appbar"><a class="brandmark" data-nav="#/">'+LOGO
     +'<div class="wordmark">Follow the Tracks<small>Clinical reasoning, examined</small></div></a>'
     +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Take the tour</a></div>';
-  h+='<div class="wrap"><div class="hero"><div class="eyebrow">Clinical reasoning, examined</div>'
-    +'<h1>Recall, not recognition.</h1>'
-    /* "MCQ" was the fourth word on the page and never expanded — the most
-       expensive possible place to put an acronym */
+  /* Two columns: what it is on the left, the proof on the right. Everything
+     previously sat in a 640px strip with half the screen empty — and the old
+     headline, "Recall, not recognition", reads as a memorisation drill, which
+     is the opposite of what this does. */
+  h+='<div class="wrap"><div class="herogrid"><div class="hero">'
+    +'<div class="eyebrow">A working demonstration</div>'
+    +'<h1>Write the diagnosis.<br>We read the reasoning.</h1>'
     +'<p class="lede">A multiple-choice question can tell you a student recognises the right answer. '
-    +'It cannot tell you whether they would have got there on their own. We grade the path.</p>'
-    +'<p class="lede2">This is a working demonstration. It contains one real teaching case — a patient with '
-    +'far too many red cells and perfectly normal oxygen — written by the faculty who use it. '
-    +'You play the clinician; the engine reads what you write and marks how you reasoned.</p></div>';
-  h+='<div class="specimen"><div class="cap">The product, in one card</div>'
-    +'<div class="sent" id="specSent"><span class="caret"></span></div>'
-    +'<div class="spchips" id="specChips"><span class="spchip">Contradiction recognised ✓</span>'
-    +'<span class="spchip">Reasoning weighted 9× recall ✓</span>'
-    +'<span class="spchip">Honest gap credited ✓</span></div></div>';
-  /* One obvious way in. The old version offered two cards containing a person's
-     name and no verb, which told nobody what would happen if they clicked. */
-  h+='<div class="startbox">'
+    +'It cannot tell you whether they would have got there on their own.</p>'
+    +'<p class="lede2">Follow the Tracks gives a student one real case, revealed a step at a time, and '
+    +'asks them to write what they think — there is nothing to pick from. It then reads those words and '
+    +'marks <b>how they reasoned</b>, not just what they landed on.</p>'
+    +'<div class="startbox">'
     +'<button class="btn primary lg" data-start="1">Start the case →</button>'
-    +'<div class="startmeta">About 20 minutes. You will read a real case, commit a diagnosis '
-    +'before you have all the evidence, and answer eight questions at the end. '
-    +'Nothing is scored until you submit.</div>'
+    +'<div class="startmeta"><b>About 20 minutes.</b> You will meet a patient with far too many red cells '
+    +'and perfectly normal oxygen, commit a diagnosis before you have enough evidence, watch it break, and '
+    +'answer eight questions in your own words. Nothing is scored until you submit.</div>'
     +'<div class="startalt">'
-    +'<button class="linkish" data-tour="1">Watch the 90-second tour instead</button>'
+    +'<button class="linkish" data-tour="1">Show me the 90-second tour first</button>'
     +'<span class="sep">·</span>'
-    +'<button class="linkish" data-door="faculty">I am faculty — show me the college view</button>'
-    +'</div></div>';
+    +'<button class="linkish" data-door="faculty">I teach — show me the college view</button>'
+    +'</div></div></div>';
+  /* the specimen now says whose sentence this is and what the marks mean. It was
+     an unlabelled sentence with two underlines and three ticks, under the caption
+     "The product, in one card" — the proof of the whole idea, unreadable. */
+  h+='<div class="specimen"><div class="cap">What the engine reads</div>'
+    +'<div class="speclab">A student wrote —</div>'
+    +'<div class="sent" id="specSent"><span class="caret"></span></div>'
+    +'<div class="specnote">The underlined phrases are what the engine recognised: the finding, '
+    +'and the reasoning that explains it.</div>'
+    +'<div class="speclab" style="margin-top:18px">So it credited them for —</div>'
+    +'<div class="spchips" id="specChips"><span class="spchip">✓ Spotting the contradiction</span>'
+    +'<span class="spchip">✓ Explaining, not just naming</span>'
+    +'<span class="spchip">✓ Saying what they did not know</span></div></div>';
+  h+='</div>';
   h+='<div class="card"><h3>How it works</h3><div class="steps">'
     +'<div class="step"><div class="no">01</div><div class="t">Commit before you know</div><div class="x">The case unfolds one stage at a time. Nothing ahead of you is on the page.</div></div>'
     +'<div class="step"><div class="no">02</div><div class="t">Watch it break</div><div class="x">Evidence arrives that your hypothesis cannot survive. You decide that, before anyone tells you.</div></div>'
@@ -2157,7 +2190,11 @@ function gateReady(cs,gate){
 }
 function spineHTML(cs){
   var looped=S.beat>=6;
-  var h='<div class="spine'+(looped?" looped":"")+'">';
+  /* the rail was an unlabelled column of abstract words — nothing said whether it
+     was a menu, navigation, or where you had got to */
+  var h='<div class="railhead">The investigation'
+    +'<span>Each step is a move in the reasoning. You are on the highlighted one.</span></div>';
+  h+='<div class="spine'+(looped?" looped":"")+'">';
   h+='<span class="spine-loop" style="top:calc(var(--rowh)*3);height:calc(var(--rowh)*4)"></span>';
   cs.beats.forEach(function(b,i){
     var cls=i<S.beat?"done":(i===S.beat?"on":"");
@@ -2490,10 +2527,10 @@ function encounterView(){
   if(!cs)return shell("cases",'<div class="card">Case not found.</div>');
   var body='<div class="crumbs"><a data-nav="#/cases">Case</a> › '+esc(cs.title)+'</div>';
   body+='<div class="enc"><div class="railwrap">'+spineHTML(cs)+'</div><div class="scenecol">';
-  body+='<div class="modeswitch" role="group" aria-label="How much of the conversation to show at once">'
+  var paceHTML='<div class="modeswitch" role="group" aria-label="How much of the conversation to show at once">'
     +'<span class="mslabel">Show me</span>'
-    +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene" title="Reveal the conversation a few lines at a time">a few lines at a time</button>'
-    +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full" title="Show the whole conversation for this stage at once">the whole stage at once</button></div>';
+    +'<button aria-pressed="'+(!S.readAll)+'" data-pace="scene" title="Reveal the conversation a few lines at a time">a few lines</button>'
+    +'<button aria-pressed="'+(!!S.readAll)+'" data-pace="full" title="Show the whole conversation for this stage at once">the whole stage</button></div>';
   /* orientation on first arrival: what this is and what is being asked of you.
      Dismissed for the session once read. */
   if(S.beat===0&&S.cue===0&&!S.oriented){
@@ -2509,7 +2546,7 @@ function encounterView(){
       +'<div class="row"><button class="btn primary" data-orient="1">Begin →</button>'
       +'<span class="small">About 20 minutes.</span></div></div>';
   }
-  body+='<div class="slug">'+esc(cs.place)+'</div>';
+  body+='<div class="slugrow"><div class="slug">'+esc(cs.place)+'</div>'+paceHTML+'</div>';
   body+='<p aria-live="polite" class="vh" id="sceneLive"></p>';
 
   var upto=S.revealAll?cs.beats.length-1:S.beat;
@@ -2604,9 +2641,13 @@ function advHTML(cs,i,cues,lastIdx){
   var remaining=Math.max(0,cues.length-1-lastIdx);
   var dots="";
   for(var k=0;k<Math.min(remaining,6);k++)dots+='<i></i>';
-  return '<button class="adv'+(act?" act":"")+'" id="adv" data-adv="1"'+(ready?"":" disabled")+'>'
+  /* the dots were unlabelled — a user has no way to know they mean "more to come
+     in this stage", so the count is now said in words beside them */
+  var left=remaining?'<span class="adv-left">'+remaining+' more in this stage</span>':"";
+  return '<button class="adv'+(act?" act":"")+'" id="adv" data-adv="1"'+(ready?"":" disabled")
+    +' title="'+esc(label)+'">'
     +'<span class="adv-l">'+esc(label)+'</span>'
-    +(act?"":'<span class="adv-c">↓</span><span class="adv-dots" aria-hidden="true">'+dots+'</span>')
+    +(act?"":'<span class="adv-c">↓</span>'+left+'<span class="adv-dots" aria-hidden="true">'+dots+'</span>')
     +'</button>';
 }
 
