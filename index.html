@@ -234,6 +234,16 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
   .enc > .scenecol{grid-column:2;grid-row:1 / span 2}
   .filewrap{grid-column:1;grid-row:2;position:sticky;top:78px}
 }
+/* A media query predicts the fit from viewport width alone. That prediction is
+   wrong as soon as OS display scaling, browser zoom or a substituted font
+   changes the real geometry — and with overflow-x:clip the case file then
+   disappears off the right edge with no scrollbar to reach it. fitDesk()
+   measures the actual right edge instead and sets .narrow, which is the same
+   two-column fallback the 1240 query uses. Measured beats predicted. */
+.enc.narrow{grid-template-columns:198px minmax(0,1fr);grid-template-rows:auto 1fr;gap:26px}
+.enc.narrow .railwrap{grid-column:1;grid-row:1;position:static}
+.enc.narrow > .scenecol{grid-column:2;grid-row:1 / span 2}
+.enc.narrow .filewrap{grid-column:1;grid-row:2;position:sticky;top:78px}
 .spine{position:relative;padding-left:14px}
 .railstep{display:flex;align-items:center;gap:11px;height:var(--rowh);font-size:13px;color:var(--ink-faint)}
 .railstep .mk{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line-2);display:flex;align-items:center;justify-content:center;
@@ -1944,6 +1954,24 @@ function __selftest(){
     S.beat=r.b;S.cue=r.c;S.readAll=r.ra;S.ledgerCommitted=r.lc;S.askedFamily=r.af;
     S.hyp1=r.h1;S.hyp2=r.h2;S.interlock=r.il;S.ledger=r.lg;S.predict=r.pr;
   }
+  /* ---- NOTHING OFF THE RIGHT EDGE. This was shipped broken twice because the
+     earlier check compared scrollWidth to innerWidth — and html{overflow-x:clip}
+     clips rather than scrolls, so scrollWidth never grows and the test passed
+     while the case file was being cut off. Measure real edges instead. ---- */
+  if(typeof document!=="undefined"&&document.querySelector(".enc")){
+    var _vw=document.documentElement.clientWidth,_off=[];
+    Array.prototype.forEach.call(document.querySelectorAll(".enc *"),function(el){
+      var r=el.getBoundingClientRect();
+      if(r.width>0&&r.right>_vw+1)_off.push(el.className||el.tagName);
+    });
+    ok("RIGHT EDGE: nothing in the desk extends past the window ("+_off.slice(0,3).join(", ")+")",_off.length===0);
+    var _fw=document.querySelector(".filewrap");
+    ok("RIGHT EDGE: the case file is fully on screen",
+       !_fw||_fw.getBoundingClientRect().right<=_vw+1);
+    /* and the guard itself must be reachable, or the two above are luck */
+    ok("RIGHT EDGE: fitDesk exists to collapse the desk when it will not fit",
+       typeof fitDesk==="function");
+  }
   ok("every beat names the reasoning move it performs",cs.beats.every(function(b){return !!b.move;}));
   ok("the answer-key frame is staged, not dead data",!!cs.answerFrameDlg&&cs.answerFrameDlg.length===9);
   ok("the scene carries a place",!!cs.place);
@@ -3113,7 +3141,25 @@ function draw(){
   else if(hash.indexOf("#/faculty")===0){
     S.role="faculty";var t=hash.match(/tab=(\w+)/);S.facultyTab=t?t[1]:"cohort";h=facultyView();}
   else h=shell("cases",'<div class="card">Page not found.</div>');
-  app.innerHTML=h;wire();demoBar();
+  app.innerHTML=h;wire();demoBar();fitDesk();
+}
+/* Collapse the three-column desk the moment it does not actually fit. The
+   media query cannot see zoom or OS scaling; getBoundingClientRect can. Two
+   passes: measure clean (no .narrow), and only re-add it if a column really
+   overruns, so the desk restores itself when the window grows back. */
+function fitDesk(){
+  var enc=document.querySelector(".enc");if(!enc)return;
+  enc.classList.remove("narrow");
+  var vw=document.documentElement.clientWidth,kids=enc.children,i,over=false;
+  for(i=0;i<kids.length;i++){
+    if(kids[i].getBoundingClientRect().right>vw-2){over=true;break;}
+  }
+  if(over)enc.classList.add("narrow");
+}
+var fitPending=false;
+function fitDeskSoon(){
+  if(fitPending)return;fitPending=true;
+  requestAnimationFrame(function(){fitPending=false;fitDesk();});
 }
 function route(){draw();window.scrollTo(0,0);}
 
@@ -3265,6 +3311,8 @@ window.__gradeQuestion=gradeQuestion;
 window.__case=VHL;
 window.__cohort=cohort;
 window.addEventListener("hashchange",route);
+/* zoom changes fire resize, so this covers ctrl+/ctrl- as well as window drags */
+window.addEventListener("resize",fitDeskSoon);
 draw();
 </script>
 </body>
