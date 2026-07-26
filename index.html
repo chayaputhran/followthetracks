@@ -588,13 +588,14 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .hcard .hl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:700}
 .hcard .ht{font-family:var(--font-display);font-size:15px;margin-top:5px;white-space:pre-wrap}
 .hcard.retired{filter:none;opacity:1;background:var(--paper-2);border-color:var(--line-3);transition:background .4s var(--ease)}
-.hcard.retired .hl{color:var(--danger)}
-/* the stamp used to be absolutely positioned OVER the hypothesis text, landing on
-   top of the words. It now sits in the flow beside the label. */
-.hcard.retired .hl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.hcard.retired .hl::after{content:'RETIRED';transform:rotate(-4deg);font-family:var(--font-mono);
-  font-size:9px;font-weight:700;letter-spacing:2.5px;color:var(--danger);
-  border:1.5px solid var(--danger);padding:2px 7px;border-radius:2px;flex:0 0 auto}
+/* The stamp used to be absolutely positioned OVER the hypothesis text, landing
+   on top of the words, so it was moved into the flow. But it was added as an
+   ::after carrying its own "RETIRED" text, and the markup already renders a
+   "Retired" label in .hl — so the card read "RETIRED RETIRED". The existing
+   label IS the stamp now; there is only one source of the word. */
+.hcard.retired .hl{display:inline-flex;align-items:center;transform:rotate(-4deg);
+  font-family:var(--font-mono);font-size:9px;font-weight:700;letter-spacing:2.5px;
+  color:var(--danger);border:1.5px solid var(--danger);padding:2px 7px;border-radius:2px}
 .hcard .epitaph{font-family:var(--font-display);font-size:13px;font-style:italic;color:var(--ink-soft);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .hboard-m{border:1px solid var(--line-2);border-radius:7px;background:var(--card);padding:0;margin-bottom:14px}
 .hboard-m summary{padding:11px 14px;cursor:pointer;font-family:var(--font-mono);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
@@ -2068,6 +2069,13 @@ function __selftest(){
     if(_fwt&&getComputedStyle(_fwt).position==="sticky"){
       ok("CASE FILE: a pinned case file never exceeds the window height",
          _fwt.getBoundingClientRect().height<=window.innerHeight+1);
+    }
+    /* the retired stamp is rendered by the markup; a CSS ::after that also
+       carries the word made the card read "RETIRED RETIRED" */
+    var _ret=document.querySelector(".hcard.retired .hl");
+    if(_ret){
+      ok("STAMP: the word RETIRED appears exactly once on a retired hypothesis",
+         (_ret.textContent.match(/retired/gi)||[]).length===1);
     }
   }
   ok("every beat names the reasoning move it performs",cs.beats.every(function(b){return !!b.move;}));
