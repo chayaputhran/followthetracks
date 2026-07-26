@@ -2058,7 +2058,10 @@ function landingView(){
     +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Take the tour</a></div>';
   h+='<div class="wrap"><div class="hero"><div class="eyebrow">Clinical reasoning, examined</div>'
     +'<h1>Recall, not recognition.</h1>'
-    +'<p class="lede">An MCQ can tell you a student recognises the right answer. It cannot tell you whether they would have got there. We grade the path.</p>'
+    /* "MCQ" was the fourth word on the page and never expanded — the most
+       expensive possible place to put an acronym */
+    +'<p class="lede">A multiple-choice question can tell you a student recognises the right answer. '
+    +'It cannot tell you whether they would have got there on their own. We grade the path.</p>'
     +'<p class="lede2">This is a working demonstration. It contains one real teaching case — a patient with '
     +'far too many red cells and perfectly normal oxygen — written by the faculty who use it. '
     +'You play the clinician; the engine reads what you write and marks how you reasoned.</p></div>';
@@ -2086,7 +2089,8 @@ function landingView(){
     +'<div class="step"><div class="no">04</div><div class="t">Explain the mechanism</div><div class="x">Eight questions in your own words. Saying you have not met a concept costs almost nothing.</div></div></div></div>';
   h+='<div class="card"><h3>For the college</h3><div class="collegestrip">'
     +'<div class="cbox"><div class="t">Per-question teaching targets</div><div class="x">See exactly which step of the mechanism the batch could not produce.</div></div>'
-    +'<div class="cbox"><div class="t">NMC / CBME mapping</div><div class="x">Every case carries a competency code.</div></div>'
+    +'<div class="cbox"><div class="t">Mapped to the NMC competencies</div><div class="x">Every case carries a '
+    +'National Medical Commission competency code, so it slots into a competency-based (CBME) curriculum.</div></div>'
     +'<div class="cbox"><div class="t">Faculty review of every grade</div><div class="x">The engine shows its working; you keep the final say.</div></div></div>'
     +'<div class="small" style="margin-top:12px">Pricing on request — pilot terms for the first cohort.</div></div>';
   h+=footer()+'</div>';
