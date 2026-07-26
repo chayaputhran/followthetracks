@@ -28,6 +28,14 @@
   --r:3px;
   --ease:cubic-bezier(0.16,1,0.3,1);
   --pad:20px; --rowh:44px;
+  /* ONE container width for the entire app. The app bar, the demo bar and the
+     page body all align to this single value, so the brand can never sit 375px
+     to the left of the content it labels — which is what a full-bleed bar over
+     a capped, centred body produced on a wide screen.
+     Widening this is safe: every block of prose is capped separately in ch
+     units (62–74ch), so the extra width is spent on structure — the rail and
+     the case file — and never on line length. */
+  --shell:min(95vw,1960px);
   --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --font-body:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
   --font-mono:"SF Mono","Cascadia Mono",Consolas,"IBM Plex Mono",monospace;
@@ -75,8 +83,14 @@ blockquote.qt{margin:12px 0;padding:10px 0 10px 16px;border-left:2px solid var(-
   font-size:16px;line-height:1.6;color:var(--ink)}
 blockquote.qt p{margin:2px 0}
 /* app bar */
-.appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:16px;padding:0 20px;height:58px;
-  background:var(--card);border-bottom:1px solid var(--line-2)}
+/* The bar's BACKGROUND is full-bleed (a sticky bar that stopped short of the
+   window edges would look broken), but its CONTENTS sit in a shell-width row so
+   the brand lines up with the page content underneath it. Previously the flex
+   row was the bar itself, which is why the brand hugged x=20 while the content
+   started at x=395 on a wide screen. */
+.appbar{position:sticky;top:0;z-index:30;background:var(--card);border-bottom:1px solid var(--line-2)}
+.barinner{display:flex;align-items:center;gap:16px;height:58px;
+  width:var(--shell);margin:0 auto;padding:0 var(--pad)}
 .brandmark{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
 .logo{width:32px;height:32px;flex:0 0 auto}
 .wordmark{font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:.2px;white-space:nowrap}
@@ -93,7 +107,9 @@ blockquote.qt p{margin:2px 0}
 /* below 700px the fixed bottom tab bar carries navigation, so the inline nav
    is redundant — and it is what pushes the user chip off a 360px screen */
 @media(max-width:700px){.appbar .nav{display:none}}
-@media(max-width:560px){.appbar{padding:0 12px;gap:10px}.brandmark{gap:8px}.userchip{gap:7px}.userchip .small{display:none}}
+/* the bar and the body must tighten together, or the brand sits 8px off the
+   content edge on a phone — the same misalignment, just smaller */
+@media(max-width:560px){:root{--pad:12px}.barinner{gap:10px}.brandmark{gap:8px}.userchip{gap:7px}.userchip .small{display:none}}
 @media(max-width:400px){.userchip .rolebadge{display:none}.wordmark small{display:none}}
 /* layout */
 /* the deep bottom padding exists ONLY to clear the fixed mobile tab bar. Above the
@@ -102,12 +118,11 @@ blockquote.qt p{margin:2px 0}
 /* FLUID, not a fixed cap. A hard max-width in pixels means the larger the
    monitor the more dead margin you get — at 1920 the old 1280 cap used 67% of
    the screen and left 640px empty. Percentage-first with a generous ceiling. */
-.wrap{width:min(95vw,1900px);margin:0 auto;padding:20px var(--pad) 22px}
-/* The encounter is a three-column desk and wants the room — but 2200px was too
-   greedy. It put the case file ~2,300px from the rail (a lot of eye travel for
-   the panel you consult most), and it left almost no slack, so any environment
-   that resolved vw slightly wide pushed the file straight off the screen. */
-.wrap.wide{width:min(96vw,1760px)}
+.wrap{width:var(--shell);margin:0 auto;padding:20px var(--pad) 22px}
+/* The encounter used to be wider than every other page. That made the app bar
+   jump horizontally as you moved between routes, because the bar aligned to one
+   width and the body to another. One shell width for every route instead. */
+.wrap.wide{width:var(--shell)}
 @media(max-width:700px){.wrap{padding-bottom:110px}}
 .crumbs{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .crumbs a{color:var(--ink-faint);text-decoration:none;cursor:pointer}
@@ -717,7 +732,9 @@ mark{background:none;color:inherit;box-shadow:inset 0 -.55em 0 var(--accent-soft
 .tourtag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
   font-weight:700;border:1px solid var(--band-edge);border-radius:var(--r);padding:3px 8px;flex:0 0 auto}
 .demobar .cap b{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em}
-.demobar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);padding:14px 18px;z-index:60;
+/* full-bleed background, shell-aligned contents — same reason as the app bar */
+.demobar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--paper);z-index:60;
+  padding:14px max(18px,calc((100vw - var(--shell)) / 2 + var(--pad)));
   display:flex;gap:14px;align-items:center;font-size:13.5px;line-height:1.5}
 /* the guided-demo bar is the other fixed element that needs bottom clearance */
 body:has(.demobar) .wrap{padding-bottom:110px}
@@ -2115,13 +2132,15 @@ function header(active){
   var facNav='<a data-nav="#/faculty" class="'+(active==="faculty"?"on":"")+'" title="What a head of department sees across a cohort">College view</a>';
   var initials=S.role==="faculty"?"SM":"PR";
   var name=S.role==="faculty"?"Prof. S. Menon":"Dr. Priya Raghavan";
-  return '<div class="appbar"><a class="brandmark" data-nav="'+(S.role==="faculty"?"#/faculty":"#/cases")+'">'+LOGO
+  return '<div class="appbar"><div class="barinner">'
+    +'<a class="brandmark" data-nav="'+(S.role==="faculty"?"#/faculty":"#/cases")+'">'+LOGO
     +'<div class="wordmark">Follow the Tracks<small>Clinical reasoning, examined</small></div></a>'
     +'<div class="nav">'+(S.role==="faculty"?facNav:studentNav)
     +'<a data-nav="#/demo" title="A 90-second guided walkthrough of what this product does">Take the tour</a></div>'
     +'<div class="spacer"></div>'
     +'<div class="userchip"><span class="rolebadge">'+esc(S.role)+'</span><div class="avatar">'+initials+'</div>'
-    +'<span class="small">'+esc(name)+'</span><button class="linkbtn" data-nav="#/">Exit</button></div></div>';
+    +'<span class="small">'+esc(name)+'</span><button class="linkbtn" data-nav="#/">Exit</button></div>'
+    +'</div></div>';
 }
 function mobtab(active){
   if(!S.role)return "";
@@ -2145,9 +2164,9 @@ function shell(active,inner,mod){
 
 /* ============ LANDING ============ */
 function landingView(){
-  var h='<div class="appbar"><a class="brandmark" data-nav="#/">'+LOGO
+  var h='<div class="appbar"><div class="barinner"><a class="brandmark" data-nav="#/">'+LOGO
     +'<div class="wordmark">Follow the Tracks<small>Clinical reasoning, examined</small></div></a>'
-    +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Take the tour</a></div>';
+    +'<div class="spacer"></div><a class="btn ghost sm" data-nav="#/demo">Take the tour</a></div></div>';
   /* Two columns: what it is on the left, the proof on the right. Everything
      previously sat in a 640px strip with half the screen empty — and the old
      headline, "Recall, not recognition", reads as a memorisation drill, which
@@ -3177,14 +3196,18 @@ function draw(){
    the room comes back, rather than latching into the fallback forever. */
 function fitDesk(){
   var vw=document.documentElement.clientWidth;
-  var wrap=document.querySelector(".wrap");
-  if(wrap){
-    wrap.style.width="";                       /* measure unclamped */
-    var wr=wrap.getBoundingClientRect();
+  /* querySelectorAll, not querySelector: the shell renders more than one
+     width-constrained box (the bar's inner row as well as the page body), and
+     clamping only the first left the others free to overrun. */
+  var boxes=document.querySelectorAll(".wrap,.barinner"),bi;
+  for(bi=0;bi<boxes.length;bi++){
+    var box=boxes[bi];
+    box.style.width="";                        /* measure unclamped */
+    var br=box.getBoundingClientRect();
     /* -4px so a sub-pixel rounding difference cannot leave a 1px overhang */
-    if(wr.width>vw-4||wr.right>vw+1){
-      wrap.style.width=Math.max(300,vw-16)+"px";
-      wrap.style.marginLeft="auto";wrap.style.marginRight="auto";
+    if(br.width>vw-4||br.right>vw+1){
+      box.style.width=Math.max(300,vw-16)+"px";
+      box.style.marginLeft="auto";box.style.marginRight="auto";
     }
   }
   var enc=document.querySelector(".enc");if(!enc)return;
